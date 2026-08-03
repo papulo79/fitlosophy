@@ -25,7 +25,9 @@
 </script>
 
 <div class="mx-auto mt-16 max-w-sm">
-  <h2 class="mb-6 text-center font-display text-3xl font-bold tracking-wide text-acento">FITLOSOPHY</h2>
+  <h2 class="mb-6 flex items-center justify-center gap-2 text-center font-display text-3xl font-bold tracking-wide text-acento">
+    <Icon nombre="logo" tam={30} /> FITLOSOPHY
+  </h2>
   <form onsubmit={entrar} class="space-y-4">
     <input
       bind:value={username}

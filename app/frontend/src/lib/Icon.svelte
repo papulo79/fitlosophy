@@ -18,10 +18,13 @@
     recuperacion: "M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09A6.06 6.06 0 0 1 16.5 3C19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z",
     descanso: "M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8",
     sin_registro: "M12 4a8 8 0 1 0 8 8h-2a6 6 0 1 1-6-6z",
+    // Marca del proyecto: mancuerna en diagonal (45°).
+    logo: "M3 9a1.5 1.5 0 0 1 3 0v6a1.5 1.5 0 0 1-3 0zm4-2a1.5 1.5 0 0 1 3 0v10a1.5 1.5 0 0 1-3 0zm7 0a1.5 1.5 0 0 1 3 0v10a1.5 1.5 0 0 1-3 0zm4 2a1.5 1.5 0 0 1 3 0v6a1.5 1.5 0 0 1-3 0zM10 11h4v2h-4z",
   };
+  const TRANSFORMS = { logo: "rotate(45 12 12)" };
   let { nombre, tam = 20 } = $props();
 </script>
 
 <svg width={tam} height={tam} viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" class="shrink-0">
-  <path d={TRAZOS[nombre] || TRAZOS.aviso} />
+  <path d={TRAZOS[nombre] || TRAZOS.aviso} transform={TRANSFORMS[nombre] || ""} />
 </svg>

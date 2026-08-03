@@ -315,9 +315,12 @@
             <p class="mt-3 text-xs font-bold uppercase tracking-wider text-tenue">{BLOQUES[grupo.bloque] || grupo.bloque}</p>
             <ul class="mt-1 space-y-1 text-sm">
               {#each grupo.items as item}
-                <li class="flex justify-between gap-2">
-                  <span class="text-texto">{item.nombre} — <span class="text-apagado">{item.dosis}</span></span>
-                  <span class="shrink-0 text-tenue">
+                <li class="flex items-start justify-between gap-2">
+                  <span class="min-w-0 text-texto">
+                    {item.nombre}
+                    <span class="block text-apagado">{item.dosis}</span>
+                  </span>
+                  <span class="shrink-0 text-right text-tenue">
                     {ESTADOS_ITEM[item.estado] || item.estado}
                     {#if s.estado !== "en_curso"}
                       <button onclick={() => abrirCorreccionItem(s.id, item)} class="ml-2 font-medium text-acento">Corregir</button>

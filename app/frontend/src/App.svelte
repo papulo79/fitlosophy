@@ -1,5 +1,6 @@
 <script>
   import NavBar from "./lib/NavBar.svelte";
+  import Icon from "./lib/Icon.svelte";
   import Login from "./routes/Login.svelte";
   import EstadoDiario from "./routes/EstadoDiario.svelte";
   import Propuesta from "./routes/Propuesta.svelte";
@@ -67,11 +68,14 @@
 {#if !session.verificado}
   <p class="p-6 text-center text-apagado">Cargando…</p>
 {:else}
-  <header class="border-b border-borde bg-superficie">
-    <div class="mx-auto max-w-xl px-4 py-3">
-      <h1 class="font-display text-2xl font-bold tracking-wide text-acento">FITLOSOPHY</h1>
-    </div>
-  </header>
+  {#if session.usuario}
+    <header class="border-b border-borde bg-superficie">
+      <div class="mx-auto flex max-w-xl items-center gap-2 px-4 py-3">
+        <span class="text-acento"><Icon nombre="logo" tam={22} /></span>
+        <h1 class="font-display text-2xl font-bold tracking-wide text-acento">FITLOSOPHY</h1>
+      </div>
+    </header>
+  {/if}
   <main class="mx-auto max-w-xl p-4 pb-24">
     {#key base + (parametro || "")}
       <Componente {parametro} />
