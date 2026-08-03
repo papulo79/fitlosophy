@@ -2,6 +2,10 @@
   import { api, mensajeError } from "../lib/api.js";
   import { flujo } from "../lib/stores.svelte.js";
   import Opciones from "../lib/Opciones.svelte";
+  import SliderDolor from "../lib/SliderDolor.svelte";
+  import Chips from "../lib/Chips.svelte";
+  import Icon from "../lib/Icon.svelte";
+  import { RECUPERACION } from "../lib/etiquetas.js";
 
   const ETIQUETAS_MATERIAL = {
     trx: "TRX",
@@ -92,41 +96,43 @@
   }
 </script>
 
-<h2 class="mb-4 text-xl font-bold">¿Cómo estás hoy?</h2>
+<h2 class="mb-4 font-display text-2xl font-bold tracking-wide">¿CÓMO ESTÁS HOY?</h2>
 
 <form onsubmit={enviar} class="space-y-6">
   <section>
-    <p class="mb-2 text-sm font-semibold text-gray-600">Recuperación</p>
+    <p class="mb-2 text-xs font-semibold uppercase tracking-wider text-tenue">Recuperación</p>
     <Opciones
       bind:valor={recuperacion}
       opciones={[
-        { valor: "verde", etiqueta: "Verde" },
-        { valor: "amarillo", etiqueta: "Amarillo" },
-        { valor: "rojo", etiqueta: "Rojo" },
+        { valor: "verde", etiqueta: RECUPERACION.verde },
+        { valor: "amarillo", etiqueta: RECUPERACION.amarillo },
+        { valor: "rojo", etiqueta: RECUPERACION.rojo },
       ]}
       colores={{
-        verde: "border-green-600 bg-green-600 text-white",
-        amarillo: "border-amber-500 bg-amber-500 text-white",
-        rojo: "border-red-600 bg-red-600 text-white",
+        verde: "border-verde bg-verde text-fondo",
+        amarillo: "border-ambar bg-ambar text-fondo",
+        rojo: "border-rojo bg-rojo text-texto",
       }}
     />
   </section>
 
   <section>
-    <p class="mb-2 text-sm font-semibold text-gray-600">Dolor (0 = nada, 10 = mucho): <span class="text-base font-bold">{dolor}</span></p>
-    <input bind:value={dolor} type="range" min="0" max="10" step="1" class="w-full" />
+    <p class="mb-2 text-xs font-semibold uppercase tracking-wider text-tenue">
+      Dolor · <span class="text-base font-bold normal-case text-texto">{dolor}</span>
+    </p>
+    <SliderDolor bind:valor={dolor} />
     {#if dolor > 0}
       <input
         bind:value={zonaDolor}
         type="text"
         placeholder="Zona del dolor (obligatorio)"
-        class="mt-2 w-full rounded-xl border border-gray-300 px-4 py-3"
+        class="mt-3 w-full rounded-xl border border-borde bg-superficie px-4 py-3 text-texto placeholder:text-tenue focus:border-acento focus:outline-none"
       />
     {/if}
   </section>
 
   <section>
-    <p class="mb-2 text-sm font-semibold text-gray-600">¿Hay BJJ hoy?</p>
+    <p class="mb-2 text-xs font-semibold uppercase tracking-wider text-tenue">¿Hay BJJ hoy?</p>
     <Opciones
       bind:valor={bjj}
       opciones={[
@@ -136,7 +142,7 @@
       ]}
     />
     {#if bjj === "si"}
-      <p class="mt-3 mb-2 text-sm font-semibold text-gray-600">Tipo de sesión de BJJ</p>
+      <p class="mt-3 mb-2 text-xs font-semibold uppercase tracking-wider text-tenue">Tipo de sesión de BJJ</p>
       <Opciones
         bind:valor={tipoBjj}
         opciones={[
@@ -150,42 +156,37 @@
 
   {#if materialVariable.length > 0}
     <section>
-      <p class="mb-2 text-sm font-semibold text-gray-600">Material disponible hoy</p>
-      <div class="grid grid-cols-2 gap-2">
-        {#each materialVariable as token}
-          <label class="flex items-center gap-2 rounded-xl border border-gray-300 bg-white px-3 py-3 text-sm">
-            <input type="checkbox" bind:checked={marcados[token]} class="h-5 w-5" />
-            {ETIQUETAS_MATERIAL[token] || token}
-          </label>
-        {/each}
-        <label class="flex items-center gap-2 rounded-xl border border-gray-200 bg-gray-100 px-3 py-3 text-sm text-gray-500">
-          <input type="checkbox" checked disabled class="h-5 w-5" />
-          Tatami (siempre)
-        </label>
-      </div>
+      <p class="mb-2 text-xs font-semibold uppercase tracking-wider text-tenue">Material disponible hoy</p>
+      <Chips tokens={materialVariable} bind:marcados etiquetas={ETIQUETAS_MATERIAL} />
+      <p class="mt-2 flex items-center gap-1.5 text-xs text-tenue">
+        <Icon nombre="check" tam={12} /> Tatami siempre disponible (cuenta como suelo)
+      </p>
     </section>
   {/if}
 
   <section>
-    <button type="button" onclick={() => (mostrarOpcionales = !mostrarOpcionales)} class="text-sm font-medium text-blue-600">
-      {mostrarOpcionales ? "− Ocultar opcionales" : "+ Limitación, sueño, tiempo, preferencias…"}
+    <button type="button" onclick={() => (mostrarOpcionales = !mostrarOpcionales)} class="flex items-center gap-1.5 text-sm font-medium text-acento">
+      <Icon nombre={mostrarOpcionales ? "cerrar" : "plus"} tam={14} />
+      {mostrarOpcionales ? "Ocultar opcionales" : "Limitación, sueño, tiempo, preferencias…"}
     </button>
     {#if mostrarOpcionales}
       <div class="mt-3 space-y-3">
-        <input bind:value={limitacion} type="text" placeholder="Limitación puntual (ej. hombro cargado)" class="w-full rounded-xl border border-gray-300 px-4 py-3" />
-        <input bind:value={sueno} type="text" placeholder="Sueño (ej. 6 h, mal)" class="w-full rounded-xl border border-gray-300 px-4 py-3" />
-        <input bind:value={tiempo} type="number" min="1" placeholder="Tiempo disponible (minutos)" class="w-full rounded-xl border border-gray-300 px-4 py-3" />
-        <input bind:value={preferencia} type="text" placeholder="Preferencia (ej. sin impacto)" class="w-full rounded-xl border border-gray-300 px-4 py-3" />
-        <input bind:value={circunstancias} type="text" placeholder="Circunstancias (ej. viaje, calor)" class="w-full rounded-xl border border-gray-300 px-4 py-3" />
+        <input bind:value={limitacion} type="text" placeholder="Limitación puntual (ej. hombro cargado)" class="w-full rounded-xl border border-borde bg-superficie px-4 py-3 text-texto placeholder:text-tenue focus:border-acento focus:outline-none" />
+        <input bind:value={sueno} type="text" placeholder="Sueño (ej. 6 h, mal)" class="w-full rounded-xl border border-borde bg-superficie px-4 py-3 text-texto placeholder:text-tenue focus:border-acento focus:outline-none" />
+        <input bind:value={tiempo} type="number" min="1" placeholder="Tiempo disponible (minutos)" class="w-full rounded-xl border border-borde bg-superficie px-4 py-3 text-texto placeholder:text-tenue focus:border-acento focus:outline-none" />
+        <input bind:value={preferencia} type="text" placeholder="Preferencia (ej. sin impacto)" class="w-full rounded-xl border border-borde bg-superficie px-4 py-3 text-texto placeholder:text-tenue focus:border-acento focus:outline-none" />
+        <input bind:value={circunstancias} type="text" placeholder="Circunstancias (ej. viaje, calor)" class="w-full rounded-xl border border-borde bg-superficie px-4 py-3 text-texto placeholder:text-tenue focus:border-acento focus:outline-none" />
       </div>
     {/if}
   </section>
 
   {#if error}
-    <p class="rounded-lg bg-red-50 p-3 text-sm text-red-700">{error}</p>
+    <p class="flex items-center gap-2 rounded-lg bg-rojo/10 p-3 text-sm text-rojo">
+      <Icon nombre="aviso" tam={16} /> {error}
+    </p>
   {/if}
 
-  <button type="submit" disabled={cargando} class="w-full rounded-xl bg-blue-600 py-4 text-lg font-bold text-white disabled:opacity-50">
-    {cargando ? "Decidiendo…" : "Proponer sesión"}
+  <button type="submit" disabled={cargando} class="w-full rounded-xl bg-acento py-4 font-display text-xl font-bold tracking-wider text-fondo disabled:opacity-50">
+    {cargando ? "DECIDIENDO…" : "GENERAR SESIÓN"}
   </button>
 </form>

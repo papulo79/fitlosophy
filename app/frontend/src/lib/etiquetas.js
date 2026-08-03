@@ -41,3 +41,10 @@ export function agruparPorBloque(items) {
     })
     .map(([bloque, its]) => ({ bloque, items: its }));
 }
+
+/** Recuperación: texto visible; los valores de API siguen siendo verde/amarillo/rojo. */
+export const RECUPERACION = {
+  verde: "Bien",
+  amarillo: "Regular",
+  rojo: "Mal",
+};
