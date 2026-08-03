@@ -1,5 +1,34 @@
 @import "tailwindcss";
+@import "@fontsource/inter/400.css";
+@import "@fontsource/inter/500.css";
+@import "@fontsource/inter/600.css";
+@import "@fontsource/inter/700.css";
+@import "@fontsource/barlow-condensed/600.css";
+@import "@fontsource/barlow-condensed/700.css";
+
+@theme {
+  /* Rediseño oscuro deportivo (spec docs/superpowers/specs/2026-08-03-…-design.md) */
+  --color-fondo: #10131a;
+  --color-superficie: #1a1f2b;
+  --color-borde: #232a38;
+  --color-texto: #e8eaf0;
+  --color-apagado: #9aa3b2;
+  --color-tenue: #6b7280;
+  --color-acento: #c8f04a;
+  --color-verde: #3ecf6e;
+  --color-ambar: #e0b34f;
+  --color-rojo: #e05a4a;
+  --font-sans: "Inter", system-ui, sans-serif;
+  --font-display: "Barlow Condensed", "Inter", system-ui, sans-serif;
+}
 
 body {
-  @apply bg-gray-50 text-gray-900 antialiased;
+  @apply bg-fondo font-sans text-texto antialiased;
+}
+
+/* Inputs heredan el esquema oscuro. */
+input,
+select,
+textarea {
+  color-scheme: dark;
 }
