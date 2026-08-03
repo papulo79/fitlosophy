@@ -626,6 +626,7 @@ Confirmado:
 - Cinta prioritaria para recuperación.
 - Biblioteca estructurada por patrones, costes y compatibilidad.
 - Documentación en lenguaje funcional y pseudocódigo.
+- Glosario y modelo de dominio con definiciones únicas (`docs/11`).
 
 Pendiente:
 
@@ -633,6 +634,7 @@ Pendiente:
 - Definir escalas exactas de recuperación.
 - Definir cálculo de carga por dosis.
 - Definir ventanas temporales y decaimiento de carga.
+- Definir taxonomía cerrada de patrones y dimensiones de carga.
 - Definir selección de patrones prioritarios.
 - Definir generación de volumen, repeticiones y descansos.
 - Definir aprendizaje individual.

@@ -57,7 +57,8 @@ fitlosophy/
 │   ├── 07-progresion.md
 │   ├── 08-registro-y-evaluacion.md
 │   ├── 09-fuentes-de-datos-e-inferencias.md
-│   └── 10-roadmap-del-producto.md
+│   ├── 10-roadmap-del-producto.md
+│   └── 11-glosario-y-modelo-de-dominio.md
 └── data/
     ├── perfil.yaml
     └── ejercicios.yaml

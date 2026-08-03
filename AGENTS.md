@@ -27,6 +27,7 @@ fitlosophy/
 │   ├── 08-registro-y-evaluacion.md   # Registro diario mínimo y evaluación semanal
 │   ├── 09-fuentes-de-datos-e-inferencias.md  # Qué se declara, qué se registra y qué se infiere
 │   ├── 10-roadmap-del-producto.md    # Fases del producto (0–12) y puerta de entrada a la app
+│   ├── 11-glosario-y-modelo-de-dominio.md  # Definiciones únicas de conceptos y entidades
 │   ├── roles/               # Orquestación opcional de dos IAs (ver sección más abajo)
 │   └── superpowers/         # Planes de trabajo para ese flujo
 ├── opencode.json            # Agentes del orquestador en el flujo de dos IAs
@@ -69,6 +70,7 @@ Nota: `docs/10-roadmap-del-producto.md` define las fases del producto (0–12) y
 
 Los conceptos se repiten deliberadamente entre archivos y deben mantenerse coherentes:
 
+- Las definiciones de los conceptos del dominio viven en `docs/11` y son únicas: si otro documento usa un término con otro significado, se corrige el otro documento.
 - Los tres tipos de día (`02`) corresponden a las plantillas de sesión A–C (`06`) y a las ramas del árbol de decisión (`03`).
 - El semáforo verde/amarillo/rojo de recuperación (`04`) es el mismo vocabulario que usa `impacto_lumbar` en los ejercicios.
 - El material de los ejercicios debe corresponderse con el inventario de `perfil.yaml`.

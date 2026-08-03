@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.3.0 - Glosario y modelo de dominio
+
+- Nuevo `docs/11`: glosario con definiciones únicas y modelo de entidades (Fase 1 del roadmap).
+- Decisiones de modelado cerradas: propuesta ≠ realizada, ejercicio ≠ variante ≠ dosis, carga multidimensional.
+- Valores provisionales identificados (dimensiones de carga, taxonomía de patrones, decaimiento).
+- Estado del diseño actualizado en `docs/00`.
+
 ## 0.2.0 - Roadmap y fuentes de datos
 
 - Documento agregador `docs/00` con el contexto completo del programa.
