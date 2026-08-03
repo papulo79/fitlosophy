@@ -83,17 +83,7 @@ Cada ejercicio o variante debe describir:
 - Restricciones.
 - Progresiones, regresiones y sustitutos.
 
-Dimensiones de carga previstas:
-
-- Total.
-- Lumbar.
-- Bisagra de cadera.
-- Rodilla y piernas.
-- Hombro y codo.
-- Agarre.
-- Core.
-- Cardio.
-- Impacto articular.
+Dimensiones de carga: lista definitiva en `docs/12` (lumbar, bisagra, rodilla y piernas, empuje, tirón, agarre, core, cardio, impacto articular y total derivada).
 
 ## Variables derivadas
 
@@ -116,20 +106,7 @@ El motor debe inferir, sin preguntarlas directamente:
 
 ## Dosis e impacto real
 
-El coste de un ejercicio no es fijo. Debe ajustarse conceptualmente según:
-
-```text
-impacto estimado = coste base
-                   ajustado por volumen
-                   ajustado por intensidad relativa
-                   ajustado por carga externa
-                   ajustado por proximidad al fallo
-                   ajustado por velocidad y densidad
-                   ajustado por fatiga previa
-                   ajustado por respuesta individual conocida
-```
-
-Este bloque es pseudocódigo conceptual, no una fórmula definitiva.
+El coste de un ejercicio no es fijo. Los multiplicadores de ajuste por dosis (volumen, proximidad al fallo, RPE real, fatiga previa) se definen en `docs/12`.
 
 ## Ejemplo: exceso reciente de bisagra
 

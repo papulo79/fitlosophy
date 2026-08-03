@@ -58,7 +58,8 @@ fitlosophy/
 │   ├── 08-registro-y-evaluacion.md
 │   ├── 09-fuentes-de-datos-e-inferencias.md
 │   ├── 10-roadmap-del-producto.md
-│   └── 11-glosario-y-modelo-de-dominio.md
+│   ├── 11-glosario-y-modelo-de-dominio.md
+│   └── 12-modelo-de-carga-e-inferencia.md
 └── data/
     ├── perfil.yaml
     └── ejercicios.yaml

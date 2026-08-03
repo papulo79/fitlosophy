@@ -628,14 +628,12 @@ Confirmado:
 - Documentación en lenguaje funcional y pseudocódigo.
 - Glosario y modelo de dominio con definiciones únicas (`docs/11`).
 - Taxonomía cerrada de patrones de movimiento (`docs/05`).
+- Modelo de carga e inferencia: dimensiones, decaimiento, dosis y BJJ estimado (`docs/12`, valores provisionales).
 
 Pendiente:
 
 - Definir cuestionario diario definitivo.
 - Definir escalas exactas de recuperación.
-- Definir cálculo de carga por dosis.
-- Definir ventanas temporales y decaimiento de carga.
-- Definir lista definitiva de dimensiones de carga.
 - Ampliar la biblioteca: cubrir los patrones sin ejercicio (`core_antiextension`, `empuje_vertical`) y añadir metadatos de variantes, progresiones y sustitutos.
 - Definir selección de patrones prioritarios.
 - Definir generación de volumen, repeticiones y descansos.

@@ -94,7 +94,7 @@ Quién es el usuario y qué condiciona todas las decisiones.
 ### Dimensión de carga
 
 - Obligatorio: nombre, descripción de qué la alimenta.
-- Origen: biblioteca. Lista prevista en `docs/09`; definitiva en Fase 3.
+- Origen: biblioteca. Lista definitiva en `docs/12`.
 
 ### Bloque de sesión
 
@@ -141,7 +141,7 @@ Quién es el usuario y qué condiciona todas las decisiones.
 ### Variable derivada
 
 - Obligatorio: nombre, fuentes (historial, biblioteca, estado diario), ventana temporal si aplica.
-- Origen: inferido. Lista prevista en `docs/09`; valores y decaimiento definitivos en Fase 3 (provisional).
+- Origen: inferido. Lista prevista en `docs/09`; cálculo y decaimiento en `docs/12` (valores provisionales).
 
 ### Presupuesto de carga
 
@@ -179,6 +179,6 @@ Criterios de salida de la Fase 1 y cómo quedan resueltos:
 
 ## Valores provisionales
 
-- Lista definitiva de dimensiones de carga (Fase 3).
+- Coste base por dimensión de cada ejercicio (pendiente en la ampliación de la biblioteca).
 - Separación formal ejercicio/variante en `data/ejercicios.yaml` (Fase 2).
-- Reglas de decaimiento de la carga activa (Fase 3).
+- Valores numéricos del modelo de carga (`docs/12`): decaimiento, puntos, umbrales y tabla de BJJ.

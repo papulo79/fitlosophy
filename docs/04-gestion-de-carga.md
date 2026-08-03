@@ -42,3 +42,5 @@ Recuperación activa o descanso. No utilizar analgésicos para forzar una sesió
 - Tras BJJ duro, priorizar sesión baja o media al día siguiente.
 - Registrar duración y RPE para valorar la carga real.
 - Introducir una semana de descarga cuando aumente la fatiga basal o aparezcan molestias recurrentes.
+
+El cálculo de la carga activa (dimensiones, decaimiento, puntuación y carga estimada del BJJ) se define en `docs/12`.
