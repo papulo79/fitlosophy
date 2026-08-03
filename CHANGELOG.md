@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.10.0 - Diseño del MVP
+
+- Nuevo `docs/14`: definición del MVP (Fase 7) con el contexto de uso real (momento de decisión ~16:15, BJJ declarado a diario, material siempre de garaje).
+- Seis pantallas definidas: estado diario, propuesta, ejecución con marcado por ítem (check + modal de modificación), cierre con «Finalizar», historial y perfil.
+- Alcance del algoritmo en la primera versión y lista explícita de lo que queda fuera.
+- Acceso por usuario y contraseña: aplicación privada de un único usuario.
+- Ocho criterios de aceptación funcionales; los casos de `docs/13` se convierten en las pruebas del MVP.
+
 ## 0.9.0 - Validación manual con casos de uso
 
 - Nuevo `docs/13`: 10 casos ejecutados a mano con la aritmética completa (familia B potente, familia A con BJJ, dolor lumbar, BJJ incierto, día rojo con motivación, día post-doble-sesión, datos incompletos, semana simulada completa, sustituciones y bisagra en días consecutivos).

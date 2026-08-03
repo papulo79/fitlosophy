@@ -633,6 +633,7 @@ Confirmado:
 - Motor de decisión formalizado: cuestionario mínimo, reglas D/C/P con prioridad y flujo completo en pseudocódigo (`docs/03`).
 - Generador de sesiones: plantillas A-D con reglas de composición, dosificación, sustitución y validación (`docs/06`).
 - Validación manual con 10 casos ejecutados a mano; incoherencias I1-I2 corregidas (`docs/13`).
+- MVP definido: pantallas, flujo de uso real, marcado por ítem y criterios de aceptación (`docs/14`).
 
 Pendiente:
 

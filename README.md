@@ -69,6 +69,4 @@ fitlosophy/
 
 Las fases 0 a 6 del roadmap están cerradas en su primera versión: contexto y visión, modelo de dominio (`docs/11`), biblioteca (`data/ejercicios.yaml`, `docs/05`), modelo de carga (`docs/12`), motor de decisión (`docs/03`), generador de sesiones (`docs/06`) y validación manual con casos de uso (`docs/13`). Todos los valores numéricos son provisionales y se calibrarán con uso real.
 
-La puerta de entrada al desarrollo está abierta en cuanto al diseño. Queda:
-
-- la definición del alcance del MVP (Fase 7).
+El MVP está definido (`docs/14`): flujo de uso real, pantallas, marcado por ítem y criterios de aceptación. El siguiente paso es la Fase 8: elección de stack y construcción de la aplicación.

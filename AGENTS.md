@@ -30,6 +30,7 @@ fitlosophy/
 │   ├── 11-glosario-y-modelo-de-dominio.md  # Definiciones únicas de conceptos y entidades
 │   ├── 12-modelo-de-carga-e-inferencia.md  # Dimensiones de carga, decaimiento, dosis y BJJ estimado
 │   ├── 13-casos-de-uso-y-validacion.md     # Validación manual: casos ejecutados e incoherencias
+│   ├── 14-diseno-del-mvp.md                # MVP: pantallas, flujo de uso, criterios de aceptación
 │   ├── roles/               # Orquestación opcional de dos IAs (ver sección más abajo)
 │   └── superpowers/         # Planes de trabajo para ese flujo
 ├── opencode.json            # Agentes del orquestador en el flujo de dos IAs
