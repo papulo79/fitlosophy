@@ -49,7 +49,7 @@ Componente propio `src/lib/Icon.svelte` con SVG de relleno sólido dibujados a m
 
 - `Icon.svelte` — sprite de relleno descrito arriba.
 - `Opciones.svelte` — se reestiliza (misma API de props) como control segmentado grande: opciones ≥ 44 px de alto, seleccionada en acento o en color de semáforo según variante.
-- `SliderDolor.svelte` — deslizador 0–10 con gradiente verde→ámbar→rojo, pulgar ≥ 34 px con el valor visible y leyenda «0 · sin dolor / 10 · máximo». `bind:valor`.
+- `SliderDolor.svelte` — deslizador 0–10 con gradiente verde→ámbar→rojo, pulgar ≥ 34 px y leyenda «0 · sin dolor / 10 · máximo»; el valor actual se muestra en la etiqueta de la sección (no dentro del pulgar). `bind:valor`.
 - `Chips.svelte` — chips on/off (≥ 40 px) para el material disponible, con acciones «Todo / Nada». El tatami es caso especial: siempre fijo (cuenta como suelo), no es un chip seleccionable y «Todo / Nada» no se aplica a él (comportamiento actual, `EstadoDiario.svelte`). Se conserva la semántica actual del envío: con todo el inventario marcado **no se envía** `material_disponible` (equivale a «todo disponible»), no se envía un `null` literal; el componente adapta su estado interno a esa lógica.
 - `BarraProgreso.svelte` — «n de m» + barra en acento, para la cabecera de Ejecución.
 - Modales *bottom-sheet*: se conserva el patrón existente (fondo oscuro translúcido, hoja redondeada por arriba) reestilizado a superficie oscura.
