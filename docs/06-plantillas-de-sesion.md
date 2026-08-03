@@ -57,6 +57,7 @@ Toda sesión se compone de bloques ordenados (`docs/11`):
 6. Ningún ejercicio restringido por el motor puede entrar, ni siquiera como sustituto.
 7. La duración estimada de la sesión no puede superar `tiempo_disponible`; si lo supera, se recorta en este orden: B3, B2, reducir series de B1 al mínimo del rango, eliminar el último ejercicio de B1.
 8. B0 y B4 no computan en el presupuesto de carga: su dosis es mínima y su función es preparatoria, no de estímulo.
+9. Filtro de material: solo entran ejercicios cuyo material requerido (salvo tatami, que cuenta como suelo) esté en `material_disponible`. Los ejercicios con `sin_material: true` entran siempre, incluso con la lista vacía. Si un patrón prioritario queda sin ejercicios disponibles (tirón sin barra, TRX ni gomas, por ejemplo), se declara en la explicación como patrón pendiente y se retoma cuando haya material.
 
 ## Reglas de dosificación
 

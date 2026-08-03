@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.11.0 - Material disponible por día
+
+- Nuevo input `material_disponible` en el estado diario (`docs/03`): selector del inventario del garaje con marcar/desmarcar todo; por defecto todo disponible. La lista vacía equivale al modo sin material (vacaciones, viajes); el tatami cuenta siempre como suelo.
+- Filtro de material en el generador (`docs/06`, regla 9): solo entran ejercicios con el material requerido disponible; los patrones sin ejercicios posibles se declaran pendientes en la explicación.
+- Nuevo flag `sin_material` en el catálogo para ejercicios válidos incluso sin nada: flexiones, pica, puente de glúteos, planchas y dead bug.
+- Dos ejercicios nuevos sin material: sentadilla libre y zancada hacia delante (cobertura de `dominante_rodilla`).
+- Limitación conocida: sin barra, TRX ni gomas no hay tirón con el catálogo actual; se declara en la explicación.
+
 ## 0.10.0 - Diseño del MVP
 
 - Nuevo `docs/14`: definición del MVP (Fase 7) con el contexto de uso real (momento de decisión ~16:15, BJJ declarado a diario, material siempre de garaje).

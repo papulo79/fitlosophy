@@ -54,7 +54,7 @@ Cada ejercicio define:
 - Patrones secundarios, cuando aplica.
 - Material necesario.
 - Nivel (`base`, `intermedio`, `avanzado`) y lateralidad (`bilateral`, `unilateral`).
-- Flags opcionales: `explosivo`, `isometrico`.
+- Flags opcionales: `explosivo`, `isometrico`, `sin_material` (ejecutable sin ningún material; el tatami cuenta como suelo).
 - Objetivos.
 - Coste por dimensión de carga (`coste_dimensiones`, niveles bajo/medio/alto por dimensión de `docs/12`).
 - Impacto lumbar estimado.

@@ -15,6 +15,7 @@ Inputs definitivos. Los cuatro primeros son obligatorios (`docs/11`); el resto e
 - `bjj_disponible`: si, no o incierto.
 - `tipo_bjj`: tecnico, normal o duro (solo si `bjj_disponible` es si; si se desconoce, se asume normal).
 - `limitacion`: movimiento restringido, si aplica.
+- `material_disponible`: subconjunto del inventario del garaje disponible hoy. Por defecto, todo. Incluye opción rápida de marcar/desmarcar todo; la lista vacía equivale al modo sin material (vacaciones, viajes). El tatami cuenta siempre como disponible (el suelo lo sustituye).
 - `tiempo_disponible`: minutos, si el día lo exige.
 - `preferencia`: fuerza, potencia, acondicionamiento, técnica o recuperación. Nunca anula una restricción.
 - `circunstancias`: enfermedad, viaje, estrés, falta de sueño, si aplica.

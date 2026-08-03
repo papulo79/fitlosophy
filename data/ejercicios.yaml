@@ -38,6 +38,7 @@ exercises:
     nombre: Flexión clásica
     patron: empuje_horizontal
     material: [tatami]
+    sin_material: true
     nivel: base
     lateralidad: bilateral
     coste_dimensiones: {empuje: bajo, core: bajo}
@@ -70,6 +71,7 @@ exercises:
     nombre: Flexión en pica
     patron: empuje_vertical
     material: [tatami]
+    sin_material: true
     nivel: intermedio
     lateralidad: bilateral
     coste_dimensiones: {empuje: medio, core: bajo}
@@ -213,6 +215,7 @@ exercises:
     nombre: Puente de glúteos
     patron: dominante_cadera
     material: [tatami]
+    sin_material: true
     nivel: base
     lateralidad: bilateral
     coste_dimensiones: {bisagra: bajo, lumbar: bajo}
@@ -292,6 +295,7 @@ exercises:
     nombre: Plancha frontal
     patron: core_antiextension
     material: [tatami]
+    sin_material: true
     nivel: base
     lateralidad: bilateral
     isometrico: true
@@ -308,6 +312,7 @@ exercises:
     nombre: Dead bug
     patron: core_antiextension
     material: [tatami]
+    sin_material: true
     nivel: base
     lateralidad: bilateral
     coste_dimensiones: {core: bajo, lumbar: bajo}
@@ -340,6 +345,7 @@ exercises:
     nombre: Plancha lateral
     patron: core_lateral
     material: [tatami]
+    sin_material: true
     nivel: base
     lateralidad: unilateral
     isometrico: true
@@ -434,3 +440,36 @@ exercises:
     prescripcion:
       minutos: [20, 45]
     uso_preferente: recuperacion
+
+  - id: squat-libre
+    nombre: Sentadilla libre
+    patron: dominante_rodilla
+    material: []
+    sin_material: true
+    nivel: base
+    lateralidad: bilateral
+    coste_dimensiones: {rodilla_piernas: bajo, core: bajo}
+    impacto_lumbar: verde
+    compatibilidad_bjj: si
+    objetivos: [fuerza_resistencia, volumen]
+    progresiones: [goblet-squat]
+    prescripcion:
+      series: [3, 5]
+      repeticiones: [15, 25]
+
+  - id: lunge-forward
+    nombre: Zancada hacia delante
+    patron: dominante_rodilla
+    material: []
+    sin_material: true
+    nivel: base
+    lateralidad: unilateral
+    coste_dimensiones: {rodilla_piernas: medio, core: bajo}
+    impacto_lumbar: verde
+    compatibilidad_bjj: si
+    objetivos: [fuerza_unilateral, estabilidad]
+    progresiones: [goblet-squat]
+    prescripcion:
+      series: [3, 4]
+      repeticiones: [8, 12]
+      por_lado: true

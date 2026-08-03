@@ -32,7 +32,7 @@ El cuestionario mínimo de `docs/03`. Se muestra al abrir la aplicación cuando 
 
 - Obligatorio: recuperación (verde/amarillo/rojo), dolor (0-10, zona si > 0), BJJ hoy (sí/no/incierto).
 - Condicional: tipo de BJJ (técnico/normal/duro) si BJJ = sí o incierto.
-- Opcional: limitación, sueño, tiempo disponible, preferencia, circunstancias.
+- Opcional: limitación, sueño, tiempo disponible, preferencia, circunstancias y **material disponible hoy**: selector del inventario del garaje con marcar/desmarcar todo (por defecto, todo marcado; desmarcar todo = modo sin material para vacaciones o viajes; dejar solo el TRX = día de viaje ligero).
 - Introduce: el usuario. Deriva: nada en esta pantalla.
 
 ### 2. Propuesta
@@ -129,7 +129,7 @@ El MVP es aceptable cuando:
 
 ## Decisiones tomadas en esta fase
 
-- Material: siempre garaje; adaptaciones en el gimnasio se registran como sustituciones del ítem.
+- Material: garaje completo por defecto; el estado diario permite seleccionar el material disponible (marcar/desmarcar todo incluido). Adaptaciones en el gimnasio se registran como sustituciones del ítem.
 - BJJ: declarado cada día por el usuario; el sistema no asume días fijos.
 - Marcado: check = tal cual; modal para cualquier desviación; la modificación es la excepción, no la norma.
 - Cierre: «Finalizar» dispara la respuesta posterior y termina el uso hasta el siguiente día.
