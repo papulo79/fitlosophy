@@ -183,3 +183,4 @@ Criterios de salida de la Fase 1 y cómo quedan resueltos:
 - Separación formal ejercicio/variante en `data/ejercicios.yaml`.
 - Valores numéricos del modelo de carga (`docs/12`): decaimiento, puntos, umbrales y tabla de BJJ.
 - Valores del motor de decisión (`docs/03`): umbral de dolor, factor de presupuesto compatible y umbral de ausencia de patrón.
+- Valores del generador de sesiones (`docs/06`): duraciones y RPE de plantillas, reservas, reducción de coste con dosis mínima y orden de recorte.

@@ -631,11 +631,11 @@ Confirmado:
 - Modelo de carga e inferencia: dimensiones, decaimiento, dosis y BJJ estimado (`docs/12`, valores provisionales).
 - Biblioteca con coste por dimensión, niveles, lateralidad y progresiones/regresiones/sustitutos; los 15 patrones tienen cobertura.
 - Motor de decisión formalizado: cuestionario mínimo, reglas D/C/P con prioridad y flujo completo en pseudocódigo (`docs/03`).
+- Generador de sesiones: plantillas A-D con reglas de composición, dosificación, sustitución y validación (`docs/06`).
 
 Pendiente:
 
 - Definir escalas exactas de recuperación.
 - Separación formal ejercicio/variante en `data/ejercicios.yaml`.
-- Definir generación de volumen, repeticiones y descansos.
 - Definir aprendizaje individual.
 - Definir casos de prueba completos.

@@ -22,7 +22,7 @@ fitlosophy/
 │   ├── 03-motor-de-decision.md       # Inputs, orden de decisión y árbol de la sesión diaria
 │   ├── 04-gestion-de-carga.md        # Semáforo de recuperación (verde/amarillo/rojo) y reglas de carga
 │   ├── 05-biblioteca-de-ejercicios.md# Categorías, etiquetas y criterio lumbar de los ejercicios
-│   ├── 06-plantillas-de-sesion.md    # Plantillas A-D (compatible BJJ, potente, recuperación, técnica)
+│   ├── 06-plantillas-de-sesion.md    # Generador: plantillas A-D, composición, dosificación, sustitución, validación
 │   ├── 07-progresion.md              # Variables progresables, descargas y objetivos medibles
 │   ├── 08-registro-y-evaluacion.md   # Registro diario mínimo y evaluación semanal
 │   ├── 09-fuentes-de-datos-e-inferencias.md  # Qué se declara, qué se registra y qué se infiere

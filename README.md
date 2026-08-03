@@ -67,10 +67,9 @@ fitlosophy/
 
 ## Estado actual
 
-Las fases 0 a 4 del roadmap están cerradas en su primera versión: contexto y visión, modelo de dominio (`docs/11`), biblioteca (`data/ejercicios.yaml`, `docs/05`), modelo de carga (`docs/12`) y motor de decisión (`docs/03`). Todos los valores numéricos son provisionales y se calibrarán con uso real.
+Las fases 0 a 5 del roadmap están cerradas en su primera versión: contexto y visión, modelo de dominio (`docs/11`), biblioteca (`data/ejercicios.yaml`, `docs/05`), modelo de carga (`docs/12`), motor de decisión (`docs/03`) y generador de sesiones (`docs/06`). Todos los valores numéricos son provisionales y se calibrarán con uso real.
 
 Antes de la puerta de entrada al desarrollo quedan:
 
-- las plantillas del generador de sesiones (Fase 5);
 - la validación manual con casos de uso (Fase 6);
 - la definición del alcance del MVP (Fase 7).

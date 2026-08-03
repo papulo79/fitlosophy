@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.8.0 - Generador de sesiones
+
+- `docs/06` reescrito como generador completo: bloques B0-B4, plantillas por familia A-D y reglas de composición, dosificación, sustitución y validación final contra el presupuesto.
+- Reglas nuevas: B0/B4 no computan en el presupuesto; la dosis mínima reduce a la mitad el coste bajo (familias A y C).
+- Ejemplo completo coherente con `docs/12`: familia A con lumbar, bisagra y agarre cargadas, validación numérica paso a paso y ejemplo de sustitución rechazada.
+- Valores provisionales del generador identificados.
+
 ## 0.7.0 - Motor de decisión formal
 
 - `docs/03` reescrito: cuestionario diario mínimo definitivo, reglas duras (D1-D6), de carga (C1-C6) y de preferencia (P1-P3) con orden de prioridad explícito.
