@@ -65,14 +65,14 @@
 </script>
 
 {#if !session.verificado}
-  <p class="p-6 text-center text-gray-500">Cargando…</p>
+  <p class="p-6 text-center text-apagado">Cargando…</p>
 {:else}
-  <header class="border-b border-gray-200 bg-white">
+  <header class="border-b border-borde bg-superficie">
     <div class="mx-auto max-w-xl px-4 py-3">
-      <h1 class="text-lg font-bold">Fitlosophy</h1>
+      <h1 class="font-display text-2xl font-bold tracking-wide text-acento">FITLOSOPHY</h1>
     </div>
   </header>
-  <main class="mx-auto max-w-xl p-4 pb-20">
+  <main class="mx-auto max-w-xl p-4 pb-24">
     {#key base + (parametro || "")}
       <Componente {parametro} />
     {/key}
