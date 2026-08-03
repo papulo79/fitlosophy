@@ -184,11 +184,13 @@ def test_flujo_completo_con_bjj_y_sustitucion_en_ejecucion(client, app):
 
     #    b) Sustituido: ejercicio real del catálogo (adaptación del gimnasio).
     #       Se elige un sustituto declarado del ejercicio o, si no hay, otro del
-    #       mismo patrón; la ejecución registra, no rechaza (docs/14).
+    #       mismo patrón; la ejecución registra, no rechaza (docs/14). El ítem
+    #       debe ser de un bloque con carga (B1-B3): B0/B4 no computan en el
+    #       presupuesto (docs/06) y el test valida el recálculo del sustituto.
     catalog = app.state.catalog
     sust_item = None
     sustituto = None
-    for it in items[1:]:
+    for it in [i for i in items if i["bloque"] in ("B1", "B2", "B3")]:
         ej = catalog[it["exercise_id"]]
         candidato = next((c for c in ej.sustitutos if catalog.get(c) is not None), None)
         if candidato is None:
