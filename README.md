@@ -59,7 +59,11 @@ fitlosophy/
 │   ├── 09-fuentes-de-datos-e-inferencias.md
 │   ├── 10-roadmap-del-producto.md
 │   ├── 11-glosario-y-modelo-de-dominio.md
-│   └── 12-modelo-de-carga-e-inferencia.md
+│   ├── 12-modelo-de-carga-e-inferencia.md
+│   ├── 13-casos-de-uso-y-validacion.md
+│   └── 14-diseno-del-mvp.md
+├── app/
+│   └── backend/             # Motor en Python + tests (pytest)
 └── data/
     ├── perfil.yaml
     └── ejercicios.yaml
@@ -69,4 +73,6 @@ fitlosophy/
 
 Las fases 0 a 6 del roadmap están cerradas en su primera versión: contexto y visión, modelo de dominio (`docs/11`), biblioteca (`data/ejercicios.yaml`, `docs/05`), modelo de carga (`docs/12`), motor de decisión (`docs/03`), generador de sesiones (`docs/06`) y validación manual con casos de uso (`docs/13`). Todos los valores numéricos son provisionales y se calibrarán con uso real.
 
-El MVP está definido (`docs/14`): flujo de uso real, pantallas, marcado por ítem y criterios de aceptación. El siguiente paso es la Fase 8: elección de stack y construcción de la aplicación.
+El MVP está definido (`docs/14`): flujo de uso real, pantallas, marcado por ítem y criterios de aceptación.
+
+La Fase 8 (construcción) está en curso: el motor de decisión y el generador de sesiones ya están implementados en Python (`app/backend/`, paquete `fitlosophy`) con los 10 casos de `docs/13` como tests ejecutables (`cd app/backend && python3 -m pytest`). Stack elegido: Svelte 5 + Tailwind 4 (frontend, responsive), FastAPI + SQLite (API y persistencia), despliegue con Cloudflare Tunnel. Siguiente paso: API REST y frontend.

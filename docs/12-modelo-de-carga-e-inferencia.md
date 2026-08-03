@@ -114,11 +114,11 @@ Cálculo (ventana 24 h, factor 1.0):
 
 ```text
 swing una mano:  bisagra 3, lumbar 3, agarre 3, core 1.5 (secundario)
-peso muerto:     bisagra 2, lumbar 2
+peso muerto:     bisagra 2, lumbar 2, agarre 1
 remo:            tiron 2, agarre 2, core 1 (secundario)
 BJJ normal:      agarre 2, core 2, cardio 2, lumbar 1, impacto 1, bisagra 1
 ─────────────────────────────────────────────────────────
-carga activa:    bisagra 6 (media), lumbar 6 (media), agarre 7 (media),
+carga activa:    agarre 8 (media), bisagra 6 (media), lumbar 6 (media),
                  core 4.5 (media), tiron 2 (baja), cardio 2 (baja),
                  impacto 1 (baja)
 ```
@@ -127,8 +127,9 @@ Consecuencias funcionales:
 
 - Cuatro dimensiones en `media` → `total` = `alta`.
 - Lumbar y bisagra en `media` → excluir swings, windmills y pesos muertos de la sesión de hoy.
+- Agarre en 8 → presupuesto 0: dimensión restringida (regla de presupuesto crítico). Sin dominadas, remos ni trabajo de agarre hoy; el tirón se declara patrón pendiente.
 - Si hoy hay BJJ normal o duro → familia A (compatible) con énfasis en empuje, que está `baja`.
-- La explicación mostrará: «lumbar y bisarga cargadas por swing + peso muerto + BJJ de ayer; agarre cargado por BJJ; empuje y piernas frescas».
+- La explicación mostrará: «lumbar y bisarga cargadas por swing + peso muerto + BJJ de ayer; agarre al límite; empuje y piernas frescas».
 
 El usuario no ha declarado nada sobre bisagra ni agarre: el sistema lo infiere (`docs/09`).
 

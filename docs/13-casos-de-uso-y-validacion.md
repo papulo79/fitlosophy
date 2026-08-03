@@ -46,7 +46,7 @@ B3: comba 5×100                (cardio 1, impacto 1)
 
 ## Caso 2. BJJ normal por la tarde con lumbar, bisagra y agarre cargados → familia A
 
-Caso desarrollado en `docs/06` (ejemplo completo). Resultado: familia A con empuje y pierna como patrones frescos, core dosificado, sustitución de dominadas rechazada por presupuesto de agarre (0.5) y oferta de remo TRX.
+Caso desarrollado en `docs/06` (ejemplo completo). Resultado: familia A con empuje y pierna como patrones frescos, core dosificado, agarre en el límite (presupuesto 0): dominadas rechazadas y tirón declarado patrón pendiente.
 
 **Resultado**: correcto. El usuario no declara nada sobre bisagra ni agarre; el sistema lo infiere del historial.
 
@@ -143,7 +143,7 @@ Semana tipo con BJJ lunes, miércoles y viernes (normales salvo miércoles duro)
 | Mié | verde, BJJ duro tarde | bisagra 3, lumbar 2, agarre 4 (del mar) | A reducida, sin bisagra (D5), sin lumbar (D3) | D3, D5 |
 | Jue | amarillo, sin BJJ | total alta (doble estímulo mié) | C: cinta 30 min + movilidad | C3, C4 |
 | Vie | verde, BJJ normal tarde | carga decaída del mié (×0.6), jue de recuperación | A (empuje + core) | D3 |
-| Sáb | verde, sin BJJ | agarre media (3 BJJ acumulados) | D técnica: escalera + conos + shadow | P1 (agilidad >7 días) |
+| Sáb | verde, sin BJJ | agarre baja (decaída tras el jueves de recuperación) | D técnica: escalera + conos + shadow | P1 (agilidad >7 días) |
 | Dom | — | — | descanso | — |
 
 **Observaciones de la semana**:
@@ -158,7 +158,7 @@ Semana tipo con BJJ lunes, miércoles y viernes (normales salvo miércoles duro)
 
 ## Caso 9. Propuestas rechazadas o modificadas
 
-- **9a** (ya en `docs/06`): dominadas con presupuesto de agarre 0.5 → rechazada; se ofrece remo TRX (agarre 0.5 con dosis baja).
+- **9a** (ya en `docs/06`): dominadas con presupuesto de agarre 0 → rechazada; el remo TRX (0.5 con dosis baja) tampoco encaja, así que el tirón se declara patrón pendiente para la próxima sesión sin BJJ.
 - **9b**: el usuario pide añadir swings a una familia A antes de BJJ duro → rechazado por D3 (impacto lumbar amarillo) y por presupuesto de bisagra; se ofrece press militar KB como trabajo de estímulo compatible.
 - **9c**: fatiga de agarre declarada tras BJJ → la dominada estricta de la familia B se sustituye por dominada asistida con goma (regresión documentada en el catálogo), manteniendo el patrón y el objetivo del bloque.
 

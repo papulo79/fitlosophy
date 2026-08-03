@@ -6,7 +6,7 @@ Guía para agentes de IA que trabajen en este repositorio.
 
 Fitlosophy es un **sistema personal de entrenamiento adaptativo** (no una aplicación, todavía). Combina acondicionamiento físico, BJJ (jiu-jitsu brasileño), pérdida de grasa, fuerza y prevención de lesiones para un único atleta. En lugar de calendarios rígidos, la sesión del día se decide a partir de inputs como la recuperación, la carga de las últimas 48–72 h, la existencia de una sesión de BJJ y el estado de la zona lumbar.
 
-El sistema vive íntegramente en **Markdown (documentación del modelo de dominio) y YAML (datos)**, mantenidos de forma deliberadamente independiente de cualquier framework para que una futura aplicación web (React o Svelte) pueda consumirlos. **No hay código ejecutable, ni tests, ni build** en el estado actual (v0.1.0).
+El sistema vive en **Markdown (documentación del modelo de dominio), YAML (datos) y, desde la Fase 8, Python (motor ejecutable)** en `app/backend/`. Los documentos siguen siendo la fuente de verdad: el código implementa lo que dicen `docs/03`, `docs/06` y `docs/12`, y los tests reproducen los casos de `docs/13`. El frontend (Svelte 5 + Tailwind 4) y la API (FastAPI + SQLite) se añadirán en fases posteriores de la construcción.
 
 ## Estructura del repositorio
 
@@ -34,6 +34,10 @@ fitlosophy/
 │   ├── roles/               # Orquestación opcional de dos IAs (ver sección más abajo)
 │   └── superpowers/         # Planes de trabajo para ese flujo
 ├── opencode.json            # Agentes del orquestador en el flujo de dos IAs
+├── app/
+│   └── backend/             # Motor en Python (paquete fitlosophy) + tests pytest
+│       ├── src/fitlosophy/  # catalog, models, load, engine, generator
+│       └── tests/           # test_load.py (docs/12) y test_cases.py (10 casos de docs/13)
 └── data/
     ├── perfil.yaml      # Datos del atleta: medidas, objetivos, BJJ, fuerza, movilidad, material, consideraciones
     └── ejercicios.yaml  # Catálogo de ejercicios con metadatos y prescripción
@@ -45,8 +49,9 @@ Nota: `docs/10-roadmap-del-producto.md` define las fases del producto (0–12) y
 
 ## Cómo trabajar en este proyecto
 
-- **No hay comandos de build, lint ni test.** No existe `package.json`, `pyproject.toml`, `Cargo.toml` ni ningún otro manifiesto: la "compilación" es la coherencia del contenido. Si se añade una app en el futuro, este archivo debe actualizarse con sus comandos.
-- La única validación técnica posible hoy es la sintaxis YAML. Tras modificar cualquier archivo de `data/`, compruébalo, por ejemplo con:
+- **La fuente de verdad es la documentación.** Si el código y los docs difieren, se corrige el código (o se corrige el doc si el código evidencia un error de aritmética, como ya ocurrió con el ejemplo de agarre de `docs/12`).
+- **Tests**: `cd app/backend && python3 -m pytest`. Deben estar en verde tras cualquier cambio en `app/backend/` o en las reglas de `docs/03`, `docs/06` y `docs/12` (los tests de `docs/13` son la especificación ejecutable).
+- La validación de la sintaxis YAML sigue siendo obligatoria tras modificar cualquier archivo de `data/`:
   `python3 -c "import yaml; yaml.safe_load(open('data/ejercicios.yaml'))"`
 - Tras cualquier cambio relevante, actualiza `CHANGELOG.md` y, si cambia la estructura o las convenciones, también `README.md` y este `AGENTS.md`.
 
@@ -69,6 +74,12 @@ Nota: `docs/10-roadmap-del-producto.md` define las fases del producto (0–12) y
 
 `data/perfil.yaml`: claves snake_case en español; los rangos se expresan como mapas `{min, max}`.
 
+### Código (app/backend)
+
+- Python 3.11+, solo dependencias declaradas en `pyproject.toml` (hoy: `pyyaml`; dev: `pytest`). No añadir dependencias sin necesidad real.
+- Identificadores en inglés; los valores de dominio se escriben exactamente como en los YAML (`dominante_cadera`, `verde`, `tiron_horizontal`...). Los textos al usuario (explicaciones) se generan en español.
+- Las reglas del motor se citan por su código (D1-D6, C1-C6, P1-P3) en la explicación, igual que en `docs/03`.
+
 ### Consistencia entre documentos
 
 Los conceptos se repiten deliberadamente entre archivos y deben mantenerse coherentes:
@@ -81,7 +92,7 @@ Los conceptos se repiten deliberadamente entre archivos y deben mantenerse coher
 
 ### Git
 
-- Mensajes de commit cortos en inglés con prefijo de tipo: `docs:`, `data:`, `chore:` (ej. `docs: add decision engine`).
+- Mensajes de commit cortos en inglés con prefijo de tipo: `docs:`, `data:`, `feat:`, `chore:` (ej. `docs: add decision engine`).
 - No hay CI ni hooks. Por defecto, commits directos sobre la rama principal.
 - Excepción: cuando se trabaja con el **flujo de dos IAs** (`docs/roles/`), se trabaja siempre en ramas — una rama = una tarea = un PR — y los PRs los fusiona el revisor, nunca el orquestador.
 

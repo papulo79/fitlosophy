@@ -105,14 +105,14 @@ Si la validación falla, se sustituye el ejercicio conflictivo por uno de menor 
 
 ## Ejemplo completo
 
-Escenario: recuperación verde, sin dolor, BJJ normal por la tarde. Ayer: swing a una mano + peso muerto + BJJ normal → carga activa: lumbar 6 (media), bisagra 6 (media), agarre 7 (media), core 4.5 (media) (ejemplo de `docs/12`).
+Escenario: recuperación verde, sin dolor, BJJ normal por la tarde. Ayer: swing a una mano + peso muerto + BJJ normal → carga activa: agarre 8 (media), lumbar 6 (media), bisagra 6 (media), core 4.5 (media) (ejemplo de `docs/12`).
 
 Motor: familia A. Presupuestos (umbral alto 8 − carga activa, factor compatible 0.5):
 
 ```text
 lumbar:   (8-6) * 0.5 = 1
 bisagra:  (8-6) * 0.5 = 1
-agarre:   (8-7) * 0.5 = 0.5
+agarre:   (8-8) * 0.5 = 0
 empuje:   (8-0) * 0.5 = 4
 rodilla:  (8-0) * 0.5 = 4
 core:     (8-4.5) * 0.5 = 1.75
@@ -127,9 +127,9 @@ B1: flexión clásica 3×12 (empuje 0.5, core 0.5)
 B2: pallof press 3×10 por lado (core 0.5)
 ```
 
-Validación: lumbar 0 ≤ 1; bisagra 0 ≤ 1; agarre 0 ≤ 0.5; empuje 0.5 ≤ 4; rodilla 2 ≤ 4; core 1.5 ≤ 1.75 → sesión válida.
+Validación: lumbar 0 ≤ 1; bisagra 0 ≤ 1; agarre 0 ≤ 0; empuje 0.5 ≤ 4; rodilla 2 ≤ 4; core 1.5 ≤ 1.75 → sesión válida.
 
-Ejemplo de rechazo: si el usuario pide cambiar la flexión por dominadas (agarre 2 > presupuesto 0.5), se rechaza la sustitución y se ofrece remo en TRX (agarre 0.5 con dosis baja), que sí encaja.
+Ejemplo de rechazo: si el usuario pide cambiar la flexión por dominadas (agarre 2 > presupuesto 0), se rechaza la sustitución. El remo en TRX (agarre 0.5 con dosis baja) tampoco encaja: con el agarre en el límite no cabe ningún tirón hoy y el patrón se declara pendiente para la próxima sesión sin BJJ.
 
 Explicación mostrada: «Familia A por BJJ normal esta tarde. Bisagra y agarre restringidos por la sesión de ayer: sin swings, pesos muertos ni dominadas (D3, C1). Empuje y pierna como patrones frescos prioritarios. Core dosificado al mínimo por carga media acumulada.»
 

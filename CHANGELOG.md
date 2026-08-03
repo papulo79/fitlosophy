@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.12.0 - Motor ejecutable en Python
+
+- Nueva `app/backend/`: paquete `fitlosophy` (Python 3.11+, pyyaml) con el modelo de carga (`load.py`), el motor de decisión (`engine.py`, reglas D/C/P) y el generador de sesiones (`generator.py`) implementados según `docs/12`, `docs/03` y `docs/06`.
+- 41 tests en verde: `test_load.py` (aritmética de `docs/12`) y `test_cases.py` (los 10 casos de `docs/13` como pruebas funcionales ejecutables).
+- Correcciones de coherencia detectadas por la implementación: el ejemplo de `docs/12` omitía el agarre del peso muerto (agarre real 8, presupuesto 0 y tirón pendiente; actualizado en `docs/06` y `docs/13`); el sábado del caso 8 queda con agarre baja tras el decaimiento.
+- AGENTS.md y README actualizados: el repo pasa a tener código ejecutable con suite de tests.
+
 ## 0.11.0 - Material disponible por día
 
 - Nuevo input `material_disponible` en el estado diario (`docs/03`): selector del inventario del garaje con marcar/desmarcar todo; por defecto todo disponible. La lista vacía equivale al modo sin material (vacaciones, viajes); el tatami cuenta siempre como suelo.
