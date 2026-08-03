@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.17.0 - Rediseño oscuro del frontend
+
+- Rediseño visual y de usabilidad del MVP según `docs/superpowers/specs/2026-08-03-redisenio-frontend-mvp-design.md`: tema oscuro deportivo con acento lima (tokens en `app.css` con `@theme` de Tailwind 4), Barlow Condensed + Inter autoalojadas (`@fontsource`, únicas dependencias nuevas) e iconos de relleno propios (`Icon.svelte`, sin librería).
+- Componentes nuevos: `SliderDolor` (0–10 con gradiente semáforo), `Chips` (material, con Todo/Nada y tatami fijo), `BarraProgreso` («n de m» en Ejecución); `Opciones` pasa a control segmentado oscuro conservando su API.
+- Usabilidad móvil: objetivos táctiles ≥ 44 px, recuperación con texto «Bien/Regular/Mal» (los valores de API no cambian), NavBar con iconos y logout reubicado a Perfil.
+- Sin cambios funcionales: misma API, mismos payloads, mismos stores y router; el contenido de seguridad (violaciones, incertidumbres, congelación) se conserva destacado. Verificado con capturas de las 7 pantallas y suite del backend intacta (58 tests).
+
 ## 0.16.0 - Corrección completa de registros (criterio 7 de docs/14)
 
 - Nuevo endpoint `PUT /api/sesiones/{id}/items/{item_id}`: corrige el registro de un ítem ya finalizado (estado, ejercicio real, dosis real, motivo). La dosis real corregida sustituye a la prevista — se recalculan los `puntos_reales` del ítem (incluido el ×1.25 por volumen sobre rango de `docs/12`) — y con ellos la carga de los días siguientes (criterio 4). Con la sesión en curso se rechaza (409): ahí se marca con PATCH.
