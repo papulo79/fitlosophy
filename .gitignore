@@ -10,3 +10,6 @@ build/
 .env
 # BD SQLite local de desarrollo (fitlosophy.db)
 *.db
+
+# Mockups del flujo de brainstorming (locales)
+.superpowers/
