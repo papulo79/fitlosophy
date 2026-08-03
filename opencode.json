@@ -1,0 +1,20 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "default_agent": "orquestador-claude",
+  "instructions": ["AGENTS.md"],
+  "permission": {
+    "edit": "allow",
+    "bash": "allow",
+    "webfetch": "allow"
+  },
+  "agent": {
+    "orquestador-kimi": {
+      "description": "Orquestador/implementador (OpenCode); Kimi revisa sus PRs y le desatasca",
+      "prompt": "Eres el orquestador del proyecto Fitlosophy. Sigue estrictamente docs/roles/orquestador-kimi.md: ejecuta el bucle autónomo del plan vigente en docs/superpowers/plans/ (el que indique el usuario) implementando las tareas una a una (rama + validación + PR por tarea), y haz revisar cada PR por Kimi mediante `kimi --prompt` antes de continuar. Nunca fusiones PRs tú mismo; eso es exclusivo del revisor."
+    },
+    "orquestador-claude": {
+      "description": "Orquestador/implementador (OpenCode); Claude revisa sus PRs y le desatasca",
+      "prompt": "Eres el orquestador del proyecto Fitlosophy. Sigue estrictamente docs/roles/orquestador-claude.md: ejecuta el bucle autónomo del plan vigente en docs/superpowers/plans/ (el que indique el usuario) implementando las tareas una a una (rama + validación + PR por tarea), y haz revisar cada PR por Claude mediante `claude -p \"...\" --dangerously-skip-permissions --model claude-opus-4-8` antes de continuar. Nunca fusiones PRs tú mismo; eso es exclusivo del revisor."
+    }
+  }
+}
