@@ -2,6 +2,7 @@
   import { api, mensajeError } from "../lib/api.js";
   import { flujo, reiniciarFlujo } from "../lib/stores.svelte.js";
   import Opciones from "../lib/Opciones.svelte";
+  import Icon from "../lib/Icon.svelte";
 
   let sesion = $derived(flujo.sesion);
 
@@ -54,31 +55,33 @@
 {#if sesion}
   {#if resultado}
     <div class="space-y-5">
-      <h2 class="text-xl font-bold">Sesión cerrada</h2>
+      <h2 class="font-display text-2xl font-bold tracking-wide">SESIÓN CERRADA</h2>
       {#if resultado.dimensiones_congeladas?.length}
-        <div class="rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm text-amber-800">
-          <p class="font-semibold">Ventanas congeladas por molestias (la dimensión no estará disponible unos días):</p>
+        <div class="rounded-xl border border-ambar/40 bg-ambar/10 p-4 text-sm text-ambar">
+          <p class="flex items-center gap-2 font-semibold">
+            <Icon nombre="aviso" tam={16} /> Ventanas congeladas por molestias (la dimensión no estará disponible unos días):
+          </p>
           <p class="mt-1">{resultado.dimensiones_congeladas.join(", ")}</p>
         </div>
       {:else}
-        <p class="rounded-xl border border-gray-200 bg-white p-4 text-sm text-gray-600">Sin dimensiones congeladas.</p>
+        <p class="rounded-xl border border-borde bg-superficie p-4 text-sm text-apagado">Sin dimensiones congeladas.</p>
       {/if}
       {#if resultado.zonas_sin_mapear?.length}
-        <p class="rounded-xl border border-gray-200 bg-white p-4 text-sm text-gray-600">
+        <p class="rounded-xl border border-borde bg-superficie p-4 text-sm text-apagado">
           {resultado.nota} Zonas: {resultado.zonas_sin_mapear.join(", ")}.
         </p>
       {/if}
       <div class="flex gap-2">
-        <a href="#/historial" class="flex-1 rounded-xl border border-gray-300 py-3 text-center font-medium">Ver historial</a>
-        <button onclick={nuevoDia} class="flex-1 rounded-xl bg-blue-600 py-3 font-semibold text-white">Nuevo día</button>
+        <a href="#/historial" class="flex-1 rounded-xl border border-borde py-3 text-center font-medium text-apagado">Ver historial</a>
+        <button onclick={nuevoDia} class="flex-1 rounded-xl bg-acento py-3 font-display text-lg font-bold tracking-wide text-fondo">NUEVO DÍA</button>
       </div>
     </div>
   {:else}
     <div class="space-y-6">
-      <h2 class="text-xl font-bold">Cierre de la sesión</h2>
+      <h2 class="font-display text-2xl font-bold tracking-wide">CIERRE DE LA SESIÓN</h2>
 
       <section>
-        <p class="mb-2 text-sm font-semibold text-gray-600">¿Cómo ha ido respecto a lo previsto?</p>
+        <p class="mb-2 text-xs font-semibold uppercase tracking-wider text-tenue">¿Cómo ha ido respecto a lo previsto?</p>
         <Opciones
           bind:valor={sensacion}
           opciones={[
@@ -90,23 +93,29 @@
       </section>
 
       <section>
-        <p class="mb-2 text-sm font-semibold text-gray-600">Molestias posteriores</p>
+        <p class="mb-2 text-xs font-semibold uppercase tracking-wider text-tenue">Molestias posteriores</p>
         {#each molestias as m, i}
           <div class="mb-2 flex items-center gap-2">
-            <input bind:value={m.zona} type="text" placeholder="Zona (ej. lumbar)" class="min-w-0 flex-1 rounded-xl border border-gray-300 px-3 py-3" />
-            <input bind:value={m.intensidad} type="number" min="0" max="10" class="w-20 rounded-xl border border-gray-300 px-3 py-3" />
-            <button onclick={() => quitarMolestia(i)} aria-label="Quitar" class="rounded-lg border border-gray-300 px-3 py-3">✕</button>
+            <input bind:value={m.zona} type="text" placeholder="Zona (ej. lumbar)" class="min-w-0 flex-1 rounded-xl border border-borde bg-superficie px-3 py-3 text-texto placeholder:text-tenue" />
+            <input bind:value={m.intensidad} type="number" min="0" max="10" class="w-20 rounded-xl border border-borde bg-superficie px-3 py-3 text-texto" />
+            <button onclick={() => quitarMolestia(i)} aria-label="Quitar" class="flex min-h-11 items-center rounded-lg border border-borde px-3 py-3 text-apagado">
+              <Icon nombre="cerrar" tam={16} />
+            </button>
           </div>
         {/each}
-        <button onclick={anadirMolestia} class="text-sm font-medium text-blue-600">+ Añadir molestia</button>
+        <button onclick={anadirMolestia} class="flex items-center gap-1.5 text-sm font-medium text-acento">
+          <Icon nombre="plus" tam={14} /> Añadir molestia
+        </button>
       </section>
 
       {#if error}
-        <p class="rounded-lg bg-red-50 p-3 text-sm text-red-700">{error}</p>
+        <p class="flex items-center gap-2 rounded-lg bg-rojo/10 p-3 text-sm text-rojo">
+          <Icon nombre="aviso" tam={16} /> {error}
+        </p>
       {/if}
 
-      <button onclick={enviar} disabled={cargando} class="w-full rounded-xl bg-blue-600 py-4 text-lg font-bold text-white disabled:opacity-50">
-        {cargando ? "Guardando…" : "Guardar cierre"}
+      <button onclick={enviar} disabled={cargando} class="w-full rounded-xl bg-acento py-4 font-display text-xl font-bold tracking-wider text-fondo disabled:opacity-50">
+        {cargando ? "GUARDANDO…" : "GUARDAR CIERRE"}
       </button>
     </div>
   {/if}
