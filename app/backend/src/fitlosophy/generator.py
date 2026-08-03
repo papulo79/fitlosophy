@@ -171,6 +171,16 @@ def _es_dosis_minima(familia: str) -> bool:
     return familia in ("A", "C")
 
 
+def dosis_prescrita(ejercicio: Exercise, familia: str) -> str:
+    """Dosis legible según la tabla de dosificación de docs/06 (API pública)."""
+    return _dosis(ejercicio, familia)
+
+
+def es_dosis_minima(familia: str) -> bool:
+    """True si la familia dosifica en el extremo bajo del rango (A y C)."""
+    return _es_dosis_minima(familia)
+
+
 # --- Construcción de bloques ------------------------------------------------------
 
 
@@ -252,6 +262,8 @@ def generate(
         return True
 
     items.extend(_b0(catalog, material, notas))
+    # B0 no computa ni para la regla 1 de patrones, pero no repetimos ejercicio.
+    usados_ids.update(i.exercise_id for i in items)
 
     if familia == "C":
         _generar_c(prop, catalog, material, anadir, notas)

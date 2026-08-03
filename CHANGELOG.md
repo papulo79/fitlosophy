@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.13.0 - API REST del MVP
+
+- Nuevo paquete `fitlosophy_api` (FastAPI + SQLite stdlib): auth de usuario único (pbkdf2, cookie HttpOnly de 30 días), sin registro.
+- Flujo completo del MVP como endpoints: estado diario → propuesta (con explicación e incertidumbre) → sustitución validada → sesión con marcado por ítem (completado/modificado/sustituido/no_realizado) → finalizar con RPE real → cierre con congelación de ventana tras molestia.
+- Historial (días, detalle propuesta vs realizado), registro y corrección de BJJ, perfil editable, exportación JSON completa.
+- El recálculo con dosis real y la congelación de dimensiones se implementaron en el núcleo `fitlosophy` (sin duplicar lógica).
+- 12 tests de API nuevos (53 en total): acceso exigido, flujo E2E, rechazo 409 de sustituciones inválidas, congelación, correcciones y export.
+- `scripts/init_db.py` y `app/backend/README.md` con instalación y arranque.
+
 ## 0.12.0 - Motor ejecutable en Python
 
 - Nueva `app/backend/`: paquete `fitlosophy` (Python 3.11+, pyyaml) con el modelo de carga (`load.py`), el motor de decisión (`engine.py`, reglas D/C/P) y el generador de sesiones (`generator.py`) implementados según `docs/12`, `docs/03` y `docs/06`.

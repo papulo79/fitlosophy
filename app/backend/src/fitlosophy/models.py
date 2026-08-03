@@ -73,12 +73,18 @@ class PerformedExercise:
 
 @dataclass
 class PerformedSession:
-    """Sesión física realizada (registrada)."""
+    """Sesión física realizada (registrada).
+
+    `congelar_dimensiones`: dimensiones afectadas por una respuesta negativa
+    registrada (molestia posterior). Su decaimiento se retrasa 24 h (docs/12:
+    la dimensión se mantiene al nivel actual una ventana adicional de 24 h).
+    """
 
     fecha: datetime
     ejercicios: list[PerformedExercise]
     familia: str | None = None
     rpe_real: int | None = None
+    congelar_dimensiones: tuple[str, ...] = ()
 
 
 Event = BjjRecord | PerformedSession

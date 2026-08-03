@@ -138,8 +138,7 @@ def compute_load(historial: list[Event], catalog: Catalog, ahora: datetime) -> L
     for evento in historial:
         horas = (ahora - evento.fecha).total_seconds() / 3600
         factor = factor_decaimiento(horas)
-        if factor == 0.0:
-            continue
+        congeladas: tuple[str, ...] = ()
         if isinstance(evento, BjjRecord):
             pts = bjj_puntos(evento)
             if evento.estimado:
@@ -148,12 +147,23 @@ def compute_load(historial: list[Event], catalog: Catalog, ahora: datetime) -> L
                 )
         else:
             pts = puntos_sesion_realizada(evento, catalog)
-        if not pts:
+            congeladas = evento.congelar_dimensiones
+        # Respuesta negativa (docs/12): la dimensión afectada mantiene el nivel
+        # actual durante una ventana adicional de 24 h (su decaimiento se
+        # retrasa 24 h, incluso más allá de la ventana general de 72 h).
+        factores = {
+            d: (factor_decaimiento(horas - 24) if d in congeladas else factor) for d in pts
+        }
+        if not any(factores.values()):
             continue
         desc = _descripcion_evento(evento, catalog)
         for d, p in pts.items():
-            puntos[d] = puntos.get(d, 0.0) + p * factor
-            origenes.setdefault(d, []).append(f"{desc} (×{factor:g})")
+            factor_dim = factores[d]
+            if factor_dim == 0.0:
+                continue
+            puntos[d] = puntos.get(d, 0.0) + p * factor_dim
+            sufijo = " (congelada por respuesta negativa)" if d in congeladas and factor_dim != factor else ""
+            origenes.setdefault(d, []).append(f"{desc} (×{factor_dim:g}){sufijo}")
 
     niveles = {d: nivel_dimension(p) for d, p in puntos.items()}
 

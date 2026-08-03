@@ -183,8 +183,9 @@ def load_default_catalog() -> Catalog:
     return Catalog.load(DATA_DIR / "ejercicios.yaml")
 
 
-def load_default_perfil() -> Perfil:
-    data = yaml.safe_load((DATA_DIR / "perfil.yaml").read_text(encoding="utf-8"))
+def perfil_desde_dict(data: dict) -> Perfil:
+    """Construye el Perfil desde un dict con la forma de `data/perfil.yaml`
+    (usado tanto desde el YAML como desde la copia editable en la BD)."""
     material = set()
     for token, clave in MATERIAL_A_PERFIL.items():
         valor = data.get("material", {}).get(clave)
@@ -196,3 +197,8 @@ def load_default_perfil() -> Perfil:
         bjj_sesiones_semana_min=int(bjj.get("sesiones_semana", {}).get("min", 3)),
         raw=data,
     )
+
+
+def load_default_perfil() -> Perfil:
+    data = yaml.safe_load((DATA_DIR / "perfil.yaml").read_text(encoding="utf-8"))
+    return perfil_desde_dict(data)

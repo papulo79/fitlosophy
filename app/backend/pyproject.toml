@@ -7,7 +7,7 @@ name = "fitlosophy"
 version = "0.1.0"
 description = "Motor de decisión y generador de sesiones del sistema Fitlosophy (docs/03, docs/06, docs/12)"
 requires-python = ">=3.11"
-dependencies = ["pyyaml"]
+dependencies = ["pyyaml", "fastapi", "uvicorn"]
 
 [project.optional-dependencies]
 dev = ["pytest"]

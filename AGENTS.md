@@ -35,9 +35,12 @@ fitlosophy/
 │   └── superpowers/         # Planes de trabajo para ese flujo
 ├── opencode.json            # Agentes del orquestador en el flujo de dos IAs
 ├── app/
-│   └── backend/             # Motor en Python (paquete fitlosophy) + tests pytest
+│   └── backend/             # Motor (paquete fitlosophy) + API (fitlosophy_api) + tests pytest
 │       ├── src/fitlosophy/  # catalog, models, load, engine, generator
-│       └── tests/           # test_load.py (docs/12) y test_cases.py (10 casos de docs/13)
+│       ├── src/fitlosophy_api/  # FastAPI + SQLite: auth, rutas, persistencia
+│       ├── scripts/init_db.py   # Inicializa la BD y crea el usuario único
+│       ├── README.md            # Instalación, arranque y tests
+│       └── tests/           # test_load.py, test_cases.py (docs/13), test_api.py
 └── data/
     ├── perfil.yaml      # Datos del atleta: medidas, objetivos, BJJ, fuerza, movilidad, material, consideraciones
     └── ejercicios.yaml  # Catálogo de ejercicios con metadatos y prescripción
@@ -51,6 +54,7 @@ Nota: `docs/10-roadmap-del-producto.md` define las fases del producto (0–12) y
 
 - **La fuente de verdad es la documentación.** Si el código y los docs difieren, se corrige el código (o se corrige el doc si el código evidencia un error de aritmética, como ya ocurrió con el ejemplo de agarre de `docs/12`).
 - **Tests**: `cd app/backend && python3 -m pytest`. Deben estar en verde tras cualquier cambio en `app/backend/` o en las reglas de `docs/03`, `docs/06` y `docs/12` (los tests de `docs/13` son la especificación ejecutable).
+- **Servidor de desarrollo**: ver `app/backend/README.md` (init_db con `FITLOSOPHY_USER`/`FITLOSOPHY_PASSWORD` y `uvicorn "fitlosophy_api.app:create_app" --factory`).
 - La validación de la sintaxis YAML sigue siendo obligatoria tras modificar cualquier archivo de `data/`:
   `python3 -c "import yaml; yaml.safe_load(open('data/ejercicios.yaml'))"`
 - Tras cualquier cambio relevante, actualiza `CHANGELOG.md` y, si cambia la estructura o las convenciones, también `README.md` y este `AGENTS.md`.
