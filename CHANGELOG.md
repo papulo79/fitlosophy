@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.9.0 - Validación manual con casos de uso
+
+- Nuevo `docs/13`: 10 casos ejecutados a mano con la aritmética completa (familia B potente, familia A con BJJ, dolor lumbar, BJJ incierto, día rojo con motivación, día post-doble-sesión, datos incompletos, semana simulada completa, sustituciones y bisagra en días consecutivos).
+- Incoherencias encontradas y corregidas: umbral exacto media/alta y presupuesto crítico (`docs/12`), definición operativa de «bisagra exigente» en D5 (`docs/03`).
+- Comportamiento deliberado registrado para calibración: prohibición categórica de agarre medio/alto en familia A (I4).
+- Fases 0-6 del roadmap cerradas; la puerta de entrada al desarrollo queda abierta en cuanto al diseño.
+
 ## 0.8.0 - Generador de sesiones
 
 - `docs/06` reescrito como generador completo: bloques B0-B4, plantillas por familia A-D y reglas de composición, dosificación, sustitución y validación final contra el presupuesto.

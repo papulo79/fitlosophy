@@ -29,6 +29,7 @@ fitlosophy/
 │   ├── 10-roadmap-del-producto.md    # Fases del producto (0–12) y puerta de entrada a la app
 │   ├── 11-glosario-y-modelo-de-dominio.md  # Definiciones únicas de conceptos y entidades
 │   ├── 12-modelo-de-carga-e-inferencia.md  # Dimensiones de carga, decaimiento, dosis y BJJ estimado
+│   ├── 13-casos-de-uso-y-validacion.md     # Validación manual: casos ejecutados e incoherencias
 │   ├── roles/               # Orquestación opcional de dos IAs (ver sección más abajo)
 │   └── superpowers/         # Planes de trabajo para ese flujo
 ├── opencode.json            # Agentes del orquestador en el flujo de dos IAs

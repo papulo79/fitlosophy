@@ -31,7 +31,7 @@ Seguridad. No negociables; ninguna otra regla ni la preferencia del usuario pued
 - **D2**: recuperación roja → recuperación activa o descanso. La motivación no convierte un día rojo en verde.
 - **D3**: si hay BJJ normal o duro después, la sesión física no puede incluir ejercicios de `impacto_lumbar` amarillo o rojo.
 - **D4**: nunca dos estímulos altos sobre la zona lumbar el mismo día (física + BJJ duro ya cuenta como uno).
-- **D5**: nunca dos días consecutivos de bisagra exigente.
+- **D5**: nunca dos días consecutivos de bisagra exigente. Bisagra exigente = cualquier ejercicio con coste de bisagra `alto` ese día (swings), o una carga de bisagra acumulada resultante de nivel `media` o superior.
 - **D6**: ante incertidumbre (datos incompletos), decisión conservadora.
 
 ### Reglas de carga (C)

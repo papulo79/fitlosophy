@@ -57,7 +57,8 @@ Para que dos personas lleguen a la misma conclusión con las mismas reglas, la c
   - Trabajo al fallo o RPE real ≥ 9: ×1.25
   - RPE real ≤ 5: ×0.75
   - Fatiga previa alta en la misma dimensión: ×1.25
-- Umbrales por dimensión y ventana: < 4 puntos = `baja`, 4-8 = `media`, > 8 = `alta`.
+- Umbrales por dimensión y ventana: < 4 puntos = `baja`, 4-8 = `media`, > 8 = `alta`. Un valor exactamente en el límite pertenece al nivel inferior (8 = `media`).
+- Presupuesto crítico: si el presupuesto de una dimensión (umbral alto − carga activa) queda por debajo de 0.5 puntos, la dimensión se trata como restringida aunque su nivel sea `media` (decisión conservadora).
 
 ## Carga estimada del BJJ
 

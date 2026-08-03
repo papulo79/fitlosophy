@@ -632,10 +632,10 @@ Confirmado:
 - Biblioteca con coste por dimensión, niveles, lateralidad y progresiones/regresiones/sustitutos; los 15 patrones tienen cobertura.
 - Motor de decisión formalizado: cuestionario mínimo, reglas D/C/P con prioridad y flujo completo en pseudocódigo (`docs/03`).
 - Generador de sesiones: plantillas A-D con reglas de composición, dosificación, sustitución y validación (`docs/06`).
+- Validación manual con 10 casos ejecutados a mano; incoherencias I1-I2 corregidas (`docs/13`).
 
 Pendiente:
 
 - Definir escalas exactas de recuperación.
 - Separación formal ejercicio/variante en `data/ejercicios.yaml`.
 - Definir aprendizaje individual.
-- Definir casos de prueba completos.
