@@ -629,12 +629,13 @@ Confirmado:
 - Glosario y modelo de dominio con definiciones únicas (`docs/11`).
 - Taxonomía cerrada de patrones de movimiento (`docs/05`).
 - Modelo de carga e inferencia: dimensiones, decaimiento, dosis y BJJ estimado (`docs/12`, valores provisionales).
+- Biblioteca con coste por dimensión, niveles, lateralidad y progresiones/regresiones/sustitutos; los 15 patrones tienen cobertura.
 
 Pendiente:
 
 - Definir cuestionario diario definitivo.
 - Definir escalas exactas de recuperación.
-- Ampliar la biblioteca: cubrir los patrones sin ejercicio (`core_antiextension`, `empuje_vertical`) y añadir metadatos de variantes, progresiones y sustitutos.
+- Separación formal ejercicio/variante en `data/ejercicios.yaml`.
 - Definir selección de patrones prioritarios.
 - Definir generación de volumen, repeticiones y descansos.
 - Definir aprendizaje individual.

@@ -53,12 +53,14 @@ Cada ejercicio define:
 - Patrón de movimiento principal (de la taxonomía).
 - Patrones secundarios, cuando aplica.
 - Material necesario.
+- Nivel (`base`, `intermedio`, `avanzado`) y lateralidad (`bilateral`, `unilateral`).
+- Flags opcionales: `explosivo`, `isometrico`.
 - Objetivos.
-- Coste de fatiga.
+- Coste por dimensión de carga (`coste_dimensiones`, niveles bajo/medio/alto por dimensión de `docs/12`).
 - Impacto lumbar estimado.
 - Compatibilidad con BJJ posterior.
+- Progresiones, regresiones y sustitutos (referencias a otros `id` del catálogo).
 - Rango orientativo de series y repeticiones.
-- Observaciones y regresiones.
 
 ## Criterio lumbar
 

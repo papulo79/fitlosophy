@@ -78,7 +78,7 @@ Quién es el usuario y qué condiciona todas las decisiones.
 
 - Obligatorio: identificador estable, nombre, patrón principal, material, coste base por dimensiones, impacto lumbar, compatibilidad con BJJ.
 - Opcional: patrones secundarios, nivel, lateralidad, comportamiento (controlado/explosivo, dinámico/isométrico), restricciones, progresiones, regresiones, sustitutos, prescripción orientativa.
-- Origen: biblioteca (`data/ejercicios.yaml`). Hoy el coste base es un único valor; la descomposición por dimensiones es pendiente (Fase 2-3, provisional).
+- Origen: biblioteca (`data/ejercicios.yaml`). El coste base se declara por dimensión (`coste_dimensiones`); los valores concretos son provisionales y se calibran en la Fase 9.
 
 ### Variante de ejercicio
 
@@ -179,6 +179,6 @@ Criterios de salida de la Fase 1 y cómo quedan resueltos:
 
 ## Valores provisionales
 
-- Coste base por dimensión de cada ejercicio (pendiente en la ampliación de la biblioteca).
-- Separación formal ejercicio/variante en `data/ejercicios.yaml` (Fase 2).
+- Coste base por dimensión de cada ejercicio (`coste_dimensiones` en `data/ejercicios.yaml`); se calibra en la Fase 9.
+- Separación formal ejercicio/variante en `data/ejercicios.yaml`.
 - Valores numéricos del modelo de carga (`docs/12`): decaimiento, puntos, umbrales y tabla de BJJ.

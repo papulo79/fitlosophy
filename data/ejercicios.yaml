@@ -1,9 +1,21 @@
-version: 1
+version: 2
 
 valores:
-  coste: [bajo, medio, alto]
   impacto_lumbar: [verde, amarillo, rojo]
   compatibilidad_bjj: [si, limitada, no]
+  nivel: [base, intermedio, avanzado]
+  lateralidad: [bilateral, unilateral]
+  nivel_coste: [bajo, medio, alto]
+  dimensiones:
+    - lumbar
+    - bisagra
+    - rodilla_piernas
+    - empuje
+    - tiron
+    - agarre
+    - core
+    - cardio
+    - impacto_articular
   patron:
     - empuje_horizontal
     - empuje_vertical
@@ -26,10 +38,13 @@ exercises:
     nombre: Flexión clásica
     patron: empuje_horizontal
     material: [tatami]
-    coste: bajo
+    nivel: base
+    lateralidad: bilateral
+    coste_dimensiones: {empuje: bajo, core: bajo}
     impacto_lumbar: verde
     compatibilidad_bjj: si
     objetivos: [fuerza_resistencia, volumen]
+    progresiones: [pushup-feet-elevated]
     prescripcion:
       series: [3, 5]
       repeticiones: [10, 20]
@@ -39,22 +54,60 @@ exercises:
     nombre: Flexión con pies elevados
     patron: empuje_horizontal
     material: [caja, tatami]
-    coste: medio
+    nivel: intermedio
+    lateralidad: bilateral
+    coste_dimensiones: {empuje: medio, core: bajo}
     impacto_lumbar: verde
     compatibilidad_bjj: si
     objetivos: [fuerza, volumen]
+    regresiones: [pushup-classic]
+    sustitutos: [pike-pushup]
     prescripcion:
       series: [3, 4]
       repeticiones: [8, 15]
+
+  - id: pike-pushup
+    nombre: Flexión en pica
+    patron: empuje_vertical
+    material: [tatami]
+    nivel: intermedio
+    lateralidad: bilateral
+    coste_dimensiones: {empuje: medio, core: bajo}
+    impacto_lumbar: verde
+    compatibilidad_bjj: si
+    objetivos: [fuerza, hombros]
+    sustitutos: [kb-press]
+    prescripcion:
+      series: [3, 4]
+      repeticiones: [6, 12]
+
+  - id: kb-press
+    nombre: Press militar con kettlebell
+    patron: empuje_vertical
+    material: [kettlebell]
+    nivel: intermedio
+    lateralidad: unilateral
+    coste_dimensiones: {empuje: medio, core: bajo}
+    impacto_lumbar: verde
+    compatibilidad_bjj: limitada
+    objetivos: [fuerza, hombros, estabilidad]
+    regresiones: [pike-pushup]
+    prescripcion:
+      series: [3, 5]
+      repeticiones: [5, 10]
+      por_lado: true
 
   - id: trx-row
     nombre: Remo en TRX
     patron: tiron_horizontal
     material: [trx]
-    coste: bajo
+    nivel: base
+    lateralidad: bilateral
+    coste_dimensiones: {tiron: bajo, agarre: bajo, core: bajo}
     impacto_lumbar: verde
     compatibilidad_bjj: si
     objetivos: [fuerza_resistencia, tecnica, recuperacion]
+    sustitutos: [kb-row-supported]
     prescripcion:
       series: [3, 5]
       repeticiones: [8, 15]
@@ -64,10 +117,13 @@ exercises:
     patron: tiron_horizontal
     secundarios: [core_antirotacion]
     material: [kettlebell, caja]
-    coste: medio
+    nivel: intermedio
+    lateralidad: unilateral
+    coste_dimensiones: {tiron: medio, agarre: medio, core: bajo}
     impacto_lumbar: verde
     compatibilidad_bjj: si
     objetivos: [fuerza]
+    sustitutos: [trx-row]
     prescripcion:
       series: [3, 5]
       repeticiones: [6, 12]
@@ -77,22 +133,45 @@ exercises:
     nombre: Dominada estricta
     patron: tiron_vertical
     material: [barra_dominadas]
-    coste: medio
+    nivel: avanzado
+    lateralidad: bilateral
+    coste_dimensiones: {tiron: medio, agarre: medio}
     impacto_lumbar: verde
     compatibilidad_bjj: limitada
     objetivos: [fuerza]
+    regresiones: [pullup-band-assisted]
     prescripcion:
       repeticiones_totales: [10, 14]
+      evitar_fallo: true
+
+  - id: pullup-band-assisted
+    nombre: Dominada asistida con goma
+    patron: tiron_vertical
+    material: [barra_dominadas, goma]
+    nivel: base
+    lateralidad: bilateral
+    coste_dimensiones: {tiron: bajo, agarre: bajo}
+    impacto_lumbar: verde
+    compatibilidad_bjj: si
+    objetivos: [fuerza_resistencia, tecnica]
+    progresiones: [pullup-strict]
+    sustitutos: [trx-row]
+    prescripcion:
+      series: [3, 5]
+      repeticiones: [5, 10]
       evitar_fallo: true
 
   - id: goblet-squat
     nombre: Goblet squat
     patron: dominante_rodilla
     material: [kettlebell]
-    coste: medio
+    nivel: base
+    lateralidad: bilateral
+    coste_dimensiones: {rodilla_piernas: medio, core: bajo}
     impacto_lumbar: verde
     compatibilidad_bjj: si
     objetivos: [fuerza_resistencia]
+    progresiones: [bulgarian-squat-trx]
     prescripcion:
       series: [3, 5]
       repeticiones: [8, 15]
@@ -101,10 +180,14 @@ exercises:
     nombre: Sentadilla búlgara asistida con TRX
     patron: dominante_rodilla
     material: [trx, caja]
-    coste: medio
+    nivel: intermedio
+    lateralidad: unilateral
+    coste_dimensiones: {rodilla_piernas: medio, agarre: bajo}
     impacto_lumbar: verde
     compatibilidad_bjj: si
     objetivos: [fuerza_unilateral, estabilidad]
+    regresiones: [goblet-squat]
+    progresiones: [pistol-trx]
     prescripcion:
       series: [3, 4]
       repeticiones: [6, 10]
@@ -114,10 +197,13 @@ exercises:
     nombre: Pistol asistida con TRX
     patron: dominante_rodilla
     material: [trx]
-    coste: medio
+    nivel: avanzado
+    lateralidad: unilateral
+    coste_dimensiones: {rodilla_piernas: medio, agarre: bajo, core: bajo}
     impacto_lumbar: amarillo
     compatibilidad_bjj: limitada
     objetivos: [fuerza_unilateral, habilidad]
+    regresiones: [bulgarian-squat-trx]
     prescripcion:
       series: [3, 5]
       repeticiones: [3, 6]
@@ -127,10 +213,13 @@ exercises:
     nombre: Puente de glúteos
     patron: dominante_cadera
     material: [tatami]
-    coste: bajo
+    nivel: base
+    lateralidad: bilateral
+    coste_dimensiones: {bisagra: bajo, lumbar: bajo}
     impacto_lumbar: verde
     compatibilidad_bjj: si
     objetivos: [activacion, recuperacion]
+    progresiones: [kb-deadlift]
     prescripcion:
       series: [2, 4]
       repeticiones: [10, 20]
@@ -139,10 +228,14 @@ exercises:
     nombre: Peso muerto con kettlebell
     patron: dominante_cadera
     material: [kettlebell]
-    coste: medio
+    nivel: intermedio
+    lateralidad: bilateral
+    coste_dimensiones: {bisagra: medio, lumbar: medio, agarre: bajo}
     impacto_lumbar: amarillo
     compatibilidad_bjj: limitada
     objetivos: [tecnica, fuerza]
+    regresiones: [glute-bridge]
+    progresiones: [kb-swing-two-hand]
     prescripcion:
       series: [3, 5]
       repeticiones: [5, 8]
@@ -151,10 +244,15 @@ exercises:
     nombre: Swing a dos manos
     patron: dominante_cadera
     material: [kettlebell]
-    coste: alto
+    nivel: intermedio
+    lateralidad: bilateral
+    explosivo: true
+    coste_dimensiones: {bisagra: alto, lumbar: medio, agarre: medio, cardio: medio}
     impacto_lumbar: amarillo
     compatibilidad_bjj: no
     objetivos: [potencia, acondicionamiento]
+    regresiones: [kb-deadlift]
+    progresiones: [kb-swing-one-hand]
     prescripcion:
       series: [6, 10]
       repeticiones: [8, 10]
@@ -165,17 +263,23 @@ exercises:
     patron: dominante_cadera
     secundarios: [core_antirotacion]
     material: [kettlebell]
-    coste: alto
+    nivel: avanzado
+    lateralidad: unilateral
+    explosivo: true
+    coste_dimensiones: {bisagra: alto, lumbar: alto, agarre: alto, core: medio}
     impacto_lumbar: rojo
     compatibilidad_bjj: no
     objetivos: [potencia, agarre, antirotacion]
+    regresiones: [kb-swing-two-hand]
 
   - id: windmill
     nombre: Windmill con kettlebell
     patron: movilidad_cargada
     secundarios: [core_lateral]
     material: [kettlebell]
-    coste: alto
+    nivel: avanzado
+    lateralidad: unilateral
+    coste_dimensiones: {lumbar: alto, core: medio, empuje: bajo}
     impacto_lumbar: rojo
     compatibilidad_bjj: no
     objetivos: [movilidad, estabilidad, fuerza]
@@ -184,14 +288,49 @@ exercises:
       repeticiones: [3, 5]
       por_lado: true
 
+  - id: plank-front
+    nombre: Plancha frontal
+    patron: core_antiextension
+    material: [tatami]
+    nivel: base
+    lateralidad: bilateral
+    isometrico: true
+    coste_dimensiones: {core: bajo}
+    impacto_lumbar: verde
+    compatibilidad_bjj: si
+    objetivos: [estabilidad_lumbopelvica]
+    sustitutos: [dead-bug]
+    prescripcion:
+      series: [2, 4]
+      segundos: [20, 45]
+
+  - id: dead-bug
+    nombre: Dead bug
+    patron: core_antiextension
+    material: [tatami]
+    nivel: base
+    lateralidad: bilateral
+    coste_dimensiones: {core: bajo, lumbar: bajo}
+    impacto_lumbar: verde
+    compatibilidad_bjj: si
+    objetivos: [estabilidad_lumbopelvica, control, recuperacion]
+    sustitutos: [plank-front]
+    prescripcion:
+      series: [2, 4]
+      repeticiones: [6, 10]
+      por_lado: true
+
   - id: pallof-press
     nombre: Pallof press con goma
     patron: core_antirotacion
     material: [goma]
-    coste: bajo
+    nivel: base
+    lateralidad: unilateral
+    coste_dimensiones: {core: bajo}
     impacto_lumbar: verde
     compatibilidad_bjj: si
     objetivos: [estabilidad_lumbopelvica]
+    sustitutos: [plank-front]
     prescripcion:
       series: 3
       repeticiones: [8, 12]
@@ -201,7 +340,10 @@ exercises:
     nombre: Plancha lateral
     patron: core_lateral
     material: [tatami]
-    coste: bajo
+    nivel: base
+    lateralidad: unilateral
+    isometrico: true
+    coste_dimensiones: {core: bajo}
     impacto_lumbar: verde
     compatibilidad_bjj: si
     objetivos: [estabilidad_lateral]
@@ -214,7 +356,9 @@ exercises:
     nombre: Elevación de rodillas colgado
     patron: core_flexion_cadera
     material: [barra_dominadas]
-    coste: medio
+    nivel: intermedio
+    lateralidad: bilateral
+    coste_dimensiones: {core: medio, agarre: medio}
     impacto_lumbar: amarillo
     compatibilidad_bjj: si
     objetivos: [core, control]
@@ -227,17 +371,22 @@ exercises:
     nombre: Russian twist cargado
     patron: core_rotacion
     material: [kettlebell, tatami]
-    coste: alto
+    nivel: avanzado
+    lateralidad: bilateral
+    coste_dimensiones: {core: alto, lumbar: alto}
     impacto_lumbar: rojo
     compatibilidad_bjj: no
     objetivos: [rotacion]
+    sustitutos: [pallof-press]
     opcional: true
 
   - id: rope-technical
     nombre: Comba técnica
     patron: acondicionamiento
     material: [comba]
-    coste: bajo
+    nivel: base
+    lateralidad: bilateral
+    coste_dimensiones: {cardio: bajo, impacto_articular: bajo}
     impacto_lumbar: verde
     compatibilidad_bjj: si
     objetivos: [coordinacion, cardio]
@@ -249,7 +398,9 @@ exercises:
     nombre: Escalera de agilidad básica
     patron: agilidad
     material: [escalera_agilidad]
-    coste: bajo
+    nivel: base
+    lateralidad: bilateral
+    coste_dimensiones: {cardio: bajo, impacto_articular: bajo}
     impacto_lumbar: verde
     compatibilidad_bjj: si
     objetivos: [coordinacion, calentamiento]
@@ -260,7 +411,10 @@ exercises:
     nombre: Zigzag entre conos
     patron: agilidad
     material: [conos]
-    coste: medio
+    nivel: intermedio
+    lateralidad: bilateral
+    explosivo: true
+    coste_dimensiones: {cardio: medio, impacto_articular: medio, rodilla_piernas: bajo}
     impacto_lumbar: amarillo
     compatibilidad_bjj: si
     objetivos: [cambio_direccion, aceleracion]
@@ -271,7 +425,9 @@ exercises:
     nombre: Caminata en cinta
     patron: recuperacion
     material: [cinta]
-    coste: bajo
+    nivel: base
+    lateralidad: bilateral
+    coste_dimensiones: {cardio: bajo}
     impacto_lumbar: verde
     compatibilidad_bjj: si
     objetivos: [recuperacion_activa, actividad_baja_intensidad]
