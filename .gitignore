@@ -8,3 +8,5 @@ node_modules/
 dist/
 build/
 .env
+# BD SQLite local de desarrollo (fitlosophy.db)
+*.db
