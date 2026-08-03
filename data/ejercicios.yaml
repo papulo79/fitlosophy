@@ -1,0 +1,261 @@
+version: 1
+
+valores:
+  coste: [bajo, medio, alto]
+  impacto_lumbar: [verde, amarillo, rojo]
+  compatibilidad_bjj: [si, limitada, no]
+
+exercises:
+  - id: pushup-classic
+    nombre: Flexión clásica
+    patron: empuje_horizontal
+    material: [tatami]
+    coste: bajo
+    impacto_lumbar: verde
+    compatibilidad_bjj: si
+    objetivos: [fuerza_resistencia, volumen]
+    prescripcion:
+      series: [3, 5]
+      repeticiones: [10, 20]
+      reserva_repeticiones: [3, 5]
+
+  - id: pushup-feet-elevated
+    nombre: Flexión con pies elevados
+    patron: empuje_horizontal
+    material: [caja, tatami]
+    coste: medio
+    impacto_lumbar: verde
+    compatibilidad_bjj: si
+    objetivos: [fuerza, volumen]
+    prescripcion:
+      series: [3, 4]
+      repeticiones: [8, 15]
+
+  - id: trx-row
+    nombre: Remo en TRX
+    patron: tiron_horizontal
+    material: [trx]
+    coste: bajo
+    impacto_lumbar: verde
+    compatibilidad_bjj: si
+    objetivos: [fuerza_resistencia, tecnica, recuperacion]
+    prescripcion:
+      series: [3, 5]
+      repeticiones: [8, 15]
+
+  - id: kb-row-supported
+    nombre: Remo unilateral con kettlebell y apoyo
+    patron: tiron_horizontal
+    material: [kettlebell, caja]
+    coste: medio
+    impacto_lumbar: verde
+    compatibilidad_bjj: si
+    objetivos: [fuerza]
+    prescripcion:
+      series: [3, 5]
+      repeticiones: [6, 12]
+      por_lado: true
+
+  - id: pullup-strict
+    nombre: Dominada estricta
+    patron: tiron_vertical
+    material: [barra_dominadas]
+    coste: medio
+    impacto_lumbar: verde
+    compatibilidad_bjj: limitada
+    objetivos: [fuerza]
+    prescripcion:
+      repeticiones_totales: [10, 14]
+      evitar_fallo: true
+
+  - id: goblet-squat
+    nombre: Goblet squat
+    patron: dominante_rodilla
+    material: [kettlebell]
+    coste: medio
+    impacto_lumbar: verde
+    compatibilidad_bjj: si
+    objetivos: [fuerza_resistencia]
+    prescripcion:
+      series: [3, 5]
+      repeticiones: [8, 15]
+
+  - id: bulgarian-squat-trx
+    nombre: Sentadilla búlgara asistida con TRX
+    patron: dominante_rodilla
+    material: [trx, caja]
+    coste: medio
+    impacto_lumbar: verde
+    compatibilidad_bjj: si
+    objetivos: [fuerza_unilateral, estabilidad]
+    prescripcion:
+      series: [3, 4]
+      repeticiones: [6, 10]
+      por_lado: true
+
+  - id: pistol-trx
+    nombre: Pistol asistida con TRX
+    patron: dominante_rodilla
+    material: [trx]
+    coste: medio
+    impacto_lumbar: amarillo
+    compatibilidad_bjj: limitada
+    objetivos: [fuerza_unilateral, habilidad]
+    prescripcion:
+      series: [3, 5]
+      repeticiones: [3, 6]
+      por_lado: true
+
+  - id: glute-bridge
+    nombre: Puente de glúteos
+    patron: dominante_cadera
+    material: [tatami]
+    coste: bajo
+    impacto_lumbar: verde
+    compatibilidad_bjj: si
+    objetivos: [activacion, recuperacion]
+    prescripcion:
+      series: [2, 4]
+      repeticiones: [10, 20]
+
+  - id: kb-deadlift
+    nombre: Peso muerto con kettlebell
+    patron: dominante_cadera
+    material: [kettlebell]
+    coste: medio
+    impacto_lumbar: amarillo
+    compatibilidad_bjj: limitada
+    objetivos: [tecnica, fuerza]
+    prescripcion:
+      series: [3, 5]
+      repeticiones: [5, 8]
+
+  - id: kb-swing-two-hand
+    nombre: Swing a dos manos
+    patron: dominante_cadera
+    material: [kettlebell]
+    coste: alto
+    impacto_lumbar: amarillo
+    compatibilidad_bjj: no
+    objetivos: [potencia, acondicionamiento]
+    prescripcion:
+      series: [6, 10]
+      repeticiones: [8, 10]
+      detener_si_falla_tecnica: true
+
+  - id: kb-swing-one-hand
+    nombre: Swing a una mano
+    patron: dominante_cadera
+    material: [kettlebell]
+    coste: alto
+    impacto_lumbar: rojo
+    compatibilidad_bjj: no
+    objetivos: [potencia, agarre, antirotacion]
+
+  - id: windmill
+    nombre: Windmill con kettlebell
+    patron: movilidad_cargada
+    material: [kettlebell]
+    coste: alto
+    impacto_lumbar: rojo
+    compatibilidad_bjj: no
+    objetivos: [movilidad, estabilidad, fuerza]
+    prescripcion:
+      series: [3, 4]
+      repeticiones: [3, 5]
+      por_lado: true
+
+  - id: pallof-press
+    nombre: Pallof press con goma
+    patron: core_antirotacion
+    material: [goma]
+    coste: bajo
+    impacto_lumbar: verde
+    compatibilidad_bjj: si
+    objetivos: [estabilidad_lumbopelvica]
+    prescripcion:
+      series: 3
+      repeticiones: [8, 12]
+      por_lado: true
+
+  - id: side-plank
+    nombre: Plancha lateral
+    patron: core_lateral
+    material: [tatami]
+    coste: bajo
+    impacto_lumbar: verde
+    compatibilidad_bjj: si
+    objetivos: [estabilidad_lateral]
+    prescripcion:
+      series: [2, 3]
+      segundos: [20, 40]
+      por_lado: true
+
+  - id: hanging-knee-raise
+    nombre: Elevación de rodillas colgado
+    patron: core_flexion_cadera
+    material: [barra_dominadas]
+    coste: medio
+    impacto_lumbar: amarillo
+    compatibilidad_bjj: si
+    objetivos: [core, control]
+    prescripcion:
+      series: [3, 5]
+      repeticiones: [5, 10]
+      sin_balanceo: true
+
+  - id: russian-twist
+    nombre: Russian twist cargado
+    patron: core_rotacion
+    material: [kettlebell, tatami]
+    coste: alto
+    impacto_lumbar: rojo
+    compatibilidad_bjj: no
+    objetivos: [rotacion]
+    opcional: true
+
+  - id: rope-technical
+    nombre: Comba técnica
+    patron: acondicionamiento
+    material: [comba]
+    coste: bajo
+    impacto_lumbar: verde
+    compatibilidad_bjj: si
+    objetivos: [coordinacion, cardio]
+    prescripcion:
+      series: 5
+      saltos: 100
+
+  - id: agility-ladder-basic
+    nombre: Escalera de agilidad básica
+    patron: agilidad
+    material: [escalera_agilidad]
+    coste: bajo
+    impacto_lumbar: verde
+    compatibilidad_bjj: si
+    objetivos: [coordinacion, calentamiento]
+    prescripcion:
+      pasadas_por_patron: [4, 6]
+
+  - id: cones-zigzag
+    nombre: Zigzag entre conos
+    patron: agilidad
+    material: [conos]
+    coste: medio
+    impacto_lumbar: amarillo
+    compatibilidad_bjj: si
+    objetivos: [cambio_direccion, aceleracion]
+    prescripcion:
+      recorridos: [4, 8]
+
+  - id: treadmill-walk
+    nombre: Caminata en cinta
+    patron: recuperacion
+    material: [cinta]
+    coste: bajo
+    impacto_lumbar: verde
+    compatibilidad_bjj: si
+    objetivos: [recuperacion_activa, actividad_baja_intensidad]
+    prescripcion:
+      minutos: [20, 45]
+    uso_preferente: recuperacion
