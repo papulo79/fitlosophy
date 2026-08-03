@@ -151,6 +151,148 @@ def test_flujo_completo_estado_a_historial(client):
     assert carga["empuje"] == pytest.approx(puntos_real["empuje"])
 
 
+def test_flujo_completo_con_bjj_y_sustitucion_en_ejecucion(client, app):
+    """Criterio 2 por el camino con BJJ (familia A), incluyendo la vía de
+    sustitución en ejecución (docs/14: las adaptaciones del gimnasio se
+    registran como sustituciones) y el cierre con congelación de ventana."""
+
+    # 1. El usuario declara el BJJ del día (docs/14: se declara cada día).
+    hoy = datetime.now().date().isoformat()
+    r = client.post("/api/bjj", json={"clasificacion": "normal", "duracion_minutos": 75})
+    assert r.status_code == 201
+
+    # 2. Estado diario con BJJ normal → familia A (compatible, docs/03).
+    propuesta = _crear_propuesta(client, bjj_disponible="si", tipo_bjj="normal")
+    assert propuesta["familia"] == "A"
+    assert propuesta["valida"]
+    assert propuesta["explicacion"]
+    assert propuesta["items"]
+
+    # 3. Aceptar → sesión en curso con ítems marcables.
+    r = client.post("/api/sesiones", json={"proposal_id": propuesta["id"]})
+    assert r.status_code == 201
+    sesion = r.json()["sesion"]
+    assert sesion["estado"] == "en_curso"
+    items = sesion["items"]
+    assert len(items) >= 3
+    assert all(i["estado"] == "pendiente" for i in items)
+
+    # 4. Marcado por las cuatro vías del modal (docs/14 §3).
+    #    a) Check: completado tal cual (una sola acción).
+    r = client.patch(f"/api/sesiones/{sesion['id']}/items/{items[0]['id']}", json={"estado": "completado"})
+    assert r.status_code == 200
+
+    #    b) Sustituido: ejercicio real del catálogo (adaptación del gimnasio).
+    #       Se elige un sustituto declarado del ejercicio o, si no hay, otro del
+    #       mismo patrón; la ejecución registra, no rechaza (docs/14).
+    catalog = app.state.catalog
+    sust_item = None
+    sustituto = None
+    for it in items[1:]:
+        ej = catalog[it["exercise_id"]]
+        candidato = next((c for c in ej.sustitutos if catalog.get(c) is not None), None)
+        if candidato is None:
+            mismo_patron = [e for e in catalog.ejercicios if e.id != ej.id and e.patron == ej.patron]
+            candidato = mismo_patron[0].id if mismo_patron else None
+        if candidato:
+            sust_item = it
+            sustituto = candidato
+            break
+    assert sust_item is not None, "la sesión debería tener algún ítem sustituible"
+    r = client.patch(
+        f"/api/sesiones/{sesion['id']}/items/{sust_item['id']}",
+        json={"estado": "sustituido", "exercise_id_real": sustituto, "motivo": "adaptación en el gimnasio"},
+    )
+    assert r.status_code == 200
+    assert isinstance(r.json()["advertencias"], list)
+
+    #    c) No realizado con motivo.
+    resto = [it for it in items if it["id"] not in (items[0]["id"], sust_item["id"])]
+    r = client.patch(
+        f"/api/sesiones/{sesion['id']}/items/{resto[-1]['id']}",
+        json={"estado": "no_realizado", "motivo": "sin tiempo"},
+    )
+    assert r.status_code == 200
+
+    #    d) Validaciones del esquema: sustituto sin ejercicio real y
+    #       modificado sin valores reales se rechazan (422).
+    r = client.patch(f"/api/sesiones/{sesion['id']}/items/{items[0]['id']}", json={"estado": "sustituido"})
+    assert r.status_code == 422
+    r = client.patch(f"/api/sesiones/{sesion['id']}/items/{items[0]['id']}", json={"estado": "modificado"})
+    assert r.status_code == 422
+
+    # 5. Finalizar: el sustituto entra en el recálculo con su impacto real.
+    r = client.post(f"/api/sesiones/{sesion['id']}/finalizar", json={"rpe_real": 7})
+    assert r.status_code == 200
+    sesion = r.json()["sesion"]
+    assert sesion["estado"] == "finalizada"
+    assert r.json()["puntos_sesion_real"]
+    sust = next(i for i in sesion["items"] if i["id"] == sust_item["id"])
+    assert sust["estado"] == "sustituido"
+    assert sust["exercise_id_real"] == sustituto
+    assert sust["puntos_reales"]
+
+    # 6. Cierre: molestia lumbar congela la ventana (criterio 5).
+    r = client.post(
+        f"/api/sesiones/{sesion['id']}/cierre",
+        json={"sensacion": "mas_duro", "molestias": [{"zona": "lumbar", "intensidad": 4}]},
+    )
+    assert r.status_code == 201
+    assert r.json()["dimensiones_congeladas"] == ["lumbar"]
+
+    # 7. Historial: el día muestra física + BJJ; el detalle conserva el
+    #    ejercicio real del ítem sustituido y el cierre (criterios 2 y 7).
+    r = client.get("/api/historial", params={"dias": 3})
+    dia = next(d for d in r.json()["dias"] if d["fecha"] == hoy)
+    assert "fisica" in dia["tipos"]
+    assert "bjj" in dia["tipos"]
+
+    r = client.get(f"/api/historial/{hoy}")
+    detalle = r.json()
+    assert detalle["estados_diarios"][0]["bjj_disponible"] == "si"
+    assert detalle["estados_diarios"][0]["tipo_bjj"] == "normal"
+    assert detalle["bjj"][0]["clasificacion"] == "normal"
+    s = next(s for s in detalle["sesiones"] if s["id"] == sesion["id"])
+    assert s["cierre"]["dimensiones_congeladas"] == ["lumbar"]
+    item_sust = next(i for i in s["items"] if i["id"] == sust_item["id"])
+    assert item_sust["exercise_id_real"] == sustituto
+
+
+def test_flujo_sin_material_e2e(client):
+    """Criterio 2 en modo sin material (vacaciones/viaje, docs/14): la sesión
+    se compone solo con ejercicios ejecutables sin nada y el flujo llega al
+    historial."""
+
+    # 1. Desmarcar todo = modo sin material.
+    propuesta = _crear_propuesta(client, material_disponible=[])
+    assert propuesta["valida"]
+    assert any("pendiente" in n for n in propuesta["notas"])
+
+    # 2. Aceptar y ejecutar sin marcar nada: el check es la acción por defecto
+    #    (los ítems sin marcar se dan por completados al finalizar).
+    r = client.post("/api/sesiones", json={"proposal_id": propuesta["id"]})
+    assert r.status_code == 201
+    sesion = r.json()["sesion"]
+    assert sesion["items"]
+
+    r = client.post(f"/api/sesiones/{sesion['id']}/finalizar", json={"rpe_real": 6})
+    assert r.status_code == 200
+    sesion = r.json()["sesion"]
+    assert sesion["estado"] == "finalizada"
+    assert all(i["estado"] == "completado" for i in sesion["items"])
+
+    # 3. Cierre sin molestias y verificación en el historial.
+    r = client.post(
+        f"/api/sesiones/{sesion['id']}/cierre",
+        json={"sensacion": "como_previsto", "molestias": []},
+    )
+    assert r.status_code == 201
+    hoy = datetime.now().date().isoformat()
+    r = client.get("/api/historial", params={"dias": 3})
+    dia = next(d for d in r.json()["dias"] if d["fecha"] == hoy)
+    assert "fisica" in dia["tipos"]
+
+
 # --- Criterio 8: sustituciones en la propuesta ----------------------------------------
 
 
