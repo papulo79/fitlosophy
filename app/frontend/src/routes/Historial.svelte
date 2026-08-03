@@ -32,6 +32,18 @@
   let editandoRpe = $state(null); // id de sesión
   let rpeNuevo = $state(7);
 
+  // --- Corrección de un ítem registrado (criterio 7 de docs/14) ---
+  let itemCorrigiendo = $state(null); // { sesionId, item }
+  let modoItem = $state("modificado");
+  let formItem = $state({ series: "", repeticiones: "", segundos: "", minutos: "", carga_kg: "", exercise_id: "", motivo: "" });
+  let catalogo = $state([]);
+  let errorItem = $state("");
+
+  // --- Corrección del cierre (criterio 7 de docs/14) ---
+  let cierreCorrigiendo = $state(null); // id de sesión
+  let cierreForm = $state({ sensacion: "como_previsto", molestias: [] });
+  let errorCierre = $state("");
+
   $effect(() => {
     if (parametro) {
       detalle = null;
@@ -105,6 +117,93 @@
       detalle = await api.get(`/api/historial/${parametro}`);
     } catch (e) {
       errorDetalle = mensajeError(e);
+    }
+  }
+
+  async function abrirCorreccionItem(sesionId, item) {
+    itemCorrigiendo = { sesionId, item };
+    modoItem = item.estado === "pendiente" ? "completado" : item.estado;
+    formItem = {
+      series: item.real.series ?? "",
+      repeticiones: item.real.repeticiones ?? "",
+      segundos: item.real.segundos ?? "",
+      minutos: item.real.minutos ?? "",
+      carga_kg: item.real.carga_kg ?? "",
+      exercise_id: item.exercise_id_real || "",
+      motivo: item.motivo || "",
+    };
+    errorItem = "";
+    if (catalogo.length === 0) {
+      try {
+        catalogo = (await api.get("/api/ejercicios")).ejercicios;
+      } catch (e) {
+        errorItem = mensajeError(e);
+      }
+    }
+  }
+
+  async function guardarCorreccionItem() {
+    errorItem = "";
+    const cuerpo = { estado: modoItem, motivo: formItem.motivo.trim() || null };
+    if (modoItem === "sustituido") {
+      if (!formItem.exercise_id) {
+        errorItem = "Elige el ejercicio realizado.";
+        return;
+      }
+      cuerpo.exercise_id_real = formItem.exercise_id;
+    }
+    if (modoItem === "modificado" || modoItem === "sustituido") {
+      for (const [campo, clave] of [
+        ["series", "series_real"],
+        ["repeticiones", "repeticiones_real"],
+        ["segundos", "segundos_real"],
+        ["minutos", "minutos_real"],
+        ["carga_kg", "carga_kg_real"],
+      ]) {
+        if (formItem[campo] !== "" && formItem[campo] !== null) cuerpo[clave] = Number(formItem[campo]);
+      }
+      if (modoItem === "modificado" && !Object.keys(cuerpo).some((k) => k.endsWith("_real"))) {
+        errorItem = "Indica al menos un valor real.";
+        return;
+      }
+    }
+    try {
+      // La dosis real corregida sustituye a la prevista: el backend recalcula los puntos.
+      await api.put(`/api/sesiones/${itemCorrigiendo.sesionId}/items/${itemCorrigiendo.item.id}`, cuerpo);
+      itemCorrigiendo = null;
+      detalle = await api.get(`/api/historial/${parametro}`);
+    } catch (e) {
+      errorItem = mensajeError(e);
+    }
+  }
+
+  function abrirCorreccionCierre(s) {
+    cierreCorrigiendo = s.id;
+    cierreForm = {
+      sensacion: s.cierre.sensacion,
+      molestias: (s.cierre.molestias || []).map((m) => ({ ...m })),
+    };
+    errorCierre = "";
+  }
+
+  async function guardarCorreccionCierre() {
+    errorCierre = "";
+    for (const m of cierreForm.molestias) {
+      if (!m.zona.trim()) {
+        errorCierre = "Toda molestia necesita una zona.";
+        return;
+      }
+    }
+    try {
+      // Si las molestias corregidas cambian, se recalculan las ventanas congeladas (docs/12).
+      await api.put(`/api/sesiones/${cierreCorrigiendo}/cierre`, {
+        sensacion: cierreForm.sensacion,
+        molestias: cierreForm.molestias.map((m) => ({ zona: m.zona.trim(), intensidad: Number(m.intensidad) || 0 })),
+      });
+      cierreCorrigiendo = null;
+      detalle = await api.get(`/api/historial/${parametro}`);
+    } catch (e) {
+      errorCierre = mensajeError(e);
     }
   }
 </script>
@@ -197,16 +296,52 @@
               {#each grupo.items as item}
                 <li class="flex justify-between gap-2">
                   <span>{item.nombre} — {item.dosis}</span>
-                  <span class="shrink-0 text-gray-500">{ESTADOS_ITEM[item.estado] || item.estado}</span>
+                  <span class="shrink-0 text-gray-500">
+                    {ESTADOS_ITEM[item.estado] || item.estado}
+                    {#if s.estado !== "en_curso"}
+                      <button onclick={() => abrirCorreccionItem(s.id, item)} class="ml-2 font-medium text-blue-600">Corregir</button>
+                    {/if}
+                  </span>
                 </li>
               {/each}
             </ul>
           {/each}
           {#if s.cierre}
-            <p class="mt-3 text-sm text-gray-600">
-              Cierre: {s.cierre.sensacion.replace("_", " ")}
-              {#if s.cierre.molestias?.length}· molestias: {s.cierre.molestias.map((m) => `${m.zona} (${m.intensidad})`).join(", ")}{/if}
-            </p>
+            <div class="mt-3 text-sm text-gray-600">
+              <p>
+                Cierre: {s.cierre.sensacion.replace("_", " ")}
+                {#if s.cierre.molestias?.length}· molestias: {s.cierre.molestias.map((m) => `${m.zona} (${m.intensidad})`).join(", ")}{/if}
+                {#if s.cierre.dimensiones_congeladas?.length}· congela: {s.cierre.dimensiones_congeladas.join(", ")}{/if}
+                <button onclick={() => abrirCorreccionCierre(s)} class="ml-2 font-medium text-blue-600">Corregir</button>
+              </p>
+              {#if cierreCorrigiendo === s.id}
+                <div class="mt-2 space-y-3 rounded-xl border border-gray-200 p-3">
+                  <Opciones
+                    bind:valor={cierreForm.sensacion}
+                    opciones={[
+                      { valor: "como_previsto", etiqueta: "Como estaba previsto" },
+                      { valor: "mas_duro", etiqueta: "Más duro" },
+                      { valor: "mas_suave", etiqueta: "Más suave" },
+                    ]}
+                  />
+                  {#each cierreForm.molestias as m, i}
+                    <div class="flex gap-2">
+                      <input bind:value={m.zona} type="text" placeholder="Zona (ej. lumbar)" class="flex-1 rounded-xl border border-gray-300 px-3 py-2" />
+                      <input bind:value={m.intensidad} type="number" min="0" max="10" title="Intensidad 0-10" class="w-20 rounded-xl border border-gray-300 px-3 py-2" />
+                      <button onclick={() => (cierreForm.molestias = cierreForm.molestias.filter((_, j) => j !== i))} aria-label="Quitar molestia" class="px-2 text-gray-400">✕</button>
+                    </div>
+                  {/each}
+                  <button onclick={() => (cierreForm.molestias = [...cierreForm.molestias, { zona: "", intensidad: 3 }])} class="text-sm font-medium text-blue-600">+ Añadir molestia</button>
+                  {#if errorCierre}
+                    <p class="rounded-lg bg-red-50 p-3 text-sm text-red-700">{errorCierre}</p>
+                  {/if}
+                  <div class="flex gap-2">
+                    <button onclick={() => (cierreCorrigiendo = null)} class="flex-1 rounded-xl border border-gray-300 py-2 font-medium">Cancelar</button>
+                    <button onclick={guardarCorreccionCierre} class="flex-1 rounded-xl bg-blue-600 py-2 font-semibold text-white">Guardar</button>
+                  </div>
+                </div>
+              {/if}
+            </div>
           {/if}
         </section>
       {/each}
@@ -238,6 +373,63 @@
     {:else if !errorDetalle}
       <p class="text-sm text-gray-500">Cargando…</p>
     {/if}
+  </div>
+{/if}
+
+{#if itemCorrigiendo}
+  <div class="fixed inset-0 z-20 flex items-end justify-center bg-black/40" role="dialog">
+    <div class="max-h-[85vh] w-full max-w-xl overflow-y-auto rounded-t-2xl bg-white p-5">
+      <h3 class="text-lg font-bold">Corregir: {itemCorrigiendo.item.nombre}</h3>
+      <p class="mb-3 text-sm text-gray-600">{itemCorrigiendo.item.dosis} · el cambio recalcula la carga de los días siguientes</p>
+
+      <div class="mb-4 grid grid-cols-2 gap-2">
+        {#each [
+            ["completado", "Completado tal cual"],
+            ["modificado", "Completado con cambios"],
+            ["sustituido", "Sustituido"],
+            ["no_realizado", "No realizado"],
+          ] as [valor, etiqueta]}
+          <button
+            onclick={() => (modoItem = valor)}
+            class="rounded-lg border px-2 py-2 text-xs font-semibold {modoItem === valor
+              ? 'border-blue-600 bg-blue-600 text-white'
+              : 'border-gray-300 bg-white'}"
+          >
+            {etiqueta}
+          </button>
+        {/each}
+      </div>
+
+      <div class="space-y-3">
+        {#if modoItem === "sustituido"}
+          <select bind:value={formItem.exercise_id} class="w-full rounded-xl border border-gray-300 px-3 py-3">
+            <option value="" disabled>Ejercicio realizado…</option>
+            {#each catalogo as ej}
+              <option value={ej.id}>{ej.nombre}</option>
+            {/each}
+          </select>
+        {/if}
+        {#if modoItem === "modificado" || modoItem === "sustituido"}
+          <div class="grid grid-cols-2 gap-2">
+            <input bind:value={formItem.series} type="number" min="1" placeholder="Series" class="rounded-xl border border-gray-300 px-3 py-3" />
+            <input bind:value={formItem.repeticiones} type="number" min="1" placeholder="Repeticiones" class="rounded-xl border border-gray-300 px-3 py-3" />
+            <input bind:value={formItem.segundos} type="number" min="1" placeholder="Segundos" class="rounded-xl border border-gray-300 px-3 py-3" />
+            <input bind:value={formItem.minutos} type="number" min="1" placeholder="Minutos" class="rounded-xl border border-gray-300 px-3 py-3" />
+            <input bind:value={formItem.carga_kg} type="number" min="0" step="0.5" placeholder="Carga (kg)" class="col-span-2 rounded-xl border border-gray-300 px-3 py-3" />
+          </div>
+        {/if}
+        <input bind:value={formItem.motivo} type="text" placeholder="Motivo (opcional)" class="w-full rounded-xl border border-gray-300 px-3 py-3" />
+      </div>
+
+      {#if errorItem}
+        <p class="mt-3 rounded-lg bg-red-50 p-3 text-sm text-red-700">{errorItem}</p>
+      {/if}
+
+      <div class="mt-4 flex gap-2">
+        <button onclick={() => (itemCorrigiendo = null)} class="flex-1 rounded-xl border border-gray-300 py-3 font-medium">Cancelar</button>
+        <button onclick={guardarCorreccionItem} class="flex-1 rounded-xl bg-blue-600 py-3 font-semibold text-white">Guardar</button>
+      </div>
+    </div>
   </div>
 {/if}
 
