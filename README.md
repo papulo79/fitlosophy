@@ -2,38 +2,41 @@
 
 Sistema personal de entrenamiento adaptativo orientado a combinar acondicionamiento físico, BJJ, pérdida de grasa, fuerza y prevención de lesiones.
 
-El proyecto evita calendarios rígidos. La sesión del día se decide a partir de varios inputs:
+El proyecto evita calendarios rígidos. La sesión del día se decide a partir de:
 
 - Estado de recuperación.
-- Carga acumulada en las últimas 48-72 horas.
+- Carga acumulada reciente.
 - Existencia o no de una sesión de BJJ.
 - Estado de la zona lumbar y articulaciones.
 - Objetivo físico prioritario del día.
 
 ## Objetivo técnico
 
-La información del sistema se mantiene en Markdown y YAML para que pueda consumirse desde una futura aplicación en React o Svelte sin acoplarla todavía a un framework concreto.
+La información del sistema se mantiene inicialmente en Markdown y YAML para que pueda consumirse desde una futura aplicación en React o Svelte sin acoplar todavía el diseño funcional a un framework concreto.
 
 ## Estrategia de producto
 
-La aplicación no se construirá hasta que el modelo funcional pueda validarse manualmente con casos reales y pseudocódigo.
+La aplicación no se construirá hasta que el modelo funcional pueda validarse manualmente con casos reales, reglas y pseudocódigo.
 
 El roadmap completo se encuentra en [`docs/10-roadmap-del-producto.md`](docs/10-roadmap-del-producto.md).
 
-Fases principales:
+### Fases del producto
 
-1. Contexto y visión.
-2. Modelo de dominio.
-3. Biblioteca de conocimiento.
-4. Modelo de carga e inferencia.
-5. Motor de decisión.
-6. Generador de sesiones.
-7. Validación manual mediante casos de uso.
-8. Definición del MVP.
-9. Construcción de la aplicación.
-10. Calibración con uso real.
-11. Producto personal completo.
-12. Integraciones y adaptación avanzada.
+0. Contexto y visión.
+1. Modelo de dominio.
+2. Biblioteca de conocimiento.
+3. Modelo de carga e inferencia.
+4. Motor de decisión.
+5. Generador de sesiones.
+6. Casos de uso y validación manual.
+7. Diseño del MVP.
+8. Construcción del MVP.
+9. Uso personal y calibración.
+10. Producto personal completo.
+11. Integraciones opcionales.
+12. Adaptación avanzada.
+
+La puerta de entrada al desarrollo de la aplicación se abre cuando las **fases 0 a 6** están suficientemente cerradas.
 
 El próximo hito es disponer de un **modelo funcional validable**: generar y justificar sesiones para los escenarios principales usando únicamente documentación, biblioteca, historial de ejemplo y pseudocódigo.
 
@@ -64,7 +67,7 @@ fitlosophy/
 
 El proyecto se encuentra entre las fases de **modelo de dominio**, **biblioteca de conocimiento** y diseño inicial del **motor de decisión**.
 
-Todavía no se ha alcanzado la puerta de entrada al desarrollo de la aplicación. Antes deben cerrarse:
+Todavía no se ha alcanzado la puerta de entrada al desarrollo. Antes deben cerrarse:
 
 - el modelo de dominio;
 - la biblioteca inicial;
