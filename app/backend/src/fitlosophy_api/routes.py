@@ -766,6 +766,15 @@ def actualizar_perfil(datos: PerfilPut, user=Depends(usuario_actual), conn=Depen
     return {"detalle": "Perfil actualizado"}
 
 
+# --- Catálogo de ejercicios (selector de sustituciones) ------------------------------------------
+
+
+@router.get("/api/ejercicios")
+def listar_ejercicios(request: Request, user=Depends(usuario_actual)):
+    catalog = get_catalog(request)
+    return {"ejercicios": [{"id": e.id, "nombre": e.nombre, "patron": e.patron} for e in catalog]}
+
+
 # --- Exportación (portabilidad, docs/14) -----------------------------------------------------
 
 
