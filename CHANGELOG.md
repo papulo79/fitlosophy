@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.16.0 - Corrección completa de registros (criterio 7 de docs/14)
+
+- Nuevo endpoint `PUT /api/sesiones/{id}/items/{item_id}`: corrige el registro de un ítem ya finalizado (estado, ejercicio real, dosis real, motivo). La dosis real corregida sustituye a la prevista — se recalculan los `puntos_reales` del ítem (incluido el ×1.25 por volumen sobre rango de `docs/12`) — y con ellos la carga de los días siguientes (criterio 4). Con la sesión en curso se rechaza (409): ahí se marca con PATCH.
+- Lógica compartida entre PATCH (marcado en ejecución) y PUT (corrección posterior): mismo guardado de estado y mismas advertencias de reglas duras en sustituciones.
+- Frontend (Historial): corrección por ítem con modal (completado / con cambios / sustituido / no realizado, valores reales y motivo) y corrección del cierre en línea (sensación + molestias); el detalle del día muestra además las dimensiones congeladas por el cierre.
+- Tests formales del criterio 7: dosis corregida → carga recalculada desde el historial persistido; dosis sobre rango → puntos ×1.25; cierre corregido sin molestias → dimensión descongelada; PUT rechazado con sesión en curso. 58 tests en total, suite en verde.
+
 ## 0.15.0 - Tests E2E del flujo completo
 
 - Dos pruebas funcionales nuevas que cierran la cobertura del criterio 2 de `docs/14` (flujo extremo a extremo) por los caminos que faltaban:

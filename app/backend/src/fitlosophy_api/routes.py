@@ -434,14 +434,49 @@ def marcar_item(sesion_id: int, item_id: int, datos: ItemPatchIn, request: Reque
     # no se rechaza, pero se advierte si contradice una regla dura (docs/14).
     advertencias: list[str] = []
     if datos.estado == "sustituido":
-        prop_row = conn.execute("SELECT * FROM proposals WHERE id = ?", (sesion["proposal_id"],)).fetchone()
-        if prop_row is not None:
-            from fitlosophy.generator import motivos_exclusion
+        advertencias = _advertencias_sustitucion(conn, catalog, sesion, datos.exercise_id_real)
 
-            advertencias = motivos_exclusion(
-                catalog[datos.exercise_id_real], _prop_desde_fila(prop_row), prop_row["familia"]
-            )
+    _guardar_estado_item(conn, item_id, datos)
+    conn.commit()
+    row = conn.execute("SELECT * FROM training_sessions WHERE id = ?", (sesion_id,)).fetchone()
+    return {"sesion": _sesion_json(conn, row, catalog), "advertencias": advertencias}
 
+
+@router.put("/api/sesiones/{sesion_id}/items/{item_id}")
+def corregir_item(sesion_id: int, item_id: int, datos: ItemPatchIn, request: Request, user=Depends(usuario_actual), conn=Depends(db_conn)):
+    """Corrige el registro de un ítem ya finalizado (criterio 7 de docs/14).
+
+    La dosis real corregida sustituye a la prevista: se recalculan los puntos
+    reales del ítem, y con ellos la carga de los días siguientes (criterio 4).
+    """
+    catalog = get_catalog(request)
+    sesion = conn.execute("SELECT * FROM training_sessions WHERE id = ?", (sesion_id,)).fetchone()
+    if sesion is None:
+        raise HTTPException(status_code=404, detail="Sesión no encontrada")
+    if sesion["estado"] == "en_curso":
+        raise HTTPException(status_code=409, detail="La sesión está en curso; usa PATCH para marcar el ítem")
+    item = conn.execute(
+        "SELECT * FROM session_items WHERE id = ? AND session_id = ?", (item_id, sesion_id)
+    ).fetchone()
+    if item is None:
+        raise HTTPException(status_code=404, detail="Ítem no encontrado")
+    if datos.estado == "sustituido" and catalog.get(datos.exercise_id_real) is None:
+        raise HTTPException(status_code=422, detail="Ejercicio desconocido en el catálogo")
+
+    advertencias: list[str] = []
+    if datos.estado == "sustituido":
+        advertencias = _advertencias_sustitucion(conn, catalog, sesion, datos.exercise_id_real)
+
+    _guardar_estado_item(conn, item_id, datos)
+    item = conn.execute("SELECT * FROM session_items WHERE id = ?", (item_id,)).fetchone()
+    puntos = _puntos_reales_item(item, catalog, sesion["familia"])
+    conn.execute("UPDATE session_items SET puntos_reales = ? WHERE id = ?", (volcar_json(puntos), item_id))
+    conn.commit()
+    row = conn.execute("SELECT * FROM training_sessions WHERE id = ?", (sesion_id,)).fetchone()
+    return {"sesion": _sesion_json(conn, row, catalog), "advertencias": advertencias}
+
+
+def _guardar_estado_item(conn, item_id: int, datos: ItemPatchIn) -> None:
     conn.execute(
         """UPDATE session_items SET estado = ?, exercise_id_real = ?, series_real = ?,
            repeticiones_real = ?, segundos_real = ?, minutos_real = ?, carga_kg_real = ?, motivo = ?
@@ -458,9 +493,15 @@ def marcar_item(sesion_id: int, item_id: int, datos: ItemPatchIn, request: Reque
             item_id,
         ),
     )
-    conn.commit()
-    row = conn.execute("SELECT * FROM training_sessions WHERE id = ?", (sesion_id,)).fetchone()
-    return {"sesion": _sesion_json(conn, row, catalog), "advertencias": advertencias}
+
+
+def _advertencias_sustitucion(conn, catalog: Catalog, sesion: sqlite3.Row, exercise_id_real: str) -> list[str]:
+    prop_row = conn.execute("SELECT * FROM proposals WHERE id = ?", (sesion["proposal_id"],)).fetchone()
+    if prop_row is None:
+        return []
+    from fitlosophy.generator import motivos_exclusion
+
+    return motivos_exclusion(catalog[exercise_id_real], _prop_desde_fila(prop_row), prop_row["familia"])
 
 
 def _sobre_rango(item: sqlite3.Row, ejercicio) -> bool:

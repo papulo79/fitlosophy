@@ -429,8 +429,75 @@ def test_correcciones_de_sesion_y_cierre(client):
     )
     assert r.status_code == 200
     assert r.json()["dimensiones_congeladas"] == ["rodilla_piernas"]
+    # Corregir el cierre de nuevo (sin molestias) descongela la dimensión.
+    r = client.put(f"/api/sesiones/{sesion_id}/cierre", json={"molestias": []})
+    assert r.status_code == 200
+    assert r.json()["dimensiones_congeladas"] == []
     r = client.get(f"/api/sesiones/{sesion_id}")
     assert r.json()["sesion"]["rpe_real"] == 8
+
+
+def test_correccion_item_recalcula_puntos_y_carga(client, app):
+    """Criterios 7 + 4: corregir la dosis real de un ítem recalcula la carga."""
+    propuesta = _crear_propuesta(client)
+    resultado = _ejecutar_sesion(client, propuesta)
+    sesion = resultado["sesion"]
+    item = next(i for i in sesion["items"] if i["puntos_reales"])
+
+    # La corrección registra que el ítem no se realizó en realidad.
+    r = client.put(
+        f"/api/sesiones/{sesion['id']}/items/{item['id']}",
+        json={"estado": "no_realizado"},
+    )
+    assert r.status_code == 200, r.text
+    corregido = next(i for i in r.json()["sesion"]["items"] if i["id"] == item["id"])
+    assert corregido["estado"] == "no_realizado"
+    assert corregido["puntos_reales"] == {}
+
+    # La carga activa se recalcula desde el registro corregido (criterio 4):
+    # los puntos del ítem desaparecen del historial (ventana ×1.0, recién hecha).
+    catalog = app.state.catalog
+    carga = compute_load(construir_historial(app.state.db, catalog), catalog, datetime.now())
+    for dimension, puntos in item["puntos_reales"].items():
+        assert carga.puntos.get(dimension, 0.0) == pytest.approx(
+            resultado["puntos_sesion_real"].get(dimension, 0.0) - puntos
+        )
+
+
+def test_correccion_item_sobre_rango_amplifica_puntos(client, app):
+    """Una dosis corregida por encima del rango prescrito aplica ×1.25 (docs/12)."""
+    propuesta = _crear_propuesta(client)
+    resultado = _ejecutar_sesion(client, propuesta)
+    sesion = resultado["sesion"]
+    catalog = app.state.catalog
+    item = next(
+        i
+        for i in sesion["items"]
+        if i["puntos_reales"] and isinstance(catalog[i["exercise_id"]].prescripcion.get("repeticiones"), list)
+    )
+    maximo = catalog[item["exercise_id"]].prescripcion["repeticiones"][1]
+
+    r = client.put(
+        f"/api/sesiones/{sesion['id']}/items/{item['id']}",
+        json={"estado": "modificado", "repeticiones_real": maximo + 2, "motivo": "me salió más fuerte"},
+    )
+    assert r.status_code == 200, r.text
+    corregido = next(i for i in r.json()["sesion"]["items"] if i["id"] == item["id"])
+    for dimension, puntos in item["puntos_previstos"].items():
+        assert corregido["puntos_reales"][dimension] == pytest.approx(puntos * 1.25)
+
+
+def test_correccion_item_con_sesion_en_curso_rechazada(client):
+    propuesta = _crear_propuesta(client)
+    r = client.post("/api/sesiones", json={"proposal_id": propuesta["id"]})
+    assert r.status_code == 201
+    sesion = r.json()["sesion"]
+    item = sesion["items"][0]
+    r = client.put(
+        f"/api/sesiones/{sesion['id']}/items/{item['id']}",
+        json={"estado": "no_realizado"},
+    )
+    assert r.status_code == 409  # en curso se marca con PATCH, no se corrige con PUT
 
 
 # --- Perfil y exportación (criterio 7) ----------------------------------------------------
