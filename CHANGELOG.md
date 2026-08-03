@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.15.0 - Tests E2E del flujo completo
+
+- Dos pruebas funcionales nuevas que cierran la cobertura del criterio 2 de `docs/14` (flujo extremo a extremo) por los caminos que faltaban:
+  - `test_flujo_completo_con_bjj_y_sustitucion_en_ejecucion`: BJJ declarado + estado diario → familia A, marcado por las cuatro vías del modal de ejecución (incluida la **sustitución con ejercicio real**, que solo se registraba en la interfaz), validaciones 422 del esquema (sustituido sin `exercise_id_real`, modificado sin valores reales), finalizar con recálculo del sustituto, cierre con congelación lumbar y verificación del historial (física + BJJ, `exercise_id_real` persistido).
+  - `test_flujo_sin_material_e2e`: modo sin material (vacaciones/viaje, `docs/14`) de extremo a extremo hasta el historial, con el check por defecto al finalizar.
+- Verificados con prueba de mutación: el test del flujo con BJJ detecta la pérdida del `exercise_id_real` en el PATCH de ítems (rojo con mutación, verde al revertir).
+- `*.db` añadido a `.gitignore`: la BD SQLite local de desarrollo no se versiona.
+
 ## 0.14.0 - Frontend del MVP (Svelte 5 + Tailwind 4)
 
 - Nueva `app/frontend/`: aplicación responsive con las 6 pantallas del MVP (`docs/14`) más login: estado diario (con selector de material disponible), propuesta (con sustitución validada y motivo del rechazo visible), ejecución (check por ítem + modal de desviación), cierre, historial (registro/corrección de BJJ, corrección de RPE) y perfil (JSON editable + exportación).
