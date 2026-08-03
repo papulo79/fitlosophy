@@ -7,6 +7,7 @@
 - Usabilidad móvil: objetivos táctiles ≥ 44 px, recuperación con texto «Bien/Regular/Mal» (los valores de API no cambian), NavBar con iconos y logout reubicado a Perfil.
 - Sin cambios funcionales: misma API, mismos payloads, mismos stores y router; el contenido de seguridad (violaciones, incertidumbres, congelación) se conserva destacado. Verificado con capturas de las 7 pantallas y suite del backend intacta (58 tests).
 - Identidad del proyecto: marca «mancuerna en diagonal» lima sobre oscuro como `logo.svg`, `icono.svg` + PNGs (180/192/512) y `favicon.svg` en `app/frontend/public/`; la cabecera y el login llevan la marca, e `index.html` enlaza favicon, apple-touch-icon y `theme-color`. La cabecera solo se muestra con sesión iniciada (el login ya no duplica el título) y los ítems del historial muestran la dosis en su propia línea (nada de cortes a mitad de palabra).
+- Ayuda de ejercicios: cada nombre de ejercicio en Propuesta y Ejecución enlaza a una búsqueda de vídeo en YouTube (nueva pestaña, icono de lupa), para quien no conoce todavía todos los movimientos.
 
 ## 0.16.0 - Corrección completa de registros (criterio 7 de docs/14)
 

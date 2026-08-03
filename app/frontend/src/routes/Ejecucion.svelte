@@ -2,6 +2,7 @@
   import { api, mensajeError } from "../lib/api.js";
   import { flujo } from "../lib/stores.svelte.js";
   import { BLOQUES, FAMILIAS, ESTADOS_ITEM, agruparPorBloque } from "../lib/etiquetas.js";
+  import { urlBusqueda } from "../lib/busqueda.js";
   import Opciones from "../lib/Opciones.svelte";
   import Icon from "../lib/Icon.svelte";
   import BarraProgreso from "../lib/BarraProgreso.svelte";
@@ -141,7 +142,10 @@
                 <Icon nombre={item.estado === "no_realizado" ? "cerrar" : "check"} tam={22} />
               </button>
               <div class="min-w-0 flex-1">
-                <p class="font-semibold text-texto">{item.nombre}</p>
+                <a href={urlBusqueda(item.nombre)} target="_blank" rel="noopener" title="Buscar vídeo del ejercicio" class="group flex items-center gap-1.5 font-semibold text-texto">
+                  {item.nombre}
+                  <span class="text-tenue group-hover:text-acento"><Icon nombre="buscar" tam={13} /></span>
+                </a>
                 <p class="text-sm text-apagado">{item.dosis}</p>
                 {#if item.estado !== "pendiente"}
                   <p class="text-xs text-tenue">

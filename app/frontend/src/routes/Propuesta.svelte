@@ -2,6 +2,7 @@
   import { api, mensajeError } from "../lib/api.js";
   import { flujo } from "../lib/stores.svelte.js";
   import { BLOQUES, FAMILIAS, agruparPorBloque } from "../lib/etiquetas.js";
+  import { urlBusqueda } from "../lib/busqueda.js";
   import Icon from "../lib/Icon.svelte";
 
   let propuesta = $derived(flujo.propuesta);
@@ -119,7 +120,10 @@
             {@const idx = propuesta.items.indexOf(item)}
             <div class="flex items-start justify-between gap-2 rounded-xl border border-borde bg-superficie p-4">
               <div>
-                <p class="font-semibold text-texto">{item.nombre}</p>
+                <a href={urlBusqueda(item.nombre)} target="_blank" rel="noopener" title="Buscar vídeo del ejercicio" class="group flex items-center gap-1.5 font-semibold text-texto">
+                  {item.nombre}
+                  <span class="text-tenue group-hover:text-acento"><Icon nombre="buscar" tam={13} /></span>
+                </a>
                 <p class="text-sm text-apagado">{item.dosis}</p>
                 {#if item.justificacion}
                   <p class="mt-1 text-xs text-tenue">{item.justificacion}</p>

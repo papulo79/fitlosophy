@@ -20,11 +20,12 @@
     sin_registro: "M12 4a8 8 0 1 0 8 8h-2a6 6 0 1 1-6-6z",
     // Marca del proyecto: mancuerna en diagonal (45°).
     logo: "M3 9a1.5 1.5 0 0 1 3 0v6a1.5 1.5 0 0 1-3 0zm4-2a1.5 1.5 0 0 1 3 0v10a1.5 1.5 0 0 1-3 0zm7 0a1.5 1.5 0 0 1 3 0v10a1.5 1.5 0 0 1-3 0zm4 2a1.5 1.5 0 0 1 3 0v6a1.5 1.5 0 0 1-3 0zM10 11h4v2h-4z",
+    buscar: "M10 2a8 8 0 1 0 0 16 8 8 0 0 0 0-16zm0 3a5 5 0 1 1 0 10 5 5 0 0 1 0-10zM15.5 14.5l5.5 5.5-1.4 1.4-5.5-5.5z",
   };
   const TRANSFORMS = { logo: "rotate(45 12 12)" };
   let { nombre, tam = 20 } = $props();
 </script>
 
 <svg width={tam} height={tam} viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" class="shrink-0">
-  <path d={TRAZOS[nombre] || TRAZOS.aviso} transform={TRANSFORMS[nombre] || ""} />
+  <path d={TRAZOS[nombre] || TRAZOS.aviso} transform={TRANSFORMS[nombre] || ""} fill-rule="evenodd" />
 </svg>
