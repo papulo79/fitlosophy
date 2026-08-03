@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.7.0 - Motor de decisión formal
+
+- `docs/03` reescrito: cuestionario diario mínimo definitivo, reglas duras (D1-D6), de carga (C1-C6) y de preferencia (P1-P3) con orden de prioridad explícito.
+- Flujo completo en pseudocódigo: del estado diario a familia de sesión, presupuesto por dimensión y patrones prioritarios/restringidos.
+- Matriz de tipos de sesión (semáforo × BJJ × carga total) y formato de explicación esperada para cada decisión.
+- Valores provisionales del motor identificados (umbral de dolor, factor de presupuesto compatible, ausencia de patrón).
+
 ## 0.6.0 - Ampliación de la biblioteca
 
 - `data/ejercicios.yaml` pasa a `version: 2`: el coste escalar se sustituye por `coste_dimensiones` (mapa dimensión → bajo/medio/alto, según `docs/12`).

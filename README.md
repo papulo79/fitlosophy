@@ -67,14 +67,10 @@ fitlosophy/
 
 ## Estado actual
 
-El proyecto se encuentra entre las fases de **modelo de dominio**, **biblioteca de conocimiento** y diseño inicial del **motor de decisión**.
+Las fases 0 a 4 del roadmap están cerradas en su primera versión: contexto y visión, modelo de dominio (`docs/11`), biblioteca (`data/ejercicios.yaml`, `docs/05`), modelo de carga (`docs/12`) y motor de decisión (`docs/03`). Todos los valores numéricos son provisionales y se calibrarán con uso real.
 
-Todavía no se ha alcanzado la puerta de entrada al desarrollo. Antes deben cerrarse:
+Antes de la puerta de entrada al desarrollo quedan:
 
-- el modelo de dominio;
-- la biblioteca inicial;
-- el modelo de carga;
-- el cuestionario diario;
-- las reglas del motor;
-- las plantillas de sesión;
-- la validación manual con casos de uso.
+- las plantillas del generador de sesiones (Fase 5);
+- la validación manual con casos de uso (Fase 6);
+- la definición del alcance del MVP (Fase 7).

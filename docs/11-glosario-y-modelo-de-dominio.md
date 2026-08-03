@@ -136,7 +136,7 @@ Quién es el usuario y qué condiciona todas las decisiones.
 ### Regla
 
 - Obligatorio: condición, consecuencia, tipo (dura, de carga, de preferencia), prioridad.
-- Origen: biblioteca (documentos `03`, `04` y futuras reglas formalizadas en Fase 4).
+- Origen: biblioteca. Reglas duras, de carga y de preferencia formalizadas con prioridad en `docs/03`; reglas de gestión de carga en `docs/04`.
 
 ### Variable derivada
 
@@ -182,3 +182,4 @@ Criterios de salida de la Fase 1 y cómo quedan resueltos:
 - Coste base por dimensión de cada ejercicio (`coste_dimensiones` en `data/ejercicios.yaml`); se calibra en la Fase 9.
 - Separación formal ejercicio/variante en `data/ejercicios.yaml`.
 - Valores numéricos del modelo de carga (`docs/12`): decaimiento, puntos, umbrales y tabla de BJJ.
+- Valores del motor de decisión (`docs/03`): umbral de dolor, factor de presupuesto compatible y umbral de ausencia de patrón.
