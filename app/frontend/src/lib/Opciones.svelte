@@ -1,5 +1,5 @@
 <script>
-  /** Grupo de botones grandes para elegir un valor de dominio. */
+  /** Grupo de botones grandes para elegir un valor de dominio (segmentado oscuro). */
   let { opciones, valor = $bindable(), colores = {} } = $props();
 </script>
 
@@ -8,9 +8,9 @@
     <button
       type="button"
       onclick={() => (valor = op.valor)}
-      class="flex-1 rounded-xl border px-2 py-3 text-sm font-semibold transition-colors {valor === op.valor
-        ? colores[op.valor] || 'border-blue-600 bg-blue-600 text-white'
-        : 'border-gray-300 bg-white text-gray-700'}"
+      class="min-h-11 flex-1 rounded-xl border px-2 py-3 text-sm font-semibold transition-colors {valor === op.valor
+        ? colores[op.valor] || 'border-acento bg-acento text-fondo'
+        : 'border-borde bg-superficie text-apagado'}"
     >
       {op.etiqueta}
     </button>
