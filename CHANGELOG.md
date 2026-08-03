@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.14.0 - Frontend del MVP (Svelte 5 + Tailwind 4)
+
+- Nueva `app/frontend/`: aplicación responsive con las 6 pantallas del MVP (`docs/14`) más login: estado diario (con selector de material disponible), propuesta (con sustitución validada y motivo del rechazo visible), ejecución (check por ítem + modal de desviación), cierre, historial (registro/corrección de BJJ, corrección de RPE) y perfil (JSON editable + exportación).
+- Router por hash propio (sin dependencias): en producción basta servir `dist/` con `StaticFiles(html=True)`; en desarrollo, proxy de `/api` a uvicorn (puerto 8000).
+- Backend: la API sirve el frontend compilado si existe (`app/frontend/dist`) y expone `GET /api/ejercicios` (catálogo ligero para el selector de sustituciones).
+- `package-lock.json` incluido; `node_modules/` y `dist/` ignorados.
+- Fix de un test dependiente de la hora del día: `test_bjj_registro_correccion_y_carga` construía el BJJ «hace 20 h», que de 20:00 a 23:59 locales caía en el día actual y no disparaba la regla C4 (el motor usa el día natural anterior, `docs/03`). La fecha ahora se construye ayer a la misma hora + 1 min (edad ≈ 23 h 59 min, ventana ×1.0 de `docs/12`).
+
 ## 0.13.0 - API REST del MVP
 
 - Nuevo paquete `fitlosophy_api` (FastAPI + SQLite stdlib): auth de usuario único (pbkdf2, cookie HttpOnly de 30 días), sin registro.

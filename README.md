@@ -63,7 +63,8 @@ fitlosophy/
 │   ├── 13-casos-de-uso-y-validacion.md
 │   └── 14-diseno-del-mvp.md
 ├── app/
-│   └── backend/             # Motor en Python + tests (pytest)
+│   ├── backend/             # Motor en Python (fitlosophy) + API FastAPI/SQLite (fitlosophy_api) + tests pytest
+│   └── frontend/            # MVP: Svelte 5 + Tailwind 4, 6 pantallas + login (Vite)
 └── data/
     ├── perfil.yaml
     └── ejercicios.yaml
@@ -75,4 +76,4 @@ Las fases 0 a 6 del roadmap están cerradas en su primera versión: contexto y v
 
 El MVP está definido (`docs/14`): flujo de uso real, pantallas, marcado por ítem y criterios de aceptación.
 
-La Fase 8 (construcción) está en curso: el motor de decisión y el generador de sesiones están implementados en Python (`app/backend/`, paquete `fitlosophy`) y la API REST con autenticación y persistencia SQLite está operativa (`fitlosophy_api`, ver `app/backend/README.md`). Los 10 casos de `docs/13` y el flujo completo del MVP son tests ejecutables (`cd app/backend && python3 -m pytest`). Stack: Svelte 5 + Tailwind 4 (frontend, responsive), FastAPI + SQLite (backend), despliegue con Cloudflare Tunnel. Siguiente paso: el frontend con las 6 pantallas del MVP.
+La Fase 8 (construcción) está en curso: el motor de decisión y el generador de sesiones están implementados en Python (`app/backend/`, paquete `fitlosophy`) y la API REST con autenticación y persistencia SQLite está operativa (`fitlosophy_api`, ver `app/backend/README.md`). El frontend del MVP (`app/frontend/`, Svelte 5 + Tailwind 4) implementa las 6 pantallas de `docs/14` más el login, y la API sirve el `dist/` compilado en producción. Los 10 casos de `docs/13` y el flujo completo del MVP son tests ejecutables (`cd app/backend && python3 -m pytest`). Stack: Svelte 5 + Tailwind 4 (frontend, responsive), FastAPI + SQLite (backend), despliegue con Cloudflare Tunnel.
