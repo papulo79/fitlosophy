@@ -2,36 +2,34 @@
 
 ## Propósito
 
-Este documento define la evolución de Fitlosophy como producto.
+Este documento define la evolución funcional de Fitlosophy como producto. No establece fechas ni decisiones técnicas prematuras. Cada fase tiene un objetivo, entregables y criterios de salida.
 
-No es un calendario de fechas ni una planificación de desarrollo técnico. Es una secuencia de fases funcionales con objetivos, entregables, criterios de entrada y criterios de salida.
+La aplicación no debe construirse solo porque ya exista una preferencia por React o Svelte. El desarrollo comienza cuando el modelo funcional puede validarse manualmente sin que quien lo ejecute tenga que improvisar reglas.
 
-La construcción de la aplicación no debe comenzar por disponer de un framework elegido. Debe comenzar cuando el modelo funcional sea suficientemente estable para evitar que la interfaz y la persistencia condicionen decisiones todavía abiertas.
-
-## Visión del producto
+## Visión
 
 Fitlosophy debe convertirse en una aplicación personal de entrenamiento adaptativo capaz de:
 
-- Recoger un estado diario con poca fricción.
-- Recuperar el historial reciente.
-- Inferir carga acumulada por patrones, zonas y tipos de fatiga.
-- Elegir una familia de sesión adecuada.
-- Generar una propuesta comprensible y modificable.
-- Registrar lo realizado realmente.
-- Comparar la propuesta con la respuesta posterior.
-- Ajustar progresivamente las recomendaciones al usuario.
+- Recoger el estado diario con poca fricción.
+- Recuperar e interpretar el historial reciente.
+- Inferir carga acumulada por patrones y zonas.
+- Seleccionar una familia de sesión.
+- Generar una propuesta explicable y modificable.
+- Registrar la sesión realmente realizada.
+- Registrar la respuesta posterior.
+- Ajustar progresivamente sus estimaciones al usuario.
 
-El producto no pretende sustituir a un entrenador, fisioterapeuta o profesional sanitario. Tampoco pretende diagnosticar lesiones.
+No diagnostica lesiones ni sustituye a profesionales sanitarios o del entrenamiento.
 
-## Principios del roadmap
+## Principios
 
 1. Primero se diseña el conocimiento; después se construye la aplicación.
-2. Cada fase debe producir algo verificable.
-3. No se avanza por haber escrito documentación, sino por haber resuelto las decisiones necesarias.
-4. Los valores provisionales deben identificarse como provisionales.
-5. La aplicación inicial debe ser útil antes de incorporar aprendizaje automático o integraciones externas.
-6. El sistema debe explicar sus decisiones.
-7. El historial real tiene más valor que una planificación teórica no ejecutada.
+2. Cada fase debe producir resultados verificables.
+3. Los valores provisionales deben identificarse como tales.
+4. El sistema debe explicar sus decisiones.
+5. El historial real tiene prioridad sobre la planificación no ejecutada.
+6. El usuario aporta hechos subjetivos; el motor infiere la carga.
+7. Toda lógica de diseño se expresa mediante reglas y pseudocódigo, no mediante implementación.
 
 ---
 
@@ -39,27 +37,22 @@ El producto no pretende sustituir a un entrenador, fisioterapeuta o profesional 
 
 ## Objetivo
 
-Concentrar el contexto completo del problema y definir qué producto se quiere construir.
+Concentrar el contexto personal, deportivo y funcional del problema.
 
 ## Entregables
 
-- Contexto personal y deportivo.
-- Objetivos ordenados.
+- Perfil y objetivos priorizados.
 - Filosofía del sistema.
 - Alcance y límites.
 - Material disponible.
 - Escenarios diarios principales.
-- Definición inicial de los tipos de sesión.
+- Tipos iniciales de sesión.
 
 ## Criterios de salida
 
-La fase se considera suficientemente cerrada cuando:
-
-- Está claro que el producto es adaptativo y no un calendario rígido.
-- Los objetivos tienen prioridad explícita.
-- BJJ está integrado como parte central de la carga.
-- Se conocen los escenarios que el sistema debe resolver.
-- Se han documentado los límites sanitarios y de seguridad.
+- Se entiende que el producto es adaptativo y no un calendario rígido.
+- BJJ forma parte central del modelo de carga.
+- Están documentados los escenarios principales y los límites de seguridad.
 
 ## Estado
 
@@ -71,45 +64,23 @@ Muy avanzada.
 
 ## Objetivo
 
-Definir los conceptos del sistema y sus relaciones sin comprometerse todavía con una base de datos, una API o un framework.
-
-## Entidades funcionales previstas
-
-- Usuario o perfil.
-- Objetivo.
-- Estado diario.
-- Ejercicio.
-- Variante de ejercicio.
-- Patrón de movimiento.
-- Dimensión de carga.
-- Sesión propuesta.
-- Sesión realizada.
-- Bloque de una sesión.
-- Registro de BJJ.
-- Molestia o limitación.
-- Respuesta posterior.
-- Regla.
-- Inferencia.
-- Presupuesto de carga.
-- Recomendación.
+Definir los conceptos del sistema y sus relaciones sin decidir todavía base de datos, API o framework.
 
 ## Entregables
 
 - Glosario de dominio.
-- Descripción de cada entidad.
+- Entidades y relaciones.
 - Campos conceptuales obligatorios y opcionales.
-- Relaciones entre entidades.
+- Distinción entre ejercicio, variante y dosis.
+- Distinción entre sesión propuesta y realizada.
 - Separación entre datos declarados, registrados e inferidos.
-- Identificación de datos históricos y datos temporales.
 
 ## Criterios de salida
 
-- Cada concepto usado por el algoritmo tiene una definición única.
-- Se diferencia claramente propuesta de sesión y sesión realizada.
-- Se diferencia ejercicio de variante y de dosis.
-- La carga no se reduce a un único valor global.
-- El modelo permite representar sesiones físicas y BJJ.
-- La futura implementación puede elegir almacenamiento sin reinterpretar el dominio.
+- Cada concepto tiene una definición única.
+- El modelo representa sesiones físicas y BJJ.
+- La carga se representa por varias dimensiones.
+- La implementación futura no necesita reinterpretar el dominio.
 
 ## Estado
 
@@ -121,45 +92,26 @@ En curso.
 
 ## Objetivo
 
-Construir una biblioteca suficientemente rica para que el motor pueda interpretar los ejercicios y no dependa de reglas escritas para cada caso concreto.
-
-## Contenido de la biblioteca
-
-Para cada ejercicio o variante:
-
-- Nombre e identificador estable.
-- Patrón principal y secundarios.
-- Material requerido.
-- Nivel o dificultad.
-- Tipo de contracción o comportamiento relevante.
-- Bilateral o unilateral.
-- Controlado o explosivo.
-- Coste base por dimensiones.
-- Compatibilidad con BJJ.
-- Restricciones conocidas.
-- Posibles regresiones y progresiones.
-- Formas de dosificación.
-- Sustitutos funcionales.
+Construir la biblioteca que permite interpretar ejercicios, variantes y actividades.
 
 ## Entregables
 
 - Taxonomía de patrones.
-- Taxonomía de costes.
-- Biblioteca inicial completa para el material disponible.
-- Reglas de equivalencia y sustitución.
-- Criterios para añadir nuevos ejercicios.
+- Taxonomía de dimensiones de carga.
+- Biblioteca inicial para todo el material disponible.
+- Compatibilidad con BJJ.
+- Progresiones, regresiones y sustituciones.
+- Criterios para incorporar ejercicios nuevos.
 
 ## Criterios de salida
 
-- Se pueden construir sesiones variadas sin recurrir a ejercicios no catalogados.
-- Los ejercicios más utilizados tienen metadatos suficientes.
-- El sistema puede inferir carga de bisagra, lumbar, agarre, piernas, empuje, tirón y cardio.
-- Existen progresiones y regresiones para los movimientos principales.
-- Los ejercicios de coste alto están identificados sin considerarlos prohibidos.
+- Los ejercicios habituales tienen metadatos suficientes.
+- Se pueden generar sesiones variadas sin usar ejercicios no catalogados.
+- El motor puede inferir carga lumbar, bisagra, agarre, empuje, tirón, piernas y cardio.
 
 ## Estado
 
-Iniciada, todavía incompleta.
+Iniciada e incompleta.
 
 ---
 
@@ -167,37 +119,24 @@ Iniciada, todavía incompleta.
 
 ## Objetivo
 
-Definir cómo el historial y la biblioteca se transforman en conocimiento útil para decidir la siguiente sesión.
-
-## Preguntas que debe resolver
-
-- ¿Qué carga sigue activa después de una sesión?
-- ¿Cómo decae con el tiempo?
-- ¿Cómo se combinan varias sesiones?
-- ¿Cómo se interpreta una doble sesión?
-- ¿Cómo afecta el RPE real?
-- ¿Cómo se diferencia volumen moderado de una dosis muy exigente del mismo ejercicio?
-- ¿Cómo se incorpora una respuesta negativa al día siguiente?
-- ¿Cómo se representa la incertidumbre cuando faltan datos?
+Definir cómo la biblioteca y el historial se transforman en conocimiento útil para la siguiente decisión.
 
 ## Entregables
 
 - Dimensiones de carga definitivas.
-- Ventanas temporales relevantes.
-- Reglas de acumulación y decaimiento.
 - Modelo conceptual de dosis.
-- Reglas de inferencia de patrones repetidos.
-- Reglas para fatiga probable por BJJ.
-- Tratamiento de datos incompletos.
-- Valores provisionales claramente marcados.
+- Ventanas temporales.
+- Reglas de acumulación y decaimiento.
+- Tratamiento de dobles sesiones.
+- Influencia del RPE y de la respuesta posterior.
+- Tratamiento de incertidumbre y datos incompletos.
 
 ## Criterios de salida
 
-- A partir de un historial de ejemplo se puede explicar qué carga queda activa.
-- Dos revisores pueden llegar a una conclusión similar usando las mismas reglas.
-- El sistema no necesita preguntar al usuario si hizo demasiada bisagra, tirón o agarre.
-- El modelo distingue entre carga observada, carga estimada e incertidumbre.
-- Existen ejemplos de cálculo expresados únicamente como pseudocódigo o reglas funcionales.
+- Un historial de ejemplo produce una carga activa explicable.
+- El usuario no tiene que declarar que hizo demasiada bisagra, tirón o agarre.
+- Se diferencia carga observada, estimada y desconocida.
+- Los ejemplos están expresados en pseudocódigo o reglas funcionales.
 
 ## Estado
 
@@ -209,41 +148,30 @@ Pendiente de definición detallada.
 
 ## Objetivo
 
-Definir la secuencia completa que lleva desde el estado diario hasta una familia de sesión y un presupuesto de carga.
-
-## Decisiones principales
-
-- Detectar restricciones de seguridad.
-- Determinar si corresponde descanso, recuperación o entrenamiento.
-- Interpretar la posibilidad de BJJ.
-- Determinar la intensidad máxima apropiada.
-- Seleccionar la familia de sesión.
-- Establecer presupuestos por dimensiones.
-- Elegir patrones prioritarios y patrones restringidos.
+Definir la secuencia que transforma el estado diario y el historial en una familia de sesión y un presupuesto de carga.
 
 ## Entregables
 
 - Cuestionario diario mínimo.
-- Reglas duras.
+- Reglas de seguridad.
 - Reglas de carga.
 - Reglas de preferencia.
-- Orden de prioridad entre reglas.
+- Prioridad entre reglas.
 - Árboles y flujos en pseudocódigo.
 - Matriz de tipos de sesión.
-- Explicaciones esperadas para cada decisión.
+- Formato de explicación de la decisión.
 
 ## Criterios de salida
 
-- Todos los escenarios principales producen una familia de sesión coherente.
-- Una motivación alta no puede anular una restricción.
-- La ausencia de BJJ no obliga a seleccionar una sesión potente.
+- Los escenarios principales producen decisiones coherentes.
+- La motivación no puede anular una restricción.
+- La ausencia de BJJ no obliga a entrenar fuerte.
 - La disponibilidad incierta de BJJ conserva margen.
-- El resultado incluye una explicación comprensible.
-- Los conflictos entre reglas tienen una prioridad definida.
+- Los conflictos entre reglas están resueltos.
 
 ## Estado
 
-Diseño inicial existente; falta formalización completa.
+Diseño inicial existente; falta formalización.
 
 ---
 
@@ -251,37 +179,23 @@ Diseño inicial existente; falta formalización completa.
 
 ## Objetivo
 
-Definir cómo se construye una sesión concreta una vez seleccionados el tipo de sesión, los patrones y el presupuesto de carga.
-
-## Decisiones principales
-
-- Número de bloques.
-- Orden de ejercicios.
-- Selección entre fuerza, técnica, potencia, acondicionamiento y movilidad.
-- Cantidad de ejercicios.
-- Volumen e intensidad.
-- Descansos.
-- Duración.
-- Sustituciones.
-- Validación del coste combinado.
+Definir cómo se construye una sesión concreta una vez elegidos su familia, patrones y presupuesto.
 
 ## Entregables
 
-- Plantillas de sesión por familia.
-- Reglas de composición.
-- Reglas de dosificación.
+- Plantillas por familia de sesión.
+- Reglas de composición y orden.
+- Reglas de volumen, intensidad y descansos.
 - Reglas de sustitución.
-- Validación final de la sesión.
-- Casos de ejemplo completos.
+- Adaptación al tiempo disponible.
+- Validación del coste combinado.
 
 ## Criterios de salida
 
-- Se pueden generar sesiones completas para los escenarios A, B, C y D.
-- Las sesiones respetan el presupuesto total y los presupuestos locales.
-- No se repiten patrones de forma accidental.
-- El usuario puede sustituir un ejercicio sin invalidar el objetivo de la sesión.
-- La duración se adapta al tiempo disponible.
-- Cada sesión explica por qué contiene esos bloques.
+- Se generan sesiones completas para los escenarios principales.
+- Se respetan presupuestos globales y locales.
+- Una sustitución mantiene el objetivo de la sesión.
+- Cada bloque tiene una justificación.
 
 ## Estado
 
@@ -293,31 +207,24 @@ Pendiente.
 
 ## Objetivo
 
-Comprobar el diseño antes de construir software.
-
-## Método
-
-Simular días y semanas reales utilizando únicamente documentación, pseudocódigo, biblioteca e historial ficticio o real anonimizado.
+Validar el diseño antes de construir software.
 
 ## Entregables
 
-- Casos de uso representativos.
-- Casos límite.
+- Casos normales y casos límite.
 - Semanas simuladas.
 - Casos con datos incompletos.
 - Casos con dolor o limitación.
-- Casos con cambios de planes.
-- Casos con propuesta rechazada o modificada.
-- Registro de incoherencias encontradas.
+- Cambios inesperados de disponibilidad de BJJ.
+- Propuestas rechazadas o modificadas.
+- Registro de contradicciones y decisiones provisionales.
 
 ## Criterios de salida
 
-- El sistema resuelve de forma razonable una muestra amplia de escenarios.
-- No aparecen preguntas que el historial debería poder responder.
-- Las recomendaciones son explicables.
-- Las reglas no producen ciclos o contradicciones frecuentes.
-- Se conocen las decisiones aún provisionales.
-- Existe un conjunto de casos que luego podrá convertirse en pruebas funcionales.
+- El sistema resuelve una muestra amplia sin improvisación.
+- No pregunta al usuario datos que puede inferir.
+- Las recomendaciones son trazables y comprensibles.
+- Existe una base de casos reutilizable como pruebas funcionales.
 
 ## Estado
 
@@ -327,20 +234,21 @@ Pendiente.
 
 # Puerta de entrada a la aplicación
 
-La aplicación no debe empezar antes de que las fases 1 a 6 estén suficientemente cerradas.
+La construcción de la aplicación no debe comenzar hasta que las **fases 0 a 6** estén suficientemente cerradas.
 
-No se exige perfección matemática, pero sí:
+No se exige una precisión matemática definitiva, pero sí:
 
+- Contexto y alcance estables.
 - Modelo de dominio estable.
 - Biblioteca inicial utilizable.
+- Modelo de carga coherente.
 - Cuestionario diario definido.
-- Reglas de decisión coherentes.
+- Motor de decisión formalizado.
 - Plantillas de sesión definidas.
 - Casos de uso validados manualmente.
 - Decisiones provisionales identificadas.
-- Alcance del MVP acordado.
 
-Cuando estos criterios se cumplan, el riesgo principal deja de ser diseñar el producto equivocado y pasa a ser implementar correctamente el producto diseñado.
+El hito que abre la puerta al desarrollo se denomina **modelo funcional validable**.
 
 ---
 
@@ -348,68 +256,56 @@ Cuando estos criterios se cumplan, el riesgo principal deja de ser diseñar el p
 
 ## Objetivo
 
-Definir la primera aplicación útil, sin intentar incluir toda la visión futura.
+Definir la primera aplicación útil y sus criterios de aceptación.
 
 ## Funcionalidades del MVP
 
 ### Perfil
 
-- Consultar y editar datos básicos.
-- Registrar objetivos y prioridades.
-- Registrar material disponible.
-- Registrar restricciones permanentes o temporales.
+- Datos básicos.
+- Objetivos y prioridades.
+- Material disponible.
+- Restricciones permanentes o temporales.
 
 ### Estado diario
 
-- Dolor y zona.
-- Limitación de movimiento.
-- Recuperación percibida.
-- Sueño percibido.
+- Dolor, zona y limitación.
+- Recuperación y sueño percibidos.
 - Tiempo disponible.
 - Posibilidad e intensidad prevista de BJJ.
 - Preferencia opcional.
 
 ### Historial
 
-- Registrar BJJ.
-- Registrar sesión física.
-- Registrar ejercicios, dosis y RPE real.
-- Registrar cambios respecto a la propuesta.
-- Consultar sesiones recientes.
+- Registro de BJJ.
+- Registro de sesión física.
+- Ejercicios, dosis y RPE real.
+- Cambios respecto a la propuesta.
+- Respuesta posterior.
 
 ### Recomendación
 
-- Seleccionar familia de sesión.
-- Generar una propuesta.
-- Mostrar motivos.
-- Mostrar restricciones aplicadas.
-- Permitir sustituciones compatibles.
-- Permitir reducir duración o carga.
-
-### Seguimiento
-
-- Registrar sensación al terminar.
-- Registrar molestias posteriores.
-- Registrar estado al día siguiente.
+- Selección de familia de sesión.
+- Generación de propuesta.
+- Explicación de motivos y restricciones.
+- Sustituciones compatibles.
+- Reducción de duración o carga.
 
 ## Fuera del MVP
 
-- Integraciones con relojes.
+- Integraciones con wearables.
 - Aprendizaje automático.
-- Recomendaciones nutricionales completas.
-- Red social.
-- Marketplace de rutinas.
-- Gestión de múltiples entrenadores.
+- Nutrición completa.
+- Funciones sociales.
 - Diagnóstico de lesiones.
-- Automatización avanzada sin supervisión.
+- Automatización sin supervisión.
 
 ## Criterios de salida
 
-- Existe una definición cerrada de pantallas y flujos.
-- Cada funcionalidad se relaciona con un requisito del dominio.
-- Está claro qué información se introduce y qué se deriva.
-- Se ha elegido qué parte del algoritmo entra en la primera versión.
-- Se han definido criterios de aceptación funcionales.
+- Pantallas y flujos definidos.
+- Alcance cerrado.
+- Criterios de aceptación funcionales.
+- Correspondencia clara entre funcionalidades y dominio.
 
 ## Estado
 
@@ -417,22 +313,18 @@ Pendiente.
 
 ---
 
-# Fase 8. Construcción de la aplicación MVP
+# Fase 8. Construcción del MVP
 
 ## Objetivo
 
-Implementar el MVP definido en la fase anterior.
+Implementar el MVP. La elección entre React, Svelte u otra tecnología pertenece a esta fase.
 
-La elección entre React, Svelte u otra tecnología pertenece a esta fase y no debe alterar el modelo funcional.
-
-## Resultado esperado
-
-Una aplicación local o desplegable que permita completar el ciclo:
+## Flujo mínimo
 
 ```text
 Declarar estado diario
 → recibir propuesta
-→ modificar o aceptar
+→ aceptar o modificar
 → registrar sesión real
 → registrar respuesta posterior
 → conservar historial
@@ -440,12 +332,11 @@ Declarar estado diario
 
 ## Criterios de salida
 
-- El flujo principal funciona de extremo a extremo.
-- Los casos de prueba funcionales principales pasan.
-- Las decisiones del motor son trazables.
-- Los datos pueden exportarse.
-- El usuario puede corregir registros.
-- La aplicación no oculta incertidumbre ni inventa datos.
+- Flujo principal completo.
+- Decisiones trazables.
+- Casos funcionales principales superados.
+- Datos editables y exportables.
+- Incertidumbre visible.
 
 ## Estado
 
@@ -457,25 +348,23 @@ No iniciada.
 
 ## Objetivo
 
-Utilizar el MVP durante un periodo suficiente para descubrir diferencias entre el modelo teórico y la respuesta real.
+Usar el MVP con datos reales para ajustar el modelo.
 
-## Funcionalidades o actividades
+## Actividades
 
-- Comparar propuesta y sesión realizada.
-- Detectar sustituciones frecuentes.
-- Revisar recomendaciones rechazadas.
-- Analizar molestias posteriores.
+- Comparar propuesta y ejecución.
+- Analizar recomendaciones rechazadas.
+- Detectar sustituciones habituales.
+- Relacionar sesiones con respuesta posterior.
 - Ajustar costes individuales.
-- Revisar la utilidad del cuestionario diario.
-- Detectar campos que generan fricción y no aportan valor.
+- Reducir campos que generen fricción sin aportar valor.
 
 ## Criterios de salida
 
-- Existe un volumen mínimo de historial real.
+- Existe historial real suficiente.
 - Se han identificado errores sistemáticos.
-- Se han ajustado los costes más relevantes.
-- El sistema produce recomendaciones útiles con una frecuencia aceptable.
-- Se conocen las funciones necesarias para la siguiente versión.
+- Los costes principales han sido recalibrados.
+- Las recomendaciones resultan útiles de forma consistente.
 
 ## Estado
 
@@ -495,20 +384,9 @@ Convertir el MVP calibrado en una herramienta personal madura.
 - Vista semanal y mensual.
 - Evolución de fuerza y capacidad.
 - Alertas de acumulación.
-- Gestión de progresiones.
-- Semanas de descarga.
-- Planificación flexible de objetivos.
-- Biblioteca editable.
-- Importación y exportación.
-- Explicaciones históricas de las decisiones.
-- Comparación entre carga prevista y respuesta real.
-
-## Criterios de salida
-
-- El usuario puede utilizar el sistema como herramienta habitual.
-- El historial aporta decisiones mejores que una recomendación genérica.
-- Las reglas pueden modificarse sin reescribir toda la aplicación.
-- La biblioteca puede crecer manteniendo consistencia.
+- Gestión de progresiones y descargas.
+- Comparación entre propuesta, ejecución y respuesta.
+- Edición completa de biblioteca y reglas configurables.
 
 ## Estado
 
@@ -520,24 +398,21 @@ No iniciada.
 
 ## Objetivo
 
-Reducir entrada manual y añadir contexto, sin convertir datos imperfectos en verdades absolutas.
+Incorporar fuentes externas solo cuando aporten valor demostrado.
 
-## Integraciones posibles
+## Posibles integraciones
 
-- Frecuencia cardiaca y reposo.
-- Sueño del wearable.
-- Pasos.
+- Wearables y frecuencia cardiaca.
+- Sueño y actividad diaria.
+- Importación y exportación de sesiones.
 - Calendario.
-- Registro de peso.
-- Exportación a formatos abiertos.
-- Importación desde otras aplicaciones.
+- Notificaciones.
 
-## Condiciones
+## Criterios
 
-- Toda integración debe ser opcional.
-- El usuario debe poder corregir el dato.
-- El sistema debe distinguir dato medido, declarado y estimado.
-- Ningún wearable debe invalidar automáticamente una sensación subjetiva intensa.
+- Ninguna integración sustituye la percepción del usuario.
+- Los datos externos deben identificar su calidad e incertidumbre.
+- El sistema debe funcionar sin servicios externos.
 
 ## Estado
 
@@ -549,20 +424,17 @@ No iniciada.
 
 ## Objetivo
 
-Personalizar progresivamente costes, tiempos de recuperación y recomendaciones.
+Personalizar progresivamente las recomendaciones usando el historial individual.
 
-## Capacidades posibles
+## Funcionalidades previstas
 
-- Ajustar el coste individual de ejercicios y combinaciones.
-- Detectar patrones asociados a molestias.
-- Estimar recuperación habitual por tipo de sesión.
-- Recomendar progresiones según rendimiento real.
-- Detectar infraentrenamiento o estancamiento.
-- Mejorar la selección entre varias sesiones válidas.
+- Ajuste de costes por respuesta observada.
+- Detección de combinaciones asociadas a molestias.
+- Identificación de dosis bien toleradas.
+- Ajuste de ventanas de recuperación.
+- Priorización basada en adherencia y preferencias reales.
 
-## Restricción principal
-
-La adaptación avanzada no debe ser una caja negra que impida explicar la recomendación.
+No implica necesariamente aprendizaje automático. Puede comenzar con reglas transparentes y ajustes supervisados.
 
 ## Estado
 
@@ -570,62 +442,8 @@ No iniciada.
 
 ---
 
-# Funcionalidades transversales
+# Próximo hito
 
-Estas capacidades afectan a varias fases:
+Completar las fases 1 a 6 hasta alcanzar un **modelo funcional validable**.
 
-## Explicabilidad
-
-Toda recomendación debe poder mostrar:
-
-- Datos relevantes utilizados.
-- Inferencias realizadas.
-- Reglas aplicadas.
-- Motivos de exclusión.
-- Nivel de incertidumbre.
-
-## Corrección
-
-El usuario debe poder corregir:
-
-- Sesiones registradas.
-- Intensidad.
-- Ejercicios.
-- RPE.
-- Dolor o respuesta posterior.
-
-## Portabilidad
-
-Los datos deben poder exportarse en un formato comprensible y reutilizable.
-
-## Seguridad funcional
-
-El sistema debe favorecer decisiones conservadoras cuando:
-
-- Falten datos importantes.
-- Exista dolor relevante.
-- Exista limitación de movimiento.
-- El historial muestre respuestas negativas repetidas.
-
----
-
-# Próximos objetivos concretos
-
-El orden inmediato recomendado es:
-
-1. Cerrar el glosario y modelo de dominio.
-2. Completar la taxonomía de patrones y dimensiones de carga.
-3. Ampliar la biblioteca de ejercicios y variantes.
-4. Diseñar el modelo de carga y decaimiento.
-5. Cerrar el cuestionario diario mínimo.
-6. Formalizar las reglas del motor de decisión.
-7. Definir las plantillas del generador de sesiones.
-8. Construir casos de uso y validarlos manualmente.
-9. Definir el alcance del MVP.
-10. Solo entonces seleccionar arquitectura y comenzar la aplicación.
-
-## Próximo hito
-
-**Modelo funcional validable**.
-
-Se alcanza cuando, usando únicamente documentos, biblioteca, historial de ejemplo y pseudocódigo, puede generarse y justificar una sesión para los escenarios principales sin decisiones improvisadas por quien lo ejecuta.
+Se considerará alcanzado cuando, usando únicamente documentación, biblioteca, historial de ejemplo y pseudocódigo, pueda generarse y justificarse una sesión para los escenarios principales sin decisiones improvisadas.
