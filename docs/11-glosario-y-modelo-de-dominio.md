@@ -37,7 +37,7 @@ El sistema distingue además entre dato conocido, estimado y desconocido, y act�
 - **Material**: equipamiento disponible para entrenar. Su inventario vive en `data/perfil.yaml`; los ejercicios solo pueden requerir material existente.
 - **Molestia**: dolor o síntoma de baja intensidad que no llega a limitar el movimiento. Se registra porque su repetición alimenta las reglas de seguridad.
 - **Objetivo**: cualidad que el usuario quiere mejorar, con prioridad explícita (perder grasa, técnica de BJJ, evitar lesiones, fuerza, cardio, músculo).
-- **Patrón de movimiento**: clasificación biomecánica de un ejercicio (empuje horizontal, dominante de cadera, antirotación...). La taxonomía se define en la Fase 2.
+- **Patrón de movimiento**: clasificación biomecánica de un ejercicio (empuje horizontal, dominante de cadera, antirotación...). Taxonomía cerrada en `docs/05`; un ejercicio tiene un patrón principal y puede declarar secundarios.
 - **Presupuesto de carga**: cantidad máxima de carga por dimensión que la sesión del día puede consumir sin violar las reglas. Lo fija el motor antes de generar la sesión.
 - **Progresión / regresión**: variante más difícil / más fácil del mismo patrón. Permiten ajustar la dificultad sin cambiar el objetivo de la sesión.
 - **Recuperación (semáforo)**: estado verde, amarillo o rojo según sueño, fatiga, dolor y movilidad (`docs/04`). Un día rojo es recuperación o descanso; la motivación no lo convierte en verde.
@@ -88,8 +88,8 @@ Quién es el usuario y qué condiciona todas las decisiones.
 
 ### Patrón de movimiento
 
-- Obligatorio: nombre, criterio de asignación.
-- Origen: biblioteca. La taxonomía cerrada es pendiente (Fase 2).
+- Obligatorio: nombre, criterio de asignación, dimensiones de carga que alimenta.
+- Origen: biblioteca. Taxonomía cerrada definida en `docs/05` y en `data/ejercicios.yaml → valores → patron`.
 
 ### Dimensión de carga
 
@@ -180,6 +180,5 @@ Criterios de salida de la Fase 1 y cómo quedan resueltos:
 ## Valores provisionales
 
 - Lista definitiva de dimensiones de carga (Fase 3).
-- Taxonomía cerrada de patrones (Fase 2).
 - Separación formal ejercicio/variante en `data/ejercicios.yaml` (Fase 2).
 - Reglas de decaimiento de la carga activa (Fase 3).

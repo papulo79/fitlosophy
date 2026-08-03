@@ -59,9 +59,9 @@ Nota: `docs/10-roadmap-del-producto.md` define las fases del producto (0–12) y
 
 `data/ejercicios.yaml`:
 
-- Empieza con `version: 1` y una sección `valores` que enumera los dominios válidos de los campos categóricos (`coste`, `impacto_lumbar`, `compatibilidad_bjj`). **Los valores nuevos deben respetar esos dominios**; si se amplía un dominio, actualiza la sección `valores` primero.
+- Empieza con `version: 1` y una sección `valores` que enumera los dominios válidos de los campos categóricos (`coste`, `impacto_lumbar`, `compatibilidad_bjj`, `patron`). **Los valores nuevos deben respetar esos dominios**; si se amplía un dominio, actualiza la sección `valores` primero. El dominio `patron` es la taxonomía cerrada de `docs/05`: un patrón nuevo se documenta allí antes de usarse.
 - La lista de ejercicios cuelga de la clave `exercises`.
-- Cada ejercicio tiene: `id` (kebab-case en inglés, ej. `kb-swing-two-hand`), `nombre` (español), `patron` (snake_case, ej. `dominante_cadera`), `material` (lista; cada elemento debe corresponderse con el inventario de `perfil.yaml → material` por concepto: ej. `kettlebell` ↔ `kettlebells_kg`, `goma` ↔ `gomas`, `cinta` ↔ `cinta_velocidad_max_kmh`), `coste`, `impacto_lumbar`, `compatibilidad_bjj`, `objetivos` y, normalmente, `prescripcion`.
+- Cada ejercicio tiene: `id` (kebab-case en inglés, ej. `kb-swing-two-hand`), `nombre` (español), `patron` (de la taxonomía de `docs/05`), `secundarios` (opcional, misma taxonomía), `material` (lista; cada elemento debe corresponderse con el inventario de `perfil.yaml → material` por concepto: ej. `kettlebell` ↔ `kettlebells_kg`, `goma` ↔ `gomas`, `cinta` ↔ `cinta_velocidad_max_kmh`), `coste`, `impacto_lumbar`, `compatibilidad_bjj`, `objetivos` y, normalmente, `prescripcion`.
 - Las prescripciones usan rangos de dos elementos (`series: [3, 5]`, `repeticiones: [8, 15]`) o valores fijos, más flags booleanos opcionales (`por_lado`, `evitar_fallo`, `detener_si_falla_tecnica`, etc.).
 
 `data/perfil.yaml`: claves snake_case en español; los rangos se expresan como mapas `{min, max}`.

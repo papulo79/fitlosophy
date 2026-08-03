@@ -4,6 +4,22 @@ valores:
   coste: [bajo, medio, alto]
   impacto_lumbar: [verde, amarillo, rojo]
   compatibilidad_bjj: [si, limitada, no]
+  patron:
+    - empuje_horizontal
+    - empuje_vertical
+    - tiron_horizontal
+    - tiron_vertical
+    - dominante_rodilla
+    - dominante_cadera
+    - core_antiextension
+    - core_antirotacion
+    - core_lateral
+    - core_flexion_cadera
+    - core_rotacion
+    - acondicionamiento
+    - agilidad
+    - movilidad_cargada
+    - recuperacion
 
 exercises:
   - id: pushup-classic
@@ -46,6 +62,7 @@ exercises:
   - id: kb-row-supported
     nombre: Remo unilateral con kettlebell y apoyo
     patron: tiron_horizontal
+    secundarios: [core_antirotacion]
     material: [kettlebell, caja]
     coste: medio
     impacto_lumbar: verde
@@ -146,6 +163,7 @@ exercises:
   - id: kb-swing-one-hand
     nombre: Swing a una mano
     patron: dominante_cadera
+    secundarios: [core_antirotacion]
     material: [kettlebell]
     coste: alto
     impacto_lumbar: rojo
@@ -155,6 +173,7 @@ exercises:
   - id: windmill
     nombre: Windmill con kettlebell
     patron: movilidad_cargada
+    secundarios: [core_lateral]
     material: [kettlebell]
     coste: alto
     impacto_lumbar: rojo
