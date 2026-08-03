@@ -43,27 +43,29 @@ El acento lima queda reservado a acciones y estados activos; el semáforo del do
 
 ### Iconos
 
-Componente propio `src/lib/Icon.svelte` con SVG de relleno sólido dibujados a mano (~15): `hoy` (pulso), `sesion` (mancuerna), `historial` (calendario), `perfil` (usuario), `check`, `aviso` (triángulo), `mas` (puntos), `exportar` (descarga), `cerrar` (cruz), `corregir` (lápiz), `atras` (chevron), `plus`, `bjj` (kimono), `logout`, `descanso` (luna). Props: `nombre`, `tam` (px, 20 por defecto). Sin librería de iconos.
+Componente propio `src/lib/Icon.svelte` con SVG de relleno sólido dibujados a mano (~17): `hoy` (pulso), `historial` (calendario), `perfil` (usuario), `check`, `aviso` (triángulo), `mas` (puntos), `exportar` (descarga), `cerrar` (cruz), `corregir` (lápiz), `atras` (chevron), `plus`, `bjj` (kimono), `logout`, `fisica` (mancuerna), `recuperacion` (corazón), `descanso` (luna), `sin_registro` (círculo punteado). Props: `nombre`, `tam` (px, 20 por defecto). Sin librería de iconos.
 
 ## 2. Componentes (`app/frontend/src/lib/`)
 
 - `Icon.svelte` — sprite de relleno descrito arriba.
 - `Opciones.svelte` — se reestiliza (misma API de props) como control segmentado grande: opciones ≥ 44 px de alto, seleccionada en acento o en color de semáforo según variante.
 - `SliderDolor.svelte` — deslizador 0–10 con gradiente verde→ámbar→rojo, pulgar ≥ 34 px con el valor visible y leyenda «0 · sin dolor / 10 · máximo». `bind:valor`.
-- `Chips.svelte` — chips on/off (≥ 40 px) para el material disponible, con acciones «Todo / Nada». `bind:seleccionados` (lista) o `null` para «todo el inventario».
+- `Chips.svelte` — chips on/off (≥ 40 px) para el material disponible, con acciones «Todo / Nada». El tatami es caso especial: siempre fijo (cuenta como suelo), no es un chip seleccionable y «Todo / Nada» no se aplica a él (comportamiento actual, `EstadoDiario.svelte`). Se conserva la semántica actual del envío: con todo el inventario marcado **no se envía** `material_disponible` (equivale a «todo disponible»), no se envía un `null` literal; el componente adapta su estado interno a esa lógica.
 - `BarraProgreso.svelte` — «n de m» + barra en acento, para la cabecera de Ejecución.
 - Modales *bottom-sheet*: se conserva el patrón existente (fondo oscuro translúcido, hoja redondeada por arriba) reestilizado a superficie oscura.
 
 ## 3. Pantallas (mismo flujo, misma API)
 
-- **App.svelte**: fondo oscuro global; cabecera mínima con «FITLOSOPHY» en Barlow Condensed; `main` mantiene `max-w-xl` centrado. **NavBar.svelte**: barra inferior fija con icono + etiqueta (Hoy / Sesión / Historial / Perfil), activo en acento; «Sesión» solo visible cuando hay sesión en curso (como hoy).
+Regla general: **se conserva todo el contenido y los datos que cada pantalla muestra y envía hoy; solo cambia la presentación**. Lo que sigue describe los cambios, no una lista exhaustiva de lo que existe.
+
+- **App.svelte**: fondo oscuro global; cabecera mínima con «FITLOSOPHY» en Barlow Condensed; `main` mantiene `max-w-xl` centrado. **NavBar.svelte**: misma composición actual (Hoy / Historial / Perfil) con icono de relleno + etiqueta y activo en acento; el botón «Salir» sale de la barra y pasa a la pantalla de Perfil (con icono `logout`).
 - **Login**: tarjeta centrada oscura con titular condensado; inputs oscuros con foco en acento.
-- **EstadoDiario**: controles del mockup validado — recuperación como segmentado con semáforo y texto «Bien / Regular / Mal»; dolor con `SliderDolor` (zona obligatoria si dolor > 0, como hoy); BJJ como segmentado Sí/No/Incierto + segmentado Técnico/Normal/Duro condicional; material con `Chips`; CTA «GENERAR SESIÓN» en acento y Barlow Condensed.
-- **Propuesta**: familia en titular condensado grande; ítems agrupados por bloque en tarjetas con icono de bloque; explicación e incertidumbres en tarjeta destacada con icono de aviso; sustitución en bottom-sheet (mismo flujo, rechazo 409 con motivo visible); CTA «EMPEZAR SESIÓN».
+- **EstadoDiario**: controles del mockup validado — recuperación como segmentado con semáforo y texto visible «Bien / Regular / Mal» (los valores enviados a la API siguen siendo `verde`/`amarillo`/`rojo`; etiquetas nuevas en `etiquetas.js`); dolor con `SliderDolor` (zona obligatoria si dolor > 0, como hoy); BJJ como segmentado Sí/No/Incierto + segmentado Técnico/Normal/Duro condicional; material con `Chips` (tatami fijo, ver §2); CTA «GENERAR SESIÓN» en acento y Barlow Condensed. **Se conserva la sección plegable de opcionales** (`limitacion`, `sueno`, `tiempo_disponible`, `preferencia`, `circunstancias`) que se envía a la API — solo se reestiliza.
+- **Propuesta**: familia en titular condensado grande; ítems agrupados por bloque en tarjetas; explicación e incertidumbres en tarjeta destacada con icono de aviso; sustitución en bottom-sheet (mismo flujo, rechazo 409 con motivo visible); CTA «EMPEZAR SESIÓN». **Se conserva todo lo demás que muestra hoy**: violaciones de reglas con `propuesta.valida` (información de seguridad lumbar, destacada con icono de aviso en rojo/ámbar), dimensiones restringidas, «versión reducida», BJJ efectivo y notas.
 - **Ejecución**: cabecera con familia + `BarraProgreso` («n de m», rescate de la variante pizarra); ítems en tarjetas con check de 48 px (pendiente → borde, completado → acento, no realizado → rojo); modal de desviación reestilizado; CTA «FINALIZAR SESIÓN» y selección de RPE con `Opciones`.
 - **Cierre**: sensación con `Opciones` (Como estaba previsto / Más duro / Más suave); editor de molestias (zona + intensidad + añadir/quitar con iconos); dimensiones congeladas visibles con icono de aviso.
-- **Historial**: lista de días con iconos por tipo (sesión física, recuperación, BJJ, descanso) además de la etiqueta; detalle del día en tarjetas; corrección de RPE/BJJ/cierre con icono de lápiz; corrección de ítem en bottom-sheet (funcionalidad añadida en 0.16.0, se reestiliza).
-- **Perfil**: editor JSON con fuente monoespaciada sobre superficie oscura; botón de exportación con icono de descarga; logout con icono.
+- **Historial**: lista de días con iconos por tipo (`fisica`, `recuperacion`, `bjj`, `descanso`, `sin_registro`) además de la etiqueta; detalle del día en tarjetas; corrección de RPE/BJJ/cierre con icono de lápiz; corrección de ítem en bottom-sheet (funcionalidad añadida en 0.16.0, se reestiliza).
+- **Perfil**: editor JSON con fuente monoespaciada sobre superficie oscura; botón de exportación con icono de descarga; botón «Salir» (logout) con icono, reubicado desde NavBar.
 
 ## 4. Usabilidad
 
@@ -82,7 +84,7 @@ Componente propio `src/lib/Icon.svelte` con SVG de relleno sólido dibujados a m
 ## 6. Verificación
 
 - `npm run build` en verde tras cada tarea de implementación.
-- Capturas de las 7 pantallas (servidor `vite preview` + captura headless) para revisión visual antes de cerrar.
+- Capturas de las 7 pantallas (servidor `vite preview` + captura headless con Chromium, p. ej. vía `npx playwright` o `chromium --headless --screenshot`; herramienta **solo de verificación, no pasa a ser dependencia del proyecto**) para revisión visual antes de cerrar.
 - Suite del backend (`pytest`) intacta: no hay cambio funcional.
 
 ## 7. Fuera de alcance
