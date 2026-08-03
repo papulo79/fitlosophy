@@ -46,4 +46,12 @@ def create_app(db_path: str | Path | None = None) -> FastAPI:
     app.state.lock = threading.Lock()
     app.state.catalog = load_default_catalog()
     app.include_router(router)
+
+    # En producción se sirve el frontend compilado si existe (app/frontend/dist).
+    # El frontend usa rutas hash (#/...), así que no hace falta fallback SPA.
+    dist = Path(__file__).resolve().parents[3] / "frontend" / "dist"
+    if dist.is_dir():
+        from fastapi.staticfiles import StaticFiles
+
+        app.mount("/", StaticFiles(directory=dist, html=True), name="frontend")
     return app

@@ -241,8 +241,16 @@ def test_cierre_sin_molestias_no_congela(client):
 
 
 def test_bjj_registro_correccion_y_carga(client):
-    # BJJ duro de hace 20 h (ventana ×1.0).
-    ayer = (datetime.now() - timedelta(hours=20)).isoformat()
+    # BJJ duro "ayer" con edad ≤ 24 h (ventana ×1.0, docs/12). El motor usa el
+    # día natural anterior para C4 (docs/03, load.py resumen_ayer), así que la
+    # fecha se construye ayer a la misma hora + 1 min: siempre cae en el día
+    # anterior (edad ≈ 23 h 59 min) independientemente de cuándo se ejecute el
+    # test (la construcción "hace 20 h" fallaba de 20:00 a 23:59 locales).
+    ahora = datetime.now()
+    ayer = (
+        datetime.combine((ahora - timedelta(days=1)).date(), ahora.time().replace(microsecond=0))
+        + timedelta(minutes=1)
+    ).isoformat()
     r = client.post("/api/bjj", json={"clasificacion": "duro", "duracion_minutos": 75, "fecha": ayer})
     assert r.status_code == 201
     registro_id = r.json()["id"]
