@@ -1,0 +1,70 @@
+version: 1
+persona:
+  altura_cm: 172
+  peso_kg: 102
+  grasa_corporal_estimada_pct:
+    min: 20
+    max: 24
+  trabajo:
+    tipo: desarrollador_software
+    horas_sentado_dia: 10
+    pasos_diarios: bajos
+  sueno_horas:
+    min: 6
+    max: 7
+
+objetivos:
+  peso_orientativo_kg: 95
+  prioridades:
+    - perder_grasa
+    - mejorar_tecnica_bjj
+    - evitar_lesiones
+    - ganar_fuerza
+    - mejorar_cardio
+    - ganar_musculo
+
+bjj:
+  experiencia_anos:
+    min: 4
+    max: 5
+  grado: azul_2_3_grados
+  sesiones_semana:
+    min: 3
+    max: 4
+  intensidad_habitual: entre_normal_y_dura
+  competicion: false
+
+fuerza_actual:
+  dominadas_estrictas: 4
+  fondos:
+    faciles: 20
+    max_estimado: 30
+  hanging_leg_raises: 10
+  pistol_sin_ayuda: 0
+  peso_muerto_kg_mas_de: 100
+  press_mancuernas_kg_por_mano: 20
+
+movilidad_1_5:
+  tobillo: 5
+  cadera: 4
+  isquios: 3
+  columna_toracica: 4
+  hombros: 4
+
+material:
+  trx: true
+  tatami: true
+  barra_dominadas: true
+  kettlebells_kg: [8, 12, 16]
+  comba: true
+  caja: true
+  gomas: true
+  conos: true
+  escalera_agilidad: true
+  cinta_velocidad_max_kmh: 12
+
+consideraciones:
+  episodios_lumbares_sacros_recientes: true
+  doble_sesion_preferida: fisico_mas_bjj
+  kettlebell_y_funcional_mismo_dia: false
+  cinta_uso_preferente: recuperacion_activa
