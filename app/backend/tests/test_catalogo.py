@@ -53,3 +53,35 @@ def test_los_ejercicios_de_riesgo_declaran_su_limite_en_palabras(catalogo):
         if e.impacto_lumbar == "rojo":
             texto = e.descripcion.lower()
             assert any(s in texto for s in señales), e.id
+
+
+def test_los_valores_categoricos_son_texto(catalogo):
+    """YAML 1.1 convierte `no` en el booleano False.
+
+    `compatibilidad_bjj: no` se leía como `False`, así que una comparación
+    futura del tipo `ej.compatibilidad_bjj == "no"` nunca habría casado — y ese
+    valor marca justo los ejercicios que no deben programarse antes de BJJ. Los
+    valores del dominio van entrecomillados en el YAML; esto lo vigila.
+    """
+    for e in catalogo:
+        assert isinstance(e.compatibilidad_bjj, str), f"{e.id}: {e.compatibilidad_bjj!r}"
+        assert isinstance(e.impacto_lumbar, str), f"{e.id}: {e.impacto_lumbar!r}"
+        assert isinstance(e.nivel, str) and isinstance(e.lateralidad, str), e.id
+
+    for dominio in ("compatibilidad_bjj", "impacto_lumbar", "nivel", "lateralidad", "patron"):
+        for valor in catalogo.valores[dominio]:
+            assert isinstance(valor, str), f"valores.{dominio}: {valor!r}"
+
+
+def test_los_valores_de_los_ejercicios_estan_en_su_dominio(catalogo):
+    """Cierra el círculo del validador: lo que ya está dentro también cumple."""
+    val = catalogo.valores
+    for e in catalogo:
+        assert e.patron in val["patron"], e.id
+        assert e.impacto_lumbar in val["impacto_lumbar"], e.id
+        assert e.compatibilidad_bjj in val["compatibilidad_bjj"], e.id
+        assert e.nivel in val["nivel"], e.id
+        assert e.lateralidad in val["lateralidad"], e.id
+        for dim, nivel in e.coste_dimensiones.items():
+            assert dim in val["dimensiones"], f"{e.id}: {dim}"
+            assert nivel in val["nivel_coste"], f"{e.id}: {dim}={nivel}"

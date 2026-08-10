@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.23.0 - Flujo para añadir ejercicios desde una fuente externa
+
+- Nuevo `docs/roles/prompt-ejercicio-nuevo.md`: prompt versionado para pedir a un agente externo un ejercicio extraído de una transcripción o un artículo, con los vocabularios cerrados y el inventario de material embebidos. Vive en el repositorio para que no se desincronice del catálogo, y `tests/test_prompt_ejercicio.py` falla si alguien amplía un dominio sin actualizarlo.
+- Nuevo `scripts/validar_ejercicio.py`: valida de forma **determinista** todo lo comprobable —dominios, material, costes por dimensión, referencias cruzadas, unicidad e id, reglas de descripción de `docs/05`, coherencia de la prescripción— e informa además de qué cubre ya el catálogo en ese patrón, para que «¿aporta algo?» sea una comparación y no una pregunta abierta. Un LLM validando conformidad de esquema es más lento, no determinista y puede equivocarse donde un script no puede.
+- **Puerta de seguridad lumbar**: un ejercicio nuevo no entra como `impacto_lumbar: verde` sin `--confirmo-verde`. `impacto_lumbar` y `coste_dimensiones` son entradas directas del motor de decisión y un modelo leyendo un vídeo no conoce los episodios lumbares del atleta; el prompt le prohíbe proponer `verde` y le exige justificar ambos campos.
+- **Corregido un valor mal tipado en el catálogo**: YAML 1.1 convierte `no` en el booleano `False`, así que `compatibilidad_bjj: no` se leía como `False` en cuatro ejercicios (los dos swings, el windmill y el russian twist) y en el propio dominio de `valores`. Hoy nadie lee ese campo, así que no había fallo activo, pero una comparación futura del tipo `== "no"` nunca habría casado — y ese valor marca justo los ejercicios que no deben ir antes de BJJ. Los valores van entrecomillados y hay dos tests nuevos que vigilan el tipo y la pertenencia al dominio.
+- `docs/roles/README.md` actualizado: decía «como no hay tests ni build» con 109 tests y un build en el repositorio.
+- 11 tests nuevos (109 en total, suite en verde).
+
 ## 0.22.1 - Roadmap al día
 
 - `docs/10` conservaba los estados de antes de escribir una sola línea de código: la Fase 8 figuraba como «No iniciada» con la aplicación desplegada y en uso, y el «Próximo hito» seguía apuntando a completar las fases 1–6. Las fases 0 a 8 pasan a **cerradas**, cada una con el documento y el módulo que la implementan, y la **Fase 9 (uso personal y calibración) queda en curso desde el 10 de agosto de 2026**.

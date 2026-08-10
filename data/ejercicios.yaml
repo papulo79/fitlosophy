@@ -2,7 +2,7 @@ version: 2
 
 valores:
   impacto_lumbar: [verde, amarillo, rojo]
-  compatibilidad_bjj: [si, limitada, no]
+  compatibilidad_bjj: ["si", "limitada", "no"]
   nivel: [base, intermedio, avanzado]
   lateralidad: [bilateral, unilateral]
   nivel_coste: [bajo, medio, alto]
@@ -280,7 +280,7 @@ exercises:
     explosivo: true
     coste_dimensiones: {bisagra: alto, lumbar: medio, agarre: medio, cardio: medio}
     impacto_lumbar: amarillo
-    compatibilidad_bjj: no
+    compatibilidad_bjj: "no"
     objetivos: [potencia, acondicionamiento]
     regresiones: [kb-deadlift]
     progresiones: [kb-swing-one-hand]
@@ -301,7 +301,7 @@ exercises:
     explosivo: true
     coste_dimensiones: {bisagra: alto, lumbar: alto, agarre: alto, core: medio}
     impacto_lumbar: rojo
-    compatibilidad_bjj: no
+    compatibilidad_bjj: "no"
     objetivos: [potencia, agarre, antirotacion]
     regresiones: [kb-swing-two-hand]
 
@@ -316,7 +316,7 @@ exercises:
     lateralidad: unilateral
     coste_dimensiones: {lumbar: alto, core: medio, empuje: bajo}
     impacto_lumbar: rojo
-    compatibilidad_bjj: no
+    compatibilidad_bjj: "no"
     objetivos: [movilidad, estabilidad, fuerza]
     prescripcion:
       series: [3, 4]
@@ -425,7 +425,7 @@ exercises:
     lateralidad: bilateral
     coste_dimensiones: {core: alto, lumbar: alto}
     impacto_lumbar: rojo
-    compatibilidad_bjj: no
+    compatibilidad_bjj: "no"
     objetivos: [rotacion]
     sustitutos: [pallof-press]
     opcional: true

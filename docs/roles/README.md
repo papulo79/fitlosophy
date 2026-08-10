@@ -8,14 +8,18 @@ Orquestación de agentes adaptada del proyecto *Pixel Adventure: Puzzle Battles*
 
 ## La «suite en verde» en Fitlosophy
 
-Como no hay tests ni build, la validación que gobierna el bucle es:
+Ya hay aplicación con tests y build, así que la validación que gobierna el bucle es:
 
-1. Sintaxis YAML válida si se tocó `data/`:
-   `python3 -c "import yaml; [yaml.safe_load(open(f)) for f in ['data/perfil.yaml','data/ejercicios.yaml']]"`
-2. Coherencia entre documentos según `AGENTS.md` §Consistencia (dominios de `valores`, material ↔ `perfil.yaml`, tipos de día / semáforo / plantillas alineados, `docs/00` sincronizado).
-3. Reglas de seguridad lumbar intactas.
+1. **Suite del backend**: `cd app/backend && ./.venv/bin/python -m pytest` (109 tests). Incluye los 10 casos de `docs/13` como pruebas ejecutables y la integridad del catálogo.
+2. **Build del frontend**: `cd app/frontend && npm run build` sin errores.
+3. Coherencia entre documentos según `AGENTS.md` §Consistencia (dominios de `valores`, material ↔ `perfil.yaml`, tipos de día / semáforo / plantillas alineados, `docs/00` sincronizado).
+4. Reglas de seguridad lumbar intactas.
 
-Si en el futuro se añade una app con tests, esa suite pasa a ser la validación principal y estos archivos deben actualizarse.
+La validación de sintaxis YAML sigue siendo obligatoria tras tocar `data/`, pero ya está cubierta por la suite: `tests/test_catalogo.py` carga el catálogo y comprueba dominios, referencias y las reglas de `docs/05`.
+
+## Añadir ejercicios al catálogo
+
+Para enriquecer `data/ejercicios.yaml` a partir de una transcripción de vídeo o un artículo, ver **`prompt-ejercicio-nuevo.md`**: un prompt para el agente externo y un validador determinista (`app/backend/scripts/validar_ejercicio.py`) que comprueba todo lo comprobable antes de insertar. El criterio humano se reserva a lo que lo necesita — si aporta cobertura nueva, si el impacto lumbar es correcto para este atleta y si los costes por dimensión son plausibles.
 
 ## Topes del bucle
 
