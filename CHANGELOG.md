@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.21.0 - Una sola sesión en marcha
+
+- **Causa raíz**: el estado del frontend vivía solo en memoria, así que recargar o reabrir la aplicación a mitad de sesión dejaba en la pantalla de estado diario, donde lo único posible era declararlo otra vez → nueva propuesta → y al aceptar, una **segunda sesión en curso** el mismo día. No era mal uso: era la consecuencia inevitable de recargar.
+- Nueva sección «Una sola sesión en marcha» en `docs/14`: como mucho una sesión activa y una propuesta vigente en cada momento; reabrir a mitad de sesión devuelve a esa sesión; redeclarar el estado diario descarta la propuesta anterior en lugar de acumularla; y una sesión se puede cancelar.
+- Backend: `POST /api/estado-diario` y `POST /api/sesiones` responden 409 si hay una sesión `en_curso` (con el `sesion_id` en el detalle, para que la interfaz pueda llevar allí). Nuevo estado `cancelada` y endpoint `POST /api/sesiones/{id}/cancelar`. Nueva columna `proposals.estado` (`vigente` | `aceptada` | `descartada`) con migración idempotente que además normaliza las bases de datos existentes.
+- Nuevo `GET /api/hoy` con la sesión activa y la propuesta vigente: es lo que permite al frontend repoblar el flujo tras recargar, en lugar de empezar de cero.
+- Frontend: al arrancar se recupera el flujo desde `/api/hoy` y no se redirige hasta saber qué hay en marcha (antes se expulsaba de Ejecución a quien recargaba dentro de su sesión). Botón «Cancelar sesión» en Ejecución, con confirmación, porque el invariante nuevo haría que una sesión abierta por error bloqueara el día entero.
+- El historial deja de mostrar propuestas descartadas y sesiones canceladas: son ruido de haber redeclarado el estado, no lo que pasó ese día. La carga nunca las contó (`construir_historial` solo lee sesiones finalizadas y cerradas).
+- 6 tests nuevos (89 en total, suite en verde): segunda sesión rechazada, redeclarar descarta la anterior, cancelar libera el día, una sesión cancelada no aporta carga ni aparece en el historial, solo se cancela lo que está en curso, y `/api/hoy` refleja lo que hay en marcha.
+
 ## 0.20.0 - Ejecución de los ejercicios en el catálogo
 
 - El catálogo era un modelo de decisión y dosificación, sin ningún campo que dijera **cómo** se hace cada ejercicio: la pantalla solo podía mostrar nombre, dosis y justificación. Se notaba sobre todo en la escalera de agilidad, cuya prescripción (`pasadas_por_patron`) se expresaba «por patrón» mientras el catálogo no enumeraba esos patrones en ninguna parte: «4 pasadas» era una dosis que no se podía ejecutar.

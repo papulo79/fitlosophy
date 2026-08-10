@@ -24,6 +24,17 @@ Estado diario → Propuesta → Ejecución y registro → Finalizar (cierre)
                                               Historial actualizado
 ```
 
+### Una sola sesión en marcha
+
+El flujo es lineal y el día tiene un único momento de decisión, así que en cada instante existe **como mucho una sesión activa** y **una propuesta vigente**:
+
+- Con una sesión `en_curso` no se puede declarar otro estado diario ni aceptar otra propuesta: primero se finaliza o se cancela. Reabrir la aplicación a mitad de sesión debe **devolver a esa sesión**, no ofrecer empezar de cero.
+- Declarar de nuevo el estado diario sin haber empezado sí está permitido —el estado real cambia a lo largo de la tarde— y **descarta** la propuesta anterior del día en lugar de acumularla.
+- Una sesión se puede **cancelar** mientras está `en_curso`: es la salida cuando se empieza por error o el plan se cae. Una sesión cancelada no aporta carga al historial ni cuenta como estímulo de ningún patrón.
+
+Estados de una sesión: `en_curso` → `finalizada` → `cerrada`, o `en_curso` → `cancelada`.
+Estados de una propuesta: `vigente` → `aceptada` o `descartada`.
+
 ## Pantallas y flujos
 
 ### 1. Estado diario

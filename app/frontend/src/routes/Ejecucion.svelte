@@ -1,6 +1,6 @@
 <script>
   import { api, mensajeError } from "../lib/api.js";
-  import { flujo } from "../lib/stores.svelte.js";
+  import { flujo, reiniciarFlujo } from "../lib/stores.svelte.js";
   import { BLOQUES, FAMILIAS, ESTADOS_ITEM, agruparPorBloque } from "../lib/etiquetas.js";
   import Opciones from "../lib/Opciones.svelte";
   import Icon from "../lib/Icon.svelte";
@@ -24,6 +24,7 @@
 
   // Finalizar: RPE real obligatorio.
   let finalizando = $state(false);
+  let cancelando = $state(false);
   let rpe = $state(7);
   let cargando = $state(false);
 
@@ -87,6 +88,20 @@
       itemModal = null;
     } catch (e) {
       errorModal = mensajeError(e);
+    }
+  }
+
+  async function cancelar() {
+    error = "";
+    cargando = true;
+    try {
+      await api.post(`/api/sesiones/${sesion.id}/cancelar`);
+      reiniciarFlujo();
+      location.hash = "#/estado";
+    } catch (e) {
+      error = mensajeError(e);
+    } finally {
+      cargando = false;
     }
   }
 
@@ -186,6 +201,29 @@
         <button onclick={() => (finalizando = true)} class="w-full rounded-xl bg-acento py-4 font-display text-xl font-bold tracking-wider text-fondo">
           FINALIZAR SESIÓN
         </button>
+
+        <!-- Salida cuando se empieza por error o el plan se cae (docs/14).
+             Sin esto, una sesión abierta bloquea el día entero: no se puede
+             declarar otro estado diario mientras siga en curso. -->
+        {#if cancelando}
+          <div class="rounded-xl border border-rojo/40 bg-rojo/10 p-4">
+            <p class="text-sm text-rojo">
+              La sesión se descarta: no cuenta en el historial ni suma carga. Podrás declarar de nuevo el estado diario.
+            </p>
+            <div class="mt-3 flex gap-2">
+              <button onclick={() => (cancelando = false)} class="flex-1 rounded-xl border border-borde py-3 font-medium text-apagado">
+                Seguir
+              </button>
+              <button onclick={cancelar} disabled={cargando} class="flex-1 rounded-xl bg-rojo py-3 font-semibold text-fondo disabled:opacity-50">
+                {cargando ? "Cancelando…" : "Cancelar sesión"}
+              </button>
+            </div>
+          </div>
+        {:else}
+          <button onclick={() => (cancelando = true)} class="min-h-11 w-full rounded-xl text-sm font-semibold text-tenue hover:text-rojo">
+            Cancelar sesión
+          </button>
+        {/if}
       {/if}
     {/if}
   </div>

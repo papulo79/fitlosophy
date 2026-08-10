@@ -37,6 +37,23 @@
   let parametro = $derived(hash.split("/").slice(2).join("/") || null);
   let Componente = $derived(componentes[base] || EstadoDiario);
 
+  // Repuebla el flujo desde el servidor tras recargar (ver stores.svelte.js).
+  let recuperando = false;
+  async function recuperarFlujo() {
+    if (recuperando) return;
+    recuperando = true;
+    try {
+      const hoy = await api.get("/api/hoy");
+      if (hoy.sesion_activa) flujo.sesion = hoy.sesion_activa;
+      if (hoy.propuesta_vigente) flujo.propuesta = hoy.propuesta_vigente;
+    } catch {
+      // Sin recuperación posible: se sigue con el flujo vacío.
+    } finally {
+      flujo.recuperado = true;
+      recuperando = false;
+    }
+  }
+
   $effect(() => {
     if (!session.verificado) {
       api
@@ -53,10 +70,23 @@
         });
       return;
     }
-    if (!session.usuario && base !== "/login") {
-      location.hash = "#/login";
-    } else if (session.usuario && base === "/login") {
+    if (!session.usuario) {
+      if (base !== "/login") location.hash = "#/login";
+      return;
+    }
+    if (base === "/login") {
       location.hash = "#/estado";
+      return;
+    }
+    // Hasta saber qué hay en marcha no se redirige: si no, se expulsaría de
+    // Ejecución a quien acaba de recargar dentro de su sesión.
+    if (!flujo.recuperado) {
+      recuperarFlujo();
+      return;
+    }
+    if (flujo.sesion?.estado === "en_curso" && base === "/estado") {
+      // docs/14: reabrir a mitad de sesión devuelve a esa sesión.
+      location.hash = "#/ejecucion";
     } else if (base === "/propuesta" && !flujo.propuesta) {
       location.hash = "#/estado";
     } else if ((base === "/ejecucion" || base === "/cierre") && !flujo.sesion) {

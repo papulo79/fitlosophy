@@ -771,3 +771,91 @@ def test_la_ejecucion_se_resuelve_desde_el_catalogo(client, app):
     items = r.json()["propuestas"][0]["items"]
     dead_bug = next(i for i in items if i["exercise_id"] == "dead-bug")
     assert dead_bug["descripcion"] == "Texto corregido a posteriori."
+
+
+# --- Una sola sesión en marcha (docs/14) --------------------------------------------
+
+
+def test_no_se_puede_empezar_una_segunda_sesion(client):
+    """El caso real: recargar llevaba al estado diario, y declararlo otra vez
+    acababa abriendo una segunda sesión en curso el mismo día."""
+    p1 = _crear_propuesta(client)
+    r = client.post("/api/sesiones", json={"proposal_id": p1["id"]})
+    assert r.status_code == 201
+
+    # Con la sesión en curso ni siquiera se puede declarar otro estado diario.
+    r = client.post(
+        "/api/estado-diario", json={"recuperacion": "verde", "dolor": 0, "bjj_disponible": "no"}
+    )
+    assert r.status_code == 409
+    assert r.json()["detail"]["sesion_id"] == 1
+
+
+def test_declarar_de_nuevo_el_estado_descarta_la_propuesta_anterior(client):
+    """El estado real cambia por la tarde: redeclararlo se permite, pero
+    sustituye la propuesta en vez de acumular otra."""
+    p1 = _crear_propuesta(client)
+    p2 = _crear_propuesta(client, preferencia="fuerza")
+    assert p2["id"] != p1["id"]
+
+    r = client.post("/api/sesiones", json={"proposal_id": p1["id"]})
+    assert r.status_code == 409
+    assert "descartada" in r.json()["detail"]
+
+    assert client.post("/api/sesiones", json={"proposal_id": p2["id"]}).status_code == 201
+
+
+def test_cancelar_libera_el_dia(client):
+    """Sin cancelar, empezar por error bloquearía el día entero."""
+    p1 = _crear_propuesta(client)
+    sesion = client.post("/api/sesiones", json={"proposal_id": p1["id"]}).json()["sesion"]
+
+    r = client.post(f"/api/sesiones/{sesion['id']}/cancelar")
+    assert r.status_code == 200
+    assert r.json()["sesion"]["estado"] == "cancelada"
+
+    # Ya se puede volver a empezar.
+    p2 = _crear_propuesta(client)
+    assert client.post("/api/sesiones", json={"proposal_id": p2["id"]}).status_code == 201
+
+
+def test_una_sesion_cancelada_no_aporta_carga_ni_aparece_en_el_historial(client):
+    """Cancelar no es finalizar: no debe contaminar el historial ni la carga."""
+    p1 = _crear_propuesta(client)
+    sesion = client.post("/api/sesiones", json={"proposal_id": p1["id"]}).json()["sesion"]
+    client.post(f"/api/sesiones/{sesion['id']}/cancelar")
+
+    hoy = datetime.now().date().isoformat()
+    detalle = client.get(f"/api/historial/{hoy}").json()
+    assert [s for s in detalle["sesiones"] if s["id"] == sesion["id"]] == []
+    # Las propuestas descartadas tampoco ensucian el día.
+    assert all(p["estado"] != "descartada" for p in detalle["propuestas"])
+
+    # Y la carga del día siguiente sigue a cero: no hubo estímulo.
+    p2 = _crear_propuesta(client)
+    assert all(v == 0 for v in p2["carga"]["puntos"].values())
+
+
+def test_solo_se_cancela_una_sesion_en_curso(client):
+    p1 = _crear_propuesta(client)
+    sesion = client.post("/api/sesiones", json={"proposal_id": p1["id"]}).json()["sesion"]
+    client.post(f"/api/sesiones/{sesion['id']}/finalizar", json={"rpe_real": 7})
+    r = client.post(f"/api/sesiones/{sesion['id']}/cancelar")
+    assert r.status_code == 409
+
+
+def test_hoy_devuelve_lo_que_hay_en_marcha(client):
+    """Es lo que permite al frontend recuperar el flujo tras recargar."""
+    assert client.get("/api/hoy").json() == {"sesion_activa": None, "propuesta_vigente": None}
+
+    propuesta = _crear_propuesta(client)
+    hoy = client.get("/api/hoy").json()
+    assert hoy["sesion_activa"] is None
+    assert hoy["propuesta_vigente"]["id"] == propuesta["id"]
+
+    sesion = client.post("/api/sesiones", json={"proposal_id": propuesta["id"]}).json()["sesion"]
+    hoy = client.get("/api/hoy").json()
+    assert hoy["sesion_activa"]["id"] == sesion["id"]
+    assert hoy["sesion_activa"]["estado"] == "en_curso"
+    # Aceptada deja de estar vigente: no hay nada nuevo que proponer.
+    assert hoy["propuesta_vigente"] is None

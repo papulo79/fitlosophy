@@ -115,6 +115,7 @@ def _propuesta_json(row: sqlite3.Row, catalog: Catalog) -> dict:
     return {
         "id": row["id"],
         "estado_diario_id": row["daily_state_id"],
+        "estado": row["estado"],
         "fecha": row["fecha"],
         "familia": row["familia"],
         "reducida": bool(row["reducida"]),
@@ -142,6 +143,13 @@ def _propuesta_json(row: sqlite3.Row, catalog: Catalog) -> dict:
 
 
 def _guardar_propuesta(conn, estado_id: int, prop: Proposal, sesion: SessionProposal) -> int:
+    # Volver a declarar el estado diario sustituye la propuesta anterior del día
+    # en lugar de acumularla (docs/14): el estado real cambia a lo largo de la
+    # tarde, pero solo una propuesta está vigente en cada momento.
+    conn.execute(
+        "UPDATE proposals SET estado = 'descartada' WHERE estado = 'vigente' AND date(fecha) = date(?)",
+        (prop.fecha.isoformat(timespec="seconds"),),
+    )
     items = [
         {
             "exercise_id": i.exercise_id,
@@ -219,9 +227,30 @@ def ruta_me(user=Depends(usuario_actual)):
 # --- 1. Estado diario → propuesta (criterio 2) --------------------------------------
 
 
+def _sesion_activa(conn) -> sqlite3.Row | None:
+    """Sesión `en_curso`, si la hay. El flujo del MVP admite una como mucho
+    (docs/14): mientras exista, no se empieza otra."""
+    return conn.execute(
+        "SELECT * FROM training_sessions WHERE estado = 'en_curso' ORDER BY id DESC LIMIT 1"
+    ).fetchone()
+
+
+def _exigir_sin_sesion_activa(conn) -> None:
+    activa = _sesion_activa(conn)
+    if activa is not None:
+        raise HTTPException(
+            status_code=409,
+            detail={
+                "detalle": "Ya tienes una sesión en curso. Termínala o cancélala antes de empezar otra.",
+                "sesion_id": activa["id"],
+            },
+        )
+
+
 @router.post("/api/estado-diario", status_code=201)
 def crear_estado_diario(datos: EstadoDiarioIn, request: Request, user=Depends(usuario_actual), conn=Depends(db_conn)):
     catalog = get_catalog(request)
+    _exigir_sin_sesion_activa(conn)
     if datos.material_disponible is not None:
         desconocidos = sorted(set(datos.material_disponible) - TOKENS_MATERIAL)
         if desconocidos:
@@ -395,6 +424,14 @@ def aceptar_propuesta(datos: SesionIn, request: Request, user=Depends(usuario_ac
     ).fetchone()
     if existente is not None:
         raise HTTPException(status_code=409, detail="La propuesta ya tiene una sesión en curso o registrada")
+    # Una sola sesión activa a la vez (docs/14). Sin esto, recargar la página
+    # llevaba al estado diario y aceptar de nuevo abría una segunda sesión.
+    _exigir_sin_sesion_activa(conn)
+    if prop["estado"] == "descartada":
+        raise HTTPException(
+            status_code=409,
+            detail="Esa propuesta quedó descartada al declarar de nuevo el estado diario",
+        )
 
     ahora = datetime.now()
     cur = conn.execute(
@@ -408,9 +445,53 @@ def aceptar_propuesta(datos: SesionIn, request: Request, user=Depends(usuario_ac
                VALUES (?, ?, ?, ?, ?, ?)""",
             (sesion_id, it["bloque"], it["exercise_id"], it["dosis"], volcar_json(it.get("puntos") or {}), it.get("justificacion", "")),
         )
+    conn.execute("UPDATE proposals SET estado = 'aceptada' WHERE id = ?", (datos.proposal_id,))
     conn.commit()
     row = conn.execute("SELECT * FROM training_sessions WHERE id = ?", (sesion_id,)).fetchone()
     return {"sesion": _sesion_json(conn, row, catalog)}
+
+
+@router.post("/api/sesiones/{sesion_id}/cancelar")
+def cancelar_sesion(sesion_id: int, request: Request, user=Depends(usuario_actual), conn=Depends(db_conn)):
+    """Abandona una sesión empezada por error o que se cae (docs/14).
+
+    No aporta carga al historial ni cuenta como estímulo: `construir_historial`
+    solo lee sesiones finalizadas y cerradas.
+    """
+    catalog = get_catalog(request)
+    sesion = conn.execute("SELECT * FROM training_sessions WHERE id = ?", (sesion_id,)).fetchone()
+    if sesion is None:
+        raise HTTPException(status_code=404, detail="Sesión no encontrada")
+    if sesion["estado"] != "en_curso":
+        raise HTTPException(
+            status_code=409, detail="Solo se puede cancelar una sesión en curso"
+        )
+    conn.execute("UPDATE training_sessions SET estado = 'cancelada' WHERE id = ?", (sesion_id,))
+    conn.commit()
+    row = conn.execute("SELECT * FROM training_sessions WHERE id = ?", (sesion_id,)).fetchone()
+    return {"sesion": _sesion_json(conn, row, catalog)}
+
+
+@router.get("/api/hoy")
+def estado_de_hoy(request: Request, user=Depends(usuario_actual), conn=Depends(db_conn)):
+    """Qué hay en marcha ahora mismo, para recuperar el flujo al abrir la app.
+
+    El estado del frontend vive en memoria y se pierde al recargar; sin este
+    endpoint, reabrir a mitad de sesión llevaba al estado diario y acababa
+    creando una propuesta y una sesión nuevas.
+    """
+    catalog = get_catalog(request)
+    activa = _sesion_activa(conn)
+    hoy = datetime.now().date().isoformat()
+    propuesta = conn.execute(
+        "SELECT * FROM proposals WHERE estado = 'vigente' AND date(fecha) = date(?) "
+        "ORDER BY id DESC LIMIT 1",
+        (hoy,),
+    ).fetchone()
+    return {
+        "sesion_activa": _sesion_json(conn, activa, catalog) if activa is not None else None,
+        "propuesta_vigente": _propuesta_json(propuesta, catalog) if propuesta is not None else None,
+    }
 
 
 @router.get("/api/sesiones/{sesion_id}")
@@ -668,11 +749,15 @@ def historial_detalle(fecha: str, request: Request, user=Depends(usuario_actual)
     estados = conn.execute(
         "SELECT * FROM daily_states WHERE substr(fecha, 1, 10) = ? ORDER BY id", (fecha,)
     ).fetchall()
+    # Las propuestas descartadas y las sesiones canceladas no se muestran: son
+    # ruido de haber redeclarado el estado, no lo que pasó ese día (docs/14).
     propuestas = conn.execute(
-        "SELECT * FROM proposals WHERE substr(fecha, 1, 10) = ? ORDER BY id", (fecha,)
+        "SELECT * FROM proposals WHERE substr(fecha, 1, 10) = ? AND estado != 'descartada' ORDER BY id",
+        (fecha,),
     ).fetchall()
     sesiones = conn.execute(
-        "SELECT * FROM training_sessions WHERE substr(fecha, 1, 10) = ? ORDER BY id", (fecha,)
+        "SELECT * FROM training_sessions WHERE substr(fecha, 1, 10) = ? AND estado != 'cancelada' ORDER BY id",
+        (fecha,),
     ).fetchall()
     bjjs = conn.execute(
         "SELECT * FROM bjj_records WHERE substr(fecha, 1, 10) = ? ORDER BY id", (fecha,)

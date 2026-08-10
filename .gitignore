@@ -13,8 +13,17 @@ build/
 .env.*
 !.env.example
 
-# BD SQLite local de desarrollo (fitlosophy.db)
+# BD SQLite: datos personales de salud y el hash de la contraseña. Nunca se
+# versiona, ni la base ni sus copias: `*.db` no cubre `fitlosophy.db.bak-...`,
+# que es exactamente como se coló una copia en un commit.
 *.db
+*.db-wal
+*.db-shm
+*.db.*
+*.sqlite
+*.sqlite3
+*.bak
+copias/
 
 # Mockups del flujo de brainstorming (locales)
 .superpowers/

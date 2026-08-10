@@ -43,6 +43,7 @@ CREATE TABLE IF NOT EXISTS daily_states (
 CREATE TABLE IF NOT EXISTS proposals (
     id INTEGER PRIMARY KEY,
     daily_state_id INTEGER NOT NULL REFERENCES daily_states(id),
+    estado TEXT NOT NULL DEFAULT 'vigente',   -- vigente | aceptada | descartada
     fecha TEXT NOT NULL,
     familia TEXT NOT NULL,
     reducida INTEGER NOT NULL DEFAULT 0,
@@ -72,7 +73,7 @@ CREATE TABLE IF NOT EXISTS training_sessions (
     proposal_id INTEGER REFERENCES proposals(id),
     fecha TEXT NOT NULL,
     familia TEXT,
-    estado TEXT NOT NULL,              -- en_curso | finalizada | cerrada
+    estado TEXT NOT NULL,              -- en_curso | finalizada | cerrada | cancelada
     rpe_real INTEGER,
     created_at TEXT NOT NULL,
     finalizada_at TEXT
@@ -142,9 +143,35 @@ def conectar(db_path: str | Path) -> sqlite3.Connection:
     return conn
 
 
+def _migrar(conn: sqlite3.Connection) -> None:
+    """Migraciones idempotentes para bases de datos ya creadas.
+
+    `CREATE TABLE IF NOT EXISTS` no añade columnas a una tabla existente, así
+    que las columnas nuevas se aplican aquí. Se ejecuta en cada arranque y no
+    hace nada si ya están.
+    """
+    columnas = {c["name"] for c in conn.execute("PRAGMA table_info(proposals)")}
+    if columnas and "estado" not in columnas:
+        conn.execute("ALTER TABLE proposals ADD COLUMN estado TEXT NOT NULL DEFAULT 'vigente'")
+        # Las propuestas que ya tienen sesión estaban aceptadas de hecho.
+        conn.execute(
+            "UPDATE proposals SET estado = 'aceptada' "
+            "WHERE id IN (SELECT proposal_id FROM training_sessions WHERE proposal_id IS NOT NULL)"
+        )
+        # Del resto solo sigue vigente la última de cada día: es el invariante
+        # que la aplicación mantiene desde ahora (docs/14).
+        conn.execute(
+            "UPDATE proposals SET estado = 'descartada' WHERE estado = 'vigente' AND id NOT IN ("
+            "  SELECT MAX(id) FROM proposals WHERE estado = 'vigente' GROUP BY date(fecha)"
+            ")"
+        )
+        conn.commit()
+
+
 def crear_esquema(conn: sqlite3.Connection) -> None:
     conn.executescript(ESQUEMA)
     conn.commit()
+    _migrar(conn)
 
 
 def cargar_json(valor: str | None, por_defecto):
