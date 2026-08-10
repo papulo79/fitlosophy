@@ -44,7 +44,8 @@
     recuperando = true;
     try {
       const hoy = await api.get("/api/hoy");
-      if (hoy.sesion_activa) flujo.sesion = hoy.sesion_activa;
+      // Una sesión sin cerrar tiene prioridad: le falta la respuesta posterior.
+      flujo.sesion = hoy.sesion_activa || hoy.sesion_pendiente_cierre || null;
       if (hoy.propuesta_vigente) flujo.propuesta = hoy.propuesta_vigente;
     } catch {
       // Sin recuperación posible: se sigue con el flujo vacío.
@@ -87,6 +88,9 @@
     if (flujo.sesion?.estado === "en_curso" && base === "/estado") {
       // docs/14: reabrir a mitad de sesión devuelve a esa sesión.
       location.hash = "#/ejecucion";
+    } else if (flujo.sesion?.estado === "finalizada" && base === "/estado") {
+      // Entrenada pero sin cerrar: falta la respuesta posterior.
+      location.hash = "#/cierre";
     } else if (base === "/propuesta" && !flujo.propuesta) {
       location.hash = "#/estado";
     } else if ((base === "/ejecucion" || base === "/cierre") && !flujo.sesion) {

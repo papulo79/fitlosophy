@@ -482,6 +482,13 @@ def estado_de_hoy(request: Request, user=Depends(usuario_actual), conn=Depends(d
     """
     catalog = get_catalog(request)
     activa = _sesion_activa(conn)
+    # Finalizada pero sin cierre: falta la respuesta posterior, que es la que
+    # congela la ventana de una dimensión tras una molestia (docs/12,
+    # criterio 5). Si no se devolviera, recargar en esa pantalla la perdería
+    # en silencio y sin manera de volver.
+    pendiente_cierre = conn.execute(
+        "SELECT * FROM training_sessions WHERE estado = 'finalizada' ORDER BY id DESC LIMIT 1"
+    ).fetchone()
     hoy = datetime.now().date().isoformat()
     propuesta = conn.execute(
         "SELECT * FROM proposals WHERE estado = 'vigente' AND date(fecha) = date(?) "
@@ -490,6 +497,9 @@ def estado_de_hoy(request: Request, user=Depends(usuario_actual), conn=Depends(d
     ).fetchone()
     return {
         "sesion_activa": _sesion_json(conn, activa, catalog) if activa is not None else None,
+        "sesion_pendiente_cierre": (
+            _sesion_json(conn, pendiente_cierre, catalog) if pendiente_cierre is not None else None
+        ),
         "propuesta_vigente": _propuesta_json(propuesta, catalog) if propuesta is not None else None,
     }
 

@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.21.2 - Dos huecos de recuperación del flujo
+
+Al recorrer los casos reales de uso aparecieron dos estados de los que no se podía volver:
+
+- **Sesión finalizada sin cierre**: `GET /api/hoy` solo miraba las sesiones `en_curso`, así que recargar en la pantalla de cierre perdía la respuesta posterior en silencio y sin manera de retomarla — y es la que congela la ventana de una dimensión tras una molestia (`docs/12`, criterio 5). Ahora se devuelve como `sesion_pendiente_cierre` y la aplicación lleva a Cierre al arrancar.
+- **Propuesta sin empezar**: se recuperaba en memoria, pero la barra de navegación solo lleva a Hoy, Historial y Perfil, así que era inalcanzable: tras recargar, la única salida era declarar el estado otra vez y descartarla. Estado diario muestra ahora un aviso con acceso a la propuesta y advierte de que redeclarar la descarta.
+- 1 test nuevo (90 en total, suite en verde) y corregidos dos tests propios: uno comparaba la respuesta de `/api/hoy` como diccionario exacto, que se rompe al añadir claves, y otro usaba un valor de `sensacion` fuera del literal de `schemas.py`.
+
 ## 0.21.1 - Rotación de contraseña
 
 - Nuevo `scripts/cambiar_password.py`. `init_db.py` no toca un usuario existente (no hay registro, docs/14) y termina con éxito diciéndolo, así que era fácil creer que había cambiado la contraseña cuando no. El script nuevo actualiza el hash, **invalida todas las sesiones abiertas** —una contraseña se rota porque la anterior ya no es de fiar, y sus cookies durarían 30 días más— y limpia los intentos fallidos. Exige un mínimo de 12 caracteres.

@@ -846,7 +846,9 @@ def test_solo_se_cancela_una_sesion_en_curso(client):
 
 def test_hoy_devuelve_lo_que_hay_en_marcha(client):
     """Es lo que permite al frontend recuperar el flujo tras recargar."""
-    assert client.get("/api/hoy").json() == {"sesion_activa": None, "propuesta_vigente": None}
+    vacio = client.get("/api/hoy").json()
+    assert vacio["sesion_activa"] is None
+    assert vacio["propuesta_vigente"] is None
 
     propuesta = _crear_propuesta(client)
     hoy = client.get("/api/hoy").json()
@@ -859,3 +861,19 @@ def test_hoy_devuelve_lo_que_hay_en_marcha(client):
     assert hoy["sesion_activa"]["estado"] == "en_curso"
     # Aceptada deja de estar vigente: no hay nada nuevo que proponer.
     assert hoy["propuesta_vigente"] is None
+
+
+def test_hoy_recupera_una_sesion_pendiente_de_cierre(client):
+    """Finalizada sin cierre: recargar ahí perdía la respuesta posterior, que
+    es la que congela la ventana tras una molestia (docs/12, criterio 5)."""
+    propuesta = _crear_propuesta(client)
+    sesion = client.post("/api/sesiones", json={"proposal_id": propuesta["id"]}).json()["sesion"]
+    client.post(f"/api/sesiones/{sesion['id']}/finalizar", json={"rpe_real": 7})
+
+    hoy = client.get("/api/hoy").json()
+    assert hoy["sesion_activa"] is None  # ya no está en curso
+    assert hoy["sesion_pendiente_cierre"]["id"] == sesion["id"]
+
+    client.post(f"/api/sesiones/{sesion['id']}/cierre", json={"sensacion": "como_previsto", "molestias": []})
+    hoy = client.get("/api/hoy").json()
+    assert hoy["sesion_pendiente_cierre"] is None

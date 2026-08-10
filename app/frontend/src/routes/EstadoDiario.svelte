@@ -98,6 +98,27 @@
 
 <h2 class="mb-4 font-display text-2xl font-bold tracking-wide">¿CÓMO ESTÁS HOY?</h2>
 
+<!-- Propuesta de hoy sin empezar. Sin este aviso quedaba inalcanzable: la
+     barra de navegación solo lleva a Hoy, Historial y Perfil, así que tras
+     recargar la única salida era declarar el estado otra vez y descartarla. -->
+{#if flujo.propuesta && !flujo.sesion}
+  <div class="mb-5 rounded-xl border border-acento/40 bg-acento/10 p-4">
+    <p class="text-sm text-texto">
+      Ya tienes una propuesta de hoy sin empezar
+      <span class="text-apagado">({flujo.propuesta.familia} · {flujo.propuesta.rpe_previsto})</span>.
+    </p>
+    <a
+      href="#/propuesta"
+      class="mt-3 flex min-h-11 items-center justify-center rounded-xl bg-acento px-4 font-semibold text-fondo"
+    >
+      Ver la propuesta
+    </a>
+    <p class="mt-2 text-xs text-tenue">
+      Si vuelves a declarar tu estado, esa propuesta se descarta y se genera otra.
+    </p>
+  </div>
+{/if}
+
 <form onsubmit={enviar} class="space-y-6">
   <section>
     <p class="mb-2 text-xs font-semibold uppercase tracking-wider text-tenue">Recuperación</p>
