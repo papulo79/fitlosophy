@@ -10,7 +10,8 @@ requires-python = ">=3.11"
 dependencies = ["pyyaml", "fastapi", "uvicorn"]
 
 [project.optional-dependencies]
-dev = ["pytest"]
+# httpx2: lo exige starlette.testclient (TestClient) para los tests de la API.
+dev = ["pytest", "httpx2"]
 
 [tool.setuptools.packages.find]
 where = ["src"]

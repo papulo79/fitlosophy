@@ -6,8 +6,9 @@ export default defineConfig({
   plugins: [svelte(), tailwindcss()],
   server: {
     proxy: {
-      // En desarrollo, la API corre en uvicorn (puerto 8000).
-      "/api": "http://localhost:8000",
+      // En desarrollo, la API corre en uvicorn (mismo puerto que el servicio
+      // de producción, FITLOSOPHY_PORT del .env: esta máquina es las dos cosas).
+      "/api": "http://localhost:10012",
     },
   },
 });

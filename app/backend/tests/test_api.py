@@ -13,7 +13,13 @@ from fastapi.testclient import TestClient
 
 from fitlosophy.load import compute_load
 from fitlosophy_api.app import create_app
-from fitlosophy_api.auth import crear_usuario
+from fitlosophy_api.auth import (
+    BLOQUEO_BASE_MIN,
+    MAX_INTENTOS_GLOBAL,
+    MAX_INTENTOS_IP,
+    VENTANA_MIN,
+    crear_usuario,
+)
 from fitlosophy_api.history import construir_historial
 
 USUARIO = "atleta"
@@ -25,6 +31,16 @@ def app(tmp_path):
     aplicacion = create_app(tmp_path / "test.db")
     crear_usuario(aplicacion.state.db, USUARIO, PASSWORD)
     return aplicacion
+
+
+@pytest.fixture(autouse=True)
+def proxy_de_pruebas(monkeypatch):
+    """TestClient se presenta como peer «testclient».
+
+    Se declara de confianza para que `CF-Connecting-IP` se respete y los tests
+    del freno puedan simular varias IPs de origen.
+    """
+    monkeypatch.setenv("FITLOSOPHY_PROXIES_CONFIABLES", "testclient")
 
 
 @pytest.fixture()
@@ -564,3 +580,155 @@ def test_dolor_sin_zona_rechazado(client):
     assert r.status_code == 201
     assert r.json()["propuesta"]["familia"] == "C"  # D1
     assert "D1" in r.json()["propuesta"]["reglas_aplicadas"]
+
+
+# --- Freno de fuerza bruta en el login ----------------------------------------------
+
+
+def _fallar_login(c, veces, ip="10.0.0.1"):
+    """Lanza `veces` intentos con contraseña incorrecta desde una IP."""
+    codigos = []
+    for _ in range(veces):
+        r = c.post(
+            "/api/auth/login",
+            json={"username": USUARIO, "password": "incorrecta"},
+            headers={"CF-Connecting-IP": ip},
+        )
+        codigos.append(r.status_code)
+    return codigos
+
+
+def test_login_se_bloquea_tras_intentos_fallidos(app):
+    """Superado el umbral, la IP recibe 429 con Retry-After, incluso acertando."""
+    with TestClient(app) as c:
+        assert _fallar_login(c, MAX_INTENTOS_IP) == [401] * MAX_INTENTOS_IP
+
+        r = c.post(
+            "/api/auth/login",
+            json={"username": USUARIO, "password": "incorrecta"},
+            headers={"CF-Connecting-IP": "10.0.0.1"},
+        )
+        assert r.status_code == 429
+        assert int(r.headers["Retry-After"]) > 0
+        assert "intentos fallidos" in r.json()["detail"]
+
+        # La contraseña correcta tampoco pasa mientras dura el bloqueo: si no,
+        # el freno sería inútil contra quien la acabe adivinando.
+        r = c.post(
+            "/api/auth/login",
+            json={"username": USUARIO, "password": PASSWORD},
+            headers={"CF-Connecting-IP": "10.0.0.1"},
+        )
+        assert r.status_code == 429
+
+
+def test_el_bloqueo_es_por_ip(app):
+    """Una IP bloqueada no impide entrar desde otra (hasta el umbral global)."""
+    with TestClient(app) as c:
+        _fallar_login(c, MAX_INTENTOS_IP, ip="10.0.0.1")
+        r = c.post(
+            "/api/auth/login",
+            json={"username": USUARIO, "password": PASSWORD},
+            headers={"CF-Connecting-IP": "10.0.0.2"},
+        )
+        assert r.status_code == 200
+
+
+def test_login_correcto_limpia_los_fallos(app):
+    """Acertar antes del umbral reinicia el contador de esa IP."""
+    with TestClient(app) as c:
+        _fallar_login(c, MAX_INTENTOS_IP - 1)
+        r = c.post(
+            "/api/auth/login",
+            json={"username": USUARIO, "password": PASSWORD},
+            headers={"CF-Connecting-IP": "10.0.0.1"},
+        )
+        assert r.status_code == 200
+        # El contador quedó a cero: vuelven a caber MAX_INTENTOS_IP fallos.
+        assert _fallar_login(c, MAX_INTENTOS_IP) == [401] * MAX_INTENTOS_IP
+
+
+def test_el_bloqueo_expira_al_pasar_la_ventana(app):
+    """Con los fallos fuera de la ventana, la IP vuelve a poder entrar."""
+    with TestClient(app) as c:
+        _fallar_login(c, MAX_INTENTOS_IP)
+        antiguo = (datetime.now() - timedelta(minutes=VENTANA_MIN + BLOQUEO_BASE_MIN + 1)).isoformat(
+            timespec="seconds"
+        )
+        app.state.db.execute("UPDATE login_failures SET ts = ?", (antiguo,))
+        app.state.db.commit()
+        r = c.post(
+            "/api/auth/login",
+            json={"username": USUARIO, "password": PASSWORD},
+            headers={"CF-Connecting-IP": "10.0.0.1"},
+        )
+        assert r.status_code == 200
+
+
+def test_umbral_global_frena_el_ataque_distribuido(app):
+    """Muchas IPs distintas, ninguna por su cuenta bloqueada, frenan igualmente."""
+    with TestClient(app) as c:
+        for i in range(MAX_INTENTOS_GLOBAL):
+            c.post(
+                "/api/auth/login",
+                json={"username": USUARIO, "password": "incorrecta"},
+                headers={"CF-Connecting-IP": f"10.1.{i // 256}.{i % 256}"},
+            )
+        # IP nueva y limpia: el límite por IP no la afectaría, el global sí.
+        r = c.post(
+            "/api/auth/login",
+            json={"username": USUARIO, "password": PASSWORD},
+            headers={"CF-Connecting-IP": "203.0.113.9"},
+        )
+        assert r.status_code == 429
+        assert "sospechosa" in r.json()["detail"]
+
+
+def test_no_se_acepta_la_ip_declarada_por_un_peer_no_confiable(app, monkeypatch):
+    """El servicio escucha en la LAN: `CF-Connecting-IP` solo vale si viene del
+    túnel. Si no, cambiarla a mano daría intentos ilimitados."""
+    monkeypatch.setenv("FITLOSOPHY_PROXIES_CONFIABLES", "127.0.0.1")  # «testclient» ya no
+    with TestClient(app) as c:
+        # Cada intento declara una IP distinta; al ignorarse, todos caen en el
+        # mismo cubo y el bloqueo salta igualmente.
+        for i in range(MAX_INTENTOS_IP):
+            r = c.post(
+                "/api/auth/login",
+                json={"username": USUARIO, "password": "incorrecta"},
+                headers={"CF-Connecting-IP": f"203.0.113.{i}"},
+            )
+            assert r.status_code == 401
+        r = c.post(
+            "/api/auth/login",
+            json={"username": USUARIO, "password": PASSWORD},
+            headers={"CF-Connecting-IP": "203.0.113.200"},
+        )
+        assert r.status_code == 429
+
+
+# --- Cookie de sesión: Secure según el esquema ---------------------------------------
+
+
+def test_cookie_sin_secure_por_http(app):
+    """Por HTTP (LAN) la cookie no puede ser Secure: el navegador la tiraría y
+    el login no llegaría a funcionar."""
+    with TestClient(app, base_url="http://fitlosophy.local") as c:
+        r = c.post("/api/auth/login", json={"username": USUARIO, "password": PASSWORD})
+        assert r.status_code == 200
+        assert "secure" not in r.headers["set-cookie"].lower()
+
+
+def test_cookie_con_secure_por_https(app):
+    """A través del túnel (HTTPS) sí se marca Secure."""
+    with TestClient(app, base_url="https://fitlosophy.example") as c:
+        r = c.post("/api/auth/login", json={"username": USUARIO, "password": PASSWORD})
+        assert r.status_code == 200
+        assert "secure" in r.headers["set-cookie"].lower()
+
+
+def test_cookie_secure_forzable_por_configuracion(app, monkeypatch):
+    """El automatismo se puede sobrescribir explícitamente."""
+    monkeypatch.setenv("FITLOSOPHY_COOKIE_SECURE", "true")
+    with TestClient(app, base_url="http://fitlosophy.local") as c:
+        r = c.post("/api/auth/login", json={"username": USUARIO, "password": PASSWORD})
+        assert "secure" in r.headers["set-cookie"].lower()

@@ -7,9 +7,12 @@ usuario único a partir de las variables de entorno:
     FITLOSOPHY_PASSWORD  contraseña (obligatoria)
     FITLOSOPHY_DB        ruta de la BD (opcional, por defecto ./fitlosophy.db)
 
-Uso:
+Se leen del fichero `app/backend/.env` si existe (ver `.env.example`); lo que ya
+esté en el entorno tiene prioridad. Uso:
+
     cd app/backend
-    FITLOSOPHY_USER=... FITLOSOPHY_PASSWORD=... PYTHONPATH=src python3 scripts/init_db.py
+    ./.venv/bin/python scripts/init_db.py                 # con .env relleno
+    FITLOSOPHY_USER=... FITLOSOPHY_PASSWORD=... ./.venv/bin/python scripts/init_db.py
 """
 
 from __future__ import annotations
@@ -22,10 +25,12 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
 
 from fitlosophy.catalog import load_default_perfil  # noqa: E402
 from fitlosophy_api.auth import crear_usuario, hay_usuario  # noqa: E402
+from fitlosophy_api.config import cargar_env  # noqa: E402
 from fitlosophy_api.db import conectar, crear_esquema, volcar_json  # noqa: E402
 
 
 def main() -> int:
+    cargar_env()
     usuario = os.environ.get("FITLOSOPHY_USER")
     password = os.environ.get("FITLOSOPHY_PASSWORD")
     if not usuario or not password:

@@ -34,13 +34,16 @@ fitlosophy/
 │   ├── roles/               # Orquestación opcional de dos IAs (ver sección más abajo)
 │   └── superpowers/         # Planes de trabajo para ese flujo
 ├── opencode.json            # Agentes del orquestador en el flujo de dos IAs
+├── scripts/
+│   └── desplegar.sh     # Recompila, reinicia el servicio y purga el caché de Cloudflare
 ├── app/
 │   ├── backend/             # Motor (paquete fitlosophy) + API (fitlosophy_api) + tests pytest
 │   │   ├── src/fitlosophy/  # catalog, models, load, engine, generator
-│   │   ├── src/fitlosophy_api/  # FastAPI + SQLite: auth, rutas, persistencia
+│   │   ├── src/fitlosophy_api/  # FastAPI + SQLite: auth, config, static, rutas, persistencia
 │   │   ├── scripts/init_db.py   # Inicializa la BD y crea el usuario único
-│   │   ├── README.md            # Instalación, arranque y tests
-│   │   └── tests/           # test_load.py, test_cases.py (docs/13), test_api.py
+│   │   ├── .env.example         # Plantilla de configuración (el .env real no se versiona)
+│   │   ├── README.md            # Instalación, configuración, arranque, caché y tests
+│   │   └── tests/           # test_load.py, test_cases.py (docs/13), test_api.py, test_config.py, test_static.py
 │   └── frontend/            # MVP: Svelte 5 + Tailwind 4 + Vite (6 pantallas + login)
 │       └── src/             # App.svelte (router hash), routes/ (pantallas), lib/ (api, stores, etiquetas)
 └── data/
@@ -56,7 +59,8 @@ Nota: `docs/10-roadmap-del-producto.md` define las fases del producto (0–12) y
 
 - **La fuente de verdad es la documentación.** Si el código y los docs difieren, se corrige el código (o se corrige el doc si el código evidencia un error de aritmética, como ya ocurrió con el ejemplo de agarre de `docs/12`).
 - **Tests**: `cd app/backend && python3 -m pytest`. Deben estar en verde tras cualquier cambio en `app/backend/` o en las reglas de `docs/03`, `docs/06` y `docs/12` (los tests de `docs/13` son la especificación ejecutable).
-- **Frontend**: `cd app/frontend && npm run build`. Debe compilar sin errores tras cualquier cambio en `app/frontend/`; en desarrollo se sirve con `npm run dev` (proxy de `/api` a uvicorn, puerto 8000).
+- **Frontend**: `cd app/frontend && npm run build`. Debe compilar sin errores tras cualquier cambio en `app/frontend/`; en desarrollo se sirve con `npm run dev` (proxy de `/api` a uvicorn, puerto `FITLOSOPHY_PORT` del `.env`: 10012).
+- **Despliegue**: `./scripts/desplegar.sh` (recompila, reinicia el servicio systemd y purga el caché del borde). Esta máquina es desarrollo y producción a la vez, servida por un túnel de Cloudflare; ver la sección de caché en `app/backend/README.md` antes de tocar cómo se sirven los estáticos.
 - **Servidor de desarrollo**: ver `app/backend/README.md` (init_db con `FITLOSOPHY_USER`/`FITLOSOPHY_PASSWORD` y `uvicorn "fitlosophy_api.app:create_app" --factory`).
 - La validación de la sintaxis YAML sigue siendo obligatoria tras modificar cualquier archivo de `data/`:
   `python3 -c "import yaml; yaml.safe_load(open('data/ejercicios.yaml'))"`
@@ -83,7 +87,8 @@ Nota: `docs/10-roadmap-del-producto.md` define las fases del producto (0–12) y
 
 ### Código (app/backend)
 
-- Python 3.11+, solo dependencias declaradas en `pyproject.toml` (hoy: `pyyaml`; dev: `pytest`). No añadir dependencias sin necesidad real.
+- Python 3.11+, solo dependencias declaradas en `pyproject.toml` (hoy: `pyyaml`, `fastapi`, `uvicorn`; dev: `pytest`, `httpx2`). No añadir dependencias sin necesidad real: por eso el lector de `.env` (`fitlosophy_api/config.py`) está escrito con la librería estándar en lugar de usar `python-dotenv`.
+- **Configuración del despliegue**: siempre por variable de entorno con respaldo en `app/backend/.env` (precedencia entorno > `.env` > valor por defecto). Toda clave nueva se documenta en `.env.example`; el `.env` real nunca se versiona. Los tests no leen el `.env` local (`tests/conftest.py`), así que un test no debe depender de él.
 - Identificadores en inglés; los valores de dominio se escriben exactamente como en los YAML (`dominante_cadera`, `verde`, `tiron_horizontal`...). Los textos al usuario (explicaciones) se generan en español.
 - Las reglas del motor se citan por su código (D1-D6, C1-C6, P1-P3) en la explicación, igual que en `docs/03`.
 

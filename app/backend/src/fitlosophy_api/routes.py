@@ -197,8 +197,8 @@ def _guardar_propuesta(conn, estado_id: int, prop: Proposal, sesion: SessionProp
 
 
 @router.post("/api/auth/login")
-def ruta_login(datos: LoginIn, response: Response, conn=Depends(db_conn)):
-    return login(conn, datos, response)
+def ruta_login(datos: LoginIn, request: Request, response: Response, conn=Depends(db_conn)):
+    return login(conn, datos, request, response)
 
 
 @router.post("/api/auth/logout")

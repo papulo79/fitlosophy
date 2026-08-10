@@ -1,5 +1,24 @@
 # Changelog
 
+## 0.19.0 - Caché del frontend y puerto del despliegue
+
+- Los estáticos se sirven con `Cache-Control` explícito (`fitlosophy_api/static.py`). `StaticFiles` solo enviaba `ETag` y `Last-Modified`, así que navegador y CDN cacheaban por heurística: tras recompilar, el túnel seguía sirviendo un `index.html` viejo que apuntaba a los JS/CSS de la compilación anterior y los cambios no llegaban a la URL pública. Ahora `assets/` (nombres con hash de contenido de Vite) va con `immutable` a un año, y todo lo de nombre fijo (`index.html`, `favicon.svg`, `icono-*.png`) con `no-cache, must-revalidate`, que revalida con un 304 sin cuerpo. No hace falta ningún `?v=`: el hash del nombre ya identifica la versión.
+- Puerto del servicio: **10012** (antes 8000), en el servicio systemd y en el proxy de desarrollo de Vite. Nuevas claves `FITLOSOPHY_HOST` y `FITLOSOPHY_PORT` en el `.env`, que el servicio systemd lee con `EnvironmentFile`: una sola fuente de configuración.
+- El servicio escucha en `0.0.0.0`: el túnel lo gestiona un contenedor de cloudflared configurado desde el panel de Cloudflare (sin `config.yml` local), que llega al host por `172.17.0.1`, y además se accede desde la LAN por `192.168.1.145:10012`. `--forwarded-allow-ips` incluye ahora `172.17.0.0/16`, porque el proxy no llega desde loopback y sin ello uvicorn ignoraba `X-Forwarded-Proto`.
+- `FITLOSOPHY_COOKIE_SECURE` pasa a admitir `auto` (nuevo valor por defecto): la cookie se marca `Secure` según el esquema real de la petición, protegida por el túnel y utilizable por HTTP en la LAN, donde una cookie `Secure` se descartaría y el login no funcionaría.
+- Nueva `FITLOSOPHY_PROXIES_CONFIABLES`: `CF-Connecting-IP` solo se acepta de loopback y de la red de Docker. Con el puerto abierto en la LAN, sin esto bastaba con ir cambiando esa cabecera a mano para tener intentos de login ilimitados.
+- Nuevo `scripts/desplegar.sh`: recompila el frontend, reinicia el servicio, espera a que responda, verifica que la cabecera de caché sigue puesta y purga el caché de Cloudflare si hay `CLOUDFLARE_API_TOKEN` y `CLOUDFLARE_ZONE_ID` en el `.env` (ambas opcionales).
+- 8 tests nuevos (75 en total, suite en verde): `index.html` y los ficheros de nombre fijo se revalidan, los de `assets/` son inmutables, la revalidación devuelve 304, la cookie se marca `Secure` solo por HTTPS y la IP declarada por un peer no confiable se ignora.
+
+## 0.18.0 - Configuración por `.env` y freno de fuerza bruta en el login
+
+- Configuración del despliegue en `app/backend/.env` (ignorado por git) con plantilla versionada en `.env.example`. Nuevo `fitlosophy_api/config.py`: lector de `.env` con la librería estándar, sin dependencias nuevas (AGENTS.md). Precedencia entorno > `.env` > valor por defecto, de modo que systemd o una variable puntual siguen ganando; `FITLOSOPHY_ENV_FILE` permite mover el fichero y `tests/conftest.py` lo desactiva para que la suite no dependa de la máquina.
+- Protección del login contra fuerza bruta (`auth.py`), que era el punto débil al publicar la app por un túnel: umbral **por IP** (5 fallos en 15 min → bloqueo de 15 min, duplicado por cada tanda acumulada en 24 h hasta 1 h) y umbral **global** (50 fallos en 15 min → login frenado desde cualquier IP, contra el ataque distribuido). Se responde 429 con `Retry-After`; durante el bloqueo se rechaza también la contraseña correcta, un intento rechazado no alarga el castigo y un login correcto limpia los fallos de esa IP. Nueva tabla `login_failures`, purgada a las 48 h; umbrales configurables por `.env`.
+- La IP del cliente se toma de `CF-Connecting-IP` (la escribe Cloudflare) y, en su defecto, de `request.client`, que uvicorn reescribe con `--proxy-headers --forwarded-allow-ips`.
+- Nuevo `FITLOSOPHY_COOKIE_SECURE`: la cookie de sesión se marca `Secure` en producción sin romper el desarrollo por `http://localhost`. `delete_cookie` pasa a repetir los atributos del `set_cookie` para que el logout la borre de verdad.
+- `httpx2` declarado en el extra `dev` de `pyproject.toml`: `starlette.testclient` lo exige y sin él no se podían ejecutar los tests de la API.
+- 9 tests nuevos (67 en total, suite en verde): bloqueo por IP, aislamiento entre IPs, limpieza tras acierto, expiración de la ventana, umbral global y cuatro del cargador de `.env`.
+
 ## 0.17.0 - Rediseño oscuro del frontend
 
 - Rediseño visual y de usabilidad del MVP según `docs/superpowers/specs/2026-08-03-redisenio-frontend-mvp-design.md`: tema oscuro deportivo con acento lima (tokens en `app.css` con `@theme` de Tailwind 4), Barlow Condensed + Inter autoalojadas (`@fontsource`, únicas dependencias nuevas) e iconos de relleno propios (`Icon.svelte`, sin librería).

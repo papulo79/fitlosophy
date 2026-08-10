@@ -17,11 +17,15 @@ from fastapi import FastAPI
 
 from fitlosophy.catalog import load_default_catalog, load_default_perfil
 
+from .config import cargar_env
 from .db import cargar_json, conectar, crear_esquema, volcar_json
 from .routes import router
 
 
 def create_app(db_path: str | Path | None = None) -> FastAPI:
+    # `.env` de app/backend: no pisa lo que ya venga del entorno (systemd, shell).
+    # Con `db_path` explícito (tests) tampoco afecta a la ruta de la BD.
+    cargar_env()
     ruta = db_path or os.environ.get("FITLOSOPHY_DB", "fitlosophy.db")
     conn = conectar(ruta)
     crear_esquema(conn)
@@ -49,9 +53,11 @@ def create_app(db_path: str | Path | None = None) -> FastAPI:
 
     # En producción se sirve el frontend compilado si existe (app/frontend/dist).
     # El frontend usa rutas hash (#/...), así que no hace falta fallback SPA.
+    # `EstaticosVersionados` añade el Cache-Control que StaticFiles no pone y
+    # sin el cual el CDN sirve un index.html viejo tras cada despliegue.
     dist = Path(__file__).resolve().parents[3] / "frontend" / "dist"
     if dist.is_dir():
-        from fastapi.staticfiles import StaticFiles
+        from .static import EstaticosVersionados
 
-        app.mount("/", StaticFiles(directory=dist, html=True), name="frontend")
+        app.mount("/", EstaticosVersionados(directory=dist, html=True), name="frontend")
     return app

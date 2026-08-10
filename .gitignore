@@ -7,7 +7,12 @@ venv/
 node_modules/
 dist/
 build/
+# Configuración del despliegue: contraseña del usuario único y ruta de la BD.
+# La plantilla .env.example sí se versiona.
 .env
+.env.*
+!.env.example
+
 # BD SQLite local de desarrollo (fitlosophy.db)
 *.db
 

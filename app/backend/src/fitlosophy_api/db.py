@@ -119,6 +119,16 @@ CREATE TABLE IF NOT EXISTS profile (
     data TEXT NOT NULL,                -- JSON con la forma de data/perfil.yaml
     updated_at TEXT NOT NULL
 );
+-- Solo intentos de login FALLIDOS: alimentan el freno de fuerza bruta de
+-- auth.py. Un login correcto borra los de esa IP; los antiguos se purgan.
+CREATE TABLE IF NOT EXISTS login_failures (
+    id INTEGER PRIMARY KEY,
+    ip TEXT NOT NULL,
+    username TEXT,                     -- el declarado en el intento (puede no existir)
+    ts TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_login_failures_ts ON login_failures(ts);
+CREATE INDEX IF NOT EXISTS idx_login_failures_ip_ts ON login_failures(ip, ts);
 """
 
 
