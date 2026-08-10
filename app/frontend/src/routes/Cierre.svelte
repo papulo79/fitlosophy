@@ -11,6 +11,7 @@
   let resultado = $state(null);
   let error = $state("");
   let cargando = $state(false);
+  let descartando = $state(false);
 
   function anadirMolestia() {
     molestias = [...molestias, { zona: "", intensidad: 3 }];
@@ -49,6 +50,28 @@
   function nuevoDia() {
     reiniciarFlujo();
     location.hash = "#/estado";
+  }
+
+  /** Deja el cierre pendiente: la sesión ya cuenta, solo falta la respuesta
+   * posterior. Se recuerda al volver a abrir la aplicación. */
+  function aplazar() {
+    flujo.cierreAplazado = true;
+    location.hash = "#/estado";
+  }
+
+  async function descartar() {
+    error = "";
+    cargando = true;
+    try {
+      await api.post(`/api/sesiones/${sesion.id}/cancelar`);
+      reiniciarFlujo();
+      location.hash = "#/estado";
+    } catch (e) {
+      error = mensajeError(e);
+      descartando = false;
+    } finally {
+      cargando = false;
+    }
   }
 </script>
 
@@ -117,6 +140,33 @@
       <button onclick={enviar} disabled={cargando} class="w-full rounded-xl bg-acento py-4 font-display text-xl font-bold tracking-wider text-fondo disabled:opacity-50">
         {cargando ? "GUARDANDO…" : "GUARDAR CIERRE"}
       </button>
+
+      <!-- Dos salidas: la sesión ya cuenta en la carga, así que el cierre se
+           puede aplazar; y si se dio por hecha por error, se descarta. -->
+      <div class="flex gap-2">
+        <button onclick={aplazar} class="min-h-11 flex-1 rounded-xl border border-borde text-sm font-semibold text-apagado">
+          Ahora no
+        </button>
+        <button onclick={() => (descartando = true)} class="min-h-11 flex-1 rounded-xl text-sm font-semibold text-tenue hover:text-rojo">
+          Descartar sesión
+        </button>
+      </div>
+
+      {#if descartando}
+        <div class="rounded-xl border border-rojo/40 bg-rojo/10 p-4">
+          <p class="text-sm text-rojo">
+            La sesión desaparece del historial y deja de aportar carga a los días siguientes. No se puede deshacer.
+          </p>
+          <div class="mt-3 flex gap-2">
+            <button onclick={() => (descartando = false)} class="min-h-11 flex-1 rounded-xl border border-borde py-3 font-medium text-apagado">
+              Conservar
+            </button>
+            <button onclick={descartar} disabled={cargando} class="min-h-11 flex-1 rounded-xl bg-rojo py-3 font-semibold text-fondo disabled:opacity-50">
+              {cargando ? "Descartando…" : "Descartar"}
+            </button>
+          </div>
+        </div>
+      {/if}
     </div>
   {/if}
 {/if}

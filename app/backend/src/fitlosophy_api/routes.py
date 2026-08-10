@@ -453,18 +453,27 @@ def aceptar_propuesta(datos: SesionIn, request: Request, user=Depends(usuario_ac
 
 @router.post("/api/sesiones/{sesion_id}/cancelar")
 def cancelar_sesion(sesion_id: int, request: Request, user=Depends(usuario_actual), conn=Depends(db_conn)):
-    """Abandona una sesión empezada por error o que se cae (docs/14).
+    """Descarta una sesión para que no cuente en el historial (docs/14).
 
-    No aporta carga al historial ni cuenta como estímulo: `construir_historial`
-    solo lee sesiones finalizadas y cerradas.
+    Vale desde `en_curso` (empezada por error o plan que se cae) y desde
+    `finalizada` (se dio por hecha por error): esta última **ya estaba
+    aportando carga**, porque `construir_historial` lee las finalizadas, así
+    que cancelarla es una corrección de registro (criterio 7 de docs/14).
+
+    Desde `cerrada` no: ahí el cierre pudo congelar la ventana de una dimensión
+    y la corrección se hace por ítem desde el historial.
     """
     catalog = get_catalog(request)
     sesion = conn.execute("SELECT * FROM training_sessions WHERE id = ?", (sesion_id,)).fetchone()
     if sesion is None:
         raise HTTPException(status_code=404, detail="Sesión no encontrada")
-    if sesion["estado"] != "en_curso":
+    if sesion["estado"] not in ("en_curso", "finalizada"):
         raise HTTPException(
-            status_code=409, detail="Solo se puede cancelar una sesión en curso"
+            status_code=409,
+            detail=(
+                "Solo se cancela una sesión en curso o finalizada sin cerrar; "
+                "una sesión cerrada se corrige por ítem desde el historial"
+            ),
         )
     conn.execute("UPDATE training_sessions SET estado = 'cancelada' WHERE id = ?", (sesion_id,))
     conn.commit()

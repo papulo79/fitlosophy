@@ -18,6 +18,9 @@ export const flujo = $state({
   propuesta: null,
   sesion: null,
   recuperado: false,
+  // El cierre pendiente lleva a esa pantalla al arrancar, pero se puede
+  // aplazar: sin esta marca, «Hoy» rebotaba a Cierre una y otra vez.
+  cierreAplazado: false,
 });
 
 export function reiniciarFlujo() {

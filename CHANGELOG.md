@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.21.3 - Salidas del cierre
+
+- **Trampa introducida en 0.21.2**: el redirigido a Cierre saltaba cada vez que se tocaba «Hoy», no solo al arrancar, así que una sesión sin cerrar dejaba la aplicación bloqueada en esa pantalla. Ahora el cierre se puede **aplazar** («Ahora no»): la sesión sigue pendiente y se recuerda al volver a abrir, pero se puede seguir usando el resto.
+- **Cancelar admite también sesiones `finalizada`**, no solo `en_curso`. Es el caso de darla por hecha por error: esa sesión ya estaba aportando carga a los días siguientes, así que cancelarla se la retira. Es una corrección de registro (criterio 7 de `docs/14`). Desde `cerrada` sigue rechazándose: ahí el cierre pudo congelar la ventana de una dimensión y la corrección se hace por ítem desde el historial.
+- Cierre gana dos salidas: «Ahora no» y «Descartar sesión», esta última con confirmación por ser irreversible.
+- `docs/14` recoge ambas reglas y deja explícito que **el cierre admite quedarse en lo mínimo**: la sensación es obligatoria y las molestias opcionales.
+- 3 tests nuevos y uno sustituido (93 en total, suite en verde): cancelar una finalizada retira su carga, una cerrada ya no se cancela, el cierre acepta ir sin molestias y no se cancela dos veces.
+
 ## 0.21.2 - Dos huecos de recuperación del flujo
 
 Al recorrer los casos reales de uso aparecieron dos estados de los que no se podía volver:

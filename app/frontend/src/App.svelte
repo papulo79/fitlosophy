@@ -88,8 +88,9 @@
     if (flujo.sesion?.estado === "en_curso" && base === "/estado") {
       // docs/14: reabrir a mitad de sesión devuelve a esa sesión.
       location.hash = "#/ejecucion";
-    } else if (flujo.sesion?.estado === "finalizada" && base === "/estado") {
-      // Entrenada pero sin cerrar: falta la respuesta posterior.
+    } else if (flujo.sesion?.estado === "finalizada" && base === "/estado" && !flujo.cierreAplazado) {
+      // Entrenada pero sin cerrar: falta la respuesta posterior. A diferencia
+      // de una sesión en curso, esto se puede aplazar: la sesión ya cuenta.
       location.hash = "#/cierre";
     } else if (base === "/propuesta" && !flujo.propuesta) {
       location.hash = "#/estado";

@@ -836,12 +836,11 @@ def test_una_sesion_cancelada_no_aporta_carga_ni_aparece_en_el_historial(client)
     assert all(v == 0 for v in p2["carga"]["puntos"].values())
 
 
-def test_solo_se_cancela_una_sesion_en_curso(client):
+def test_no_se_cancela_dos_veces(client):
     p1 = _crear_propuesta(client)
     sesion = client.post("/api/sesiones", json={"proposal_id": p1["id"]}).json()["sesion"]
-    client.post(f"/api/sesiones/{sesion['id']}/finalizar", json={"rpe_real": 7})
-    r = client.post(f"/api/sesiones/{sesion['id']}/cancelar")
-    assert r.status_code == 409
+    assert client.post(f"/api/sesiones/{sesion['id']}/cancelar").status_code == 200
+    assert client.post(f"/api/sesiones/{sesion['id']}/cancelar").status_code == 409
 
 
 def test_hoy_devuelve_lo_que_hay_en_marcha(client):
@@ -877,3 +876,43 @@ def test_hoy_recupera_una_sesion_pendiente_de_cierre(client):
     client.post(f"/api/sesiones/{sesion['id']}/cierre", json={"sensacion": "como_previsto", "molestias": []})
     hoy = client.get("/api/hoy").json()
     assert hoy["sesion_pendiente_cierre"] is None
+
+
+def test_cancelar_una_sesion_finalizada_le_retira_la_carga(client):
+    """Darla por hecha por error: al cancelarla deja de contar en el historial
+    y de aportar carga a los días siguientes (criterio 7 de docs/14)."""
+    propuesta = _crear_propuesta(client)
+    sesion = client.post("/api/sesiones", json={"proposal_id": propuesta["id"]}).json()["sesion"]
+    resp = client.post(f"/api/sesiones/{sesion['id']}/finalizar", json={"rpe_real": 7}).json()
+    assert any(v > 0 for v in resp["puntos_sesion_real"].values())  # estaba aportando carga
+
+    r = client.post(f"/api/sesiones/{sesion['id']}/cancelar")
+    assert r.status_code == 200
+    assert r.json()["sesion"]["estado"] == "cancelada"
+
+    siguiente = _crear_propuesta(client)
+    assert all(v == 0 for v in siguiente["carga"]["puntos"].values())
+
+
+def test_una_sesion_cerrada_ya_no_se_cancela(client):
+    """El cierre pudo congelar la ventana de una dimensión: ahí se corrige por
+    ítem desde el historial, no se borra el día entero."""
+    propuesta = _crear_propuesta(client)
+    sesion = client.post("/api/sesiones", json={"proposal_id": propuesta["id"]}).json()["sesion"]
+    client.post(f"/api/sesiones/{sesion['id']}/finalizar", json={"rpe_real": 7})
+    client.post(
+        f"/api/sesiones/{sesion['id']}/cierre",
+        json={"sensacion": "como_previsto", "molestias": []},
+    )
+    r = client.post(f"/api/sesiones/{sesion['id']}/cancelar")
+    assert r.status_code == 409
+    assert "historial" in r.json()["detail"]
+
+
+def test_el_cierre_admite_quedarse_en_lo_minimo(client):
+    """Solo la sensación es obligatoria: las molestias pueden ir vacías."""
+    propuesta = _crear_propuesta(client)
+    sesion = client.post("/api/sesiones", json={"proposal_id": propuesta["id"]}).json()["sesion"]
+    client.post(f"/api/sesiones/{sesion['id']}/finalizar", json={"rpe_real": 7})
+    r = client.post(f"/api/sesiones/{sesion['id']}/cierre", json={"sensacion": "como_previsto"})
+    assert r.status_code == 201

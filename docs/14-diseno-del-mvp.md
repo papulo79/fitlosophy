@@ -30,7 +30,8 @@ El flujo es lineal y el día tiene un único momento de decisión, así que en c
 
 - Con una sesión `en_curso` no se puede declarar otro estado diario ni aceptar otra propuesta: primero se finaliza o se cancela. Reabrir la aplicación a mitad de sesión debe **devolver a esa sesión**, no ofrecer empezar de cero.
 - Declarar de nuevo el estado diario sin haber empezado sí está permitido —el estado real cambia a lo largo de la tarde— y **descarta** la propuesta anterior del día en lugar de acumularla.
-- Una sesión se puede **cancelar** mientras está `en_curso`: es la salida cuando se empieza por error o el plan se cae. Una sesión cancelada no aporta carga al historial ni cuenta como estímulo de ningún patrón.
+- Una sesión se puede **cancelar** mientras está `en_curso` o `finalizada`: es la salida cuando se empieza por error, el plan se cae o se da por hecha una sesión que no fue. Una sesión cancelada no aporta carga al historial ni cuenta como estímulo de ningún patrón; cancelar una ya finalizada le retira la carga que estaba aportando, y es por tanto una corrección de registro (criterio 7). Desde `cerrada` no se cancela: el cierre pudo congelar la ventana de una dimensión y la corrección se hace por ítem desde el historial.
+- El **cierre admite quedarse en lo mínimo**: la sensación es obligatoria y las molestias son opcionales. También se puede aplazar y seguir usando la aplicación; la sesión queda pendiente y se recuerda al volver a abrir.
 
 Estados de una sesión: `en_curso` → `finalizada` → `cerrada`, o `en_curso` → `cancelada`.
 Estados de una propuesta: `vigente` → `aceptada` o `descartada`.
