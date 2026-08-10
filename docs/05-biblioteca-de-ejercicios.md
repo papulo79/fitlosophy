@@ -77,6 +77,29 @@ Criterios:
 3. **`patrones` es obligatorio cuando la prescripción se expresa por patrón** (hoy, `pasadas_por_patron`). Sin esa lista la dosis es incompleta: «4 pasadas» no dice de qué, y el usuario no puede ejecutar la sesión. Un test del catálogo lo verifica.
 4. La descripción explica *qué* hacer, no *por qué* está hoy en la sesión: el motivo lo genera el motor en la justificación del ítem (`docs/03`).
 
+## Intención del ejercicio
+
+La biblioteca no prescribe kilos: el peso externo depende del estado del día y de la fuerza del momento, y el modelo de carga de `docs/12` es ciego a la intensidad (el coste por dimensión es un nivel fijo del ejercicio, no una función del peso). Prescribir un número exigiría un dato de fuerza por ejercicio que el perfil no tiene.
+
+En su lugar se declara **con qué intención** se hace el ejercicio, y el atleta elige el peso. La intención se deriva del **primer elemento de `objetivos`**, que el catálogo lista por orden de importancia, y se reduce a un vocabulario cerrado:
+
+| Intención | Origen (`objetivos[0]`) | Qué le dice al atleta |
+|---|---|---|
+| `fuerza` | `fuerza`, `fuerza_unilateral` | Pocas repeticiones y peso alto para el rango |
+| `potencia` | `potencia` | Velocidad; el peso no debe frenar el gesto |
+| `resistencia` | `fuerza_resistencia`, `volumen` | Muchas repeticiones y peso sostenible |
+| `control` | `tecnica`, `estabilidad_*`, `core`, `rotacion`, `activacion` | La calidad manda; el peso es secundario |
+| `coordinacion` | `coordinacion` | Cadencia y apoyos limpios antes que intensidad |
+| `movilidad` | `movilidad` | Recorrido y control, carga mínima |
+| `cardio` | `cambio_direccion`, `aceleracion`, `acondicionamiento`, `cardio` | Continuidad y ritmo |
+| `recuperacion` | `recuperacion`, `recuperacion_activa` | Sin buscar estímulo |
+
+Junto a la intención se muestra la **reserva de repeticiones de la familia** (`docs/06`), que es la instrucción concreta para elegir el peso: en familia B, «deja 1-3 repeticiones en recámara» acota la carga sin necesidad de un número.
+
+La reserva solo se muestra donde significa algo: en ejercicios dosificados en **repeticiones**. No aplica a los isométricos ni a los que se dosifican en segundos, minutos, saltos o pasadas —«deja 1-3 repeticiones en recámara» no dice nada en una plancha de 32 s—, ni a B0 y B4, que por la regla 8 de `docs/06` no buscan estímulo.
+
+El peso realmente usado se registra en `carga_kg_real`. Hoy no alimenta el modelo de carga; se acumula para poder sugerir progresión más adelante (`docs/07`: una sola variable a la vez, y solo si se cerró el rango alto con el RPE previsto o menor).
+
 ## Criterio lumbar
 
 - `verde`: uso habitual y baja demanda lumbopélvica.

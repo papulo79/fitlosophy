@@ -916,3 +916,86 @@ def test_el_cierre_admite_quedarse_en_lo_minimo(client):
     client.post(f"/api/sesiones/{sesion['id']}/finalizar", json={"rpe_real": 7})
     r = client.post(f"/api/sesiones/{sesion['id']}/cierre", json={"sensacion": "como_previsto"})
     assert r.status_code == 201
+
+
+# --- Intención y peso usado (docs/05) -------------------------------------------------
+
+
+def test_la_propuesta_declara_la_intencion_y_la_reserva(client):
+    """La biblioteca no prescribe kilos: dice con qué intención se hace el
+    ejercicio y cuánta reserva dejar, y el atleta ajusta el peso."""
+    propuesta = _crear_propuesta(client)  # familia B
+    swing = next(i for i in propuesta["items"] if i["exercise_id"] == "kb-swing-two-hand")
+    assert swing["intencion"] == "potencia"
+    assert swing["reserva"] == "deja 1-3 repeticiones en recámara"
+    assert swing["admite_peso"] is True
+
+    # El calentamiento no busca estímulo (regla 8 de docs/06): sin reserva.
+    b0 = next(i for i in propuesta["items"] if i["bloque"] == "B0")
+    assert b0["reserva"] == ""
+
+
+def test_los_ejercicios_sin_carga_externa_no_piden_peso(client):
+    propuesta = _crear_propuesta(client)
+    plancha = next((i for i in propuesta["items"] if i["exercise_id"] == "plank-front"), None)
+    assert plancha is not None
+    assert plancha["admite_peso"] is False
+    assert plancha["intencion"] == "control"
+
+
+def test_apuntar_el_peso_sin_declarar_desviacion(client):
+    """El caso que motivó el cambio: hiciste el ejercicio tal cual y solo
+    quieres dejar constancia de los kilos, sin marcarlo como «modificado»."""
+    propuesta = _crear_propuesta(client)
+    r = client.post("/api/sesiones", json={"proposal_id": propuesta["id"]})
+    sesion = r.json()["sesion"]
+    assert sesion["pesos_disponibles"] == [8, 12, 16]  # inventario del perfil
+
+    swing = next(i for i in sesion["items"] if i["exercise_id"] == "kb-swing-two-hand")
+    r = client.patch(
+        f"/api/sesiones/{sesion['id']}/items/{swing['id']}",
+        json={"estado": "completado", "carga_kg_real": 16},
+    )
+    assert r.status_code == 200
+    guardado = next(i for i in r.json()["sesion"]["items"] if i["id"] == swing["id"])
+    assert guardado["estado"] == "completado"  # no queda como modificado
+    assert guardado["real"]["carga_kg"] == 16
+
+
+def test_el_peso_no_altera_la_carga_calculada(client):
+    """docs/12 es ciego a la intensidad: el peso se acumula para la progresión
+    futura (docs/07), no cambia los puntos de hoy."""
+    propuesta = _crear_propuesta(client)
+    sesion = client.post("/api/sesiones", json={"proposal_id": propuesta["id"]}).json()["sesion"]
+    swing = next(i for i in sesion["items"] if i["exercise_id"] == "kb-swing-two-hand")
+    client.patch(
+        f"/api/sesiones/{sesion['id']}/items/{swing['id']}",
+        json={"estado": "completado", "carga_kg_real": 16},
+    )
+    r = client.post(f"/api/sesiones/{sesion['id']}/finalizar", json={"rpe_real": 7})
+    con_peso = r.json()["puntos_sesion_real"]
+
+    previstos = {}
+    for it in propuesta["items"]:
+        for d, p in (it.get("puntos") or {}).items():
+            previstos[d] = previstos.get(d, 0) + p
+    assert con_peso["bisagra"] == pytest.approx(previstos["bisagra"])
+
+
+def test_la_reserva_solo_donde_significa_algo(client):
+    """«Deja 1-3 repeticiones en recámara» no dice nada en una plancha de 32 s
+    ni en una serie de 100 saltos: solo aplica a dosis en repeticiones."""
+    propuesta = _crear_propuesta(client)
+    por_id = {i["exercise_id"]: i for i in propuesta["items"]}
+
+    assert por_id["kb-swing-two-hand"]["reserva"]           # series × repeticiones
+    assert por_id["pushup-feet-elevated"]["reserva"]
+
+    assert por_id["plank-front"]["reserva"] == ""           # isométrico, en segundos
+    assert por_id["side-plank"]["reserva"] == ""
+    assert por_id["rope-technical"]["reserva"] == ""        # saltos
+    assert por_id["agility-ladder-basic"]["reserva"] == ""  # pasadas, y además B0
+
+    # La escalera y la comba se leen como coordinación, no como «control».
+    assert por_id["agility-ladder-basic"]["intencion"] == "coordinacion"
+    assert por_id["rope-technical"]["intencion"] == "coordinacion"

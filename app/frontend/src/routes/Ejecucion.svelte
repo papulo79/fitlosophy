@@ -6,6 +6,8 @@
   import Icon from "../lib/Icon.svelte";
   import BarraProgreso from "../lib/BarraProgreso.svelte";
   import AccionesEjercicio from "../lib/AccionesEjercicio.svelte";
+  import Intencion from "../lib/Intencion.svelte";
+  import PesoUsado from "../lib/PesoUsado.svelte";
 
   let sesion = $derived(flujo.sesion);
   let grupos = $derived(agruparPorBloque(sesion?.items));
@@ -27,6 +29,7 @@
   let cancelando = $state(false);
   let rpe = $state(7);
   let cargando = $state(false);
+  let guardandoPeso = $state(null); // id del ítem cuyo peso se está guardando
 
   async function marcar(item) {
     if (item.estado !== "pendiente") return; // un check es definitivo; correcciones vía historial
@@ -37,6 +40,28 @@
       advertencias = resp.advertencias || [];
     } catch (e) {
       error = mensajeError(e);
+    }
+  }
+
+  /** Apunta el peso usado sin declarar desviación: el ítem se hizo tal cual,
+   *  solo queda constancia de los kilos (docs/05). El backend acepta
+   *  `carga_kg_real` con estado `completado`. */
+  async function guardarPeso(item, kg) {
+    error = "";
+    guardandoPeso = item.id;
+    try {
+      const resp = await api.patch(`/api/sesiones/${sesion.id}/items/${item.id}`, {
+        estado: item.estado === "pendiente" ? "completado" : item.estado,
+        carga_kg_real: kg,
+        // Un ítem sustituido exige mantener su ejercicio real (schemas.py).
+        ...(item.estado === "sustituido" ? { exercise_id_real: item.exercise_id_real } : {}),
+      });
+      flujo.sesion = resp.sesion;
+      advertencias = resp.advertencias || [];
+    } catch (e) {
+      error = mensajeError(e);
+    } finally {
+      guardandoPeso = null;
     }
   }
 
@@ -160,10 +185,19 @@
                 <div class="min-w-0 flex-1">
                   <p class="font-semibold text-texto">{item.nombre}</p>
                   <p class="text-sm text-apagado">{item.dosis}</p>
+                  <Intencion intencion={item.intencion} reserva={item.reserva} />
                   {#if item.estado !== "pendiente"}
                     <p class="text-xs text-tenue">
                       {ESTADOS_ITEM[item.estado]}{item.motivo ? ` · ${item.motivo}` : ""}
                     </p>
+                  {/if}
+                  {#if item.admite_peso && sesion.estado === "en_curso"}
+                    <PesoUsado
+                      valor={item.real?.carga_kg ?? null}
+                      sugerencias={sesion.pesos_disponibles || []}
+                      guardando={guardandoPeso === item.id}
+                      alGuardar={(kg) => guardarPeso(item, kg)}
+                    />
                   {/if}
                 </div>
                 {#if sesion.estado === "en_curso"}

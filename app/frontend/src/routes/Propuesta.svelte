@@ -4,6 +4,7 @@
   import { BLOQUES, FAMILIAS, agruparPorBloque } from "../lib/etiquetas.js";
   import Icon from "../lib/Icon.svelte";
   import Plegable from "../lib/Plegable.svelte";
+  import Intencion from "../lib/Intencion.svelte";
   import AccionesEjercicio from "../lib/AccionesEjercicio.svelte";
 
   let propuesta = $derived(flujo.propuesta);
@@ -136,6 +137,7 @@
                 <div class="min-w-0">
                   <p class="font-semibold text-texto">{item.nombre}</p>
                   <p class="text-sm text-apagado">{item.dosis}</p>
+                  <Intencion intencion={item.intencion} reserva={item.reserva} />
                   {#if item.justificacion}
                     <p class="mt-1 text-xs text-tenue">{item.justificacion}</p>
                   {/if}

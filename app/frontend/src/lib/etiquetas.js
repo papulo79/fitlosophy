@@ -26,6 +26,19 @@ export const ESTADOS_ITEM = {
   no_realizado: "No realizado",
 };
 
+/** Intención del ejercicio (docs/05): con qué criterio elegir el peso.
+ *  `color` usa los tokens del tema; `nota` es la guía cuando no hay reserva. */
+export const INTENCIONES = {
+  fuerza: { etiqueta: "Fuerza", color: "text-acento border-acento/40 bg-acento/10" },
+  potencia: { etiqueta: "Potencia", color: "text-ambar border-ambar/40 bg-ambar/10" },
+  resistencia: { etiqueta: "Resistencia", color: "text-acento border-acento/40 bg-acento/10" },
+  control: { etiqueta: "Control", color: "text-apagado border-borde bg-fondo" },
+  coordinacion: { etiqueta: "Coordinación", color: "text-apagado border-borde bg-fondo" },
+  movilidad: { etiqueta: "Movilidad", color: "text-apagado border-borde bg-fondo" },
+  cardio: { etiqueta: "Cardio", color: "text-ambar border-ambar/40 bg-ambar/10" },
+  recuperacion: { etiqueta: "Recuperación", color: "text-apagado border-borde bg-fondo" },
+};
+
 /** Agrupa ítems por bloque en el orden canónico. Devuelve [{bloque, items}]. */
 export function agruparPorBloque(items) {
   const grupos = new Map();

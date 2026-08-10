@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.22.0 - Intención del ejercicio y peso usado
+
+- El catálogo no decía nada sobre el peso: «Swing a dos manos 8×9» no indicaba con qué kettlebell. La biblioteca **sigue sin prescribir kilos** —el modelo de carga de `docs/12` es ciego a la intensidad y el perfil no tiene un dato de fuerza por ejercicio— y en su lugar declara **con qué intención** se hace el ejercicio, dejando que el atleta ajuste.
+- Nueva sección «Intención del ejercicio» en `docs/05`: la intención se deriva del primer elemento de `objetivos`, que ya existía en los 28 ejercicios, reducido a un vocabulario cerrado (`fuerza`, `potencia`, `resistencia`, `control`, `coordinacion`, `movilidad`, `cardio`, `recuperacion`).
+- Junto a la intención se muestra la **reserva de repeticiones de la familia** (tabla de `docs/06`), que es la instrucción concreta para elegir el peso: en familia B, «deja 1-3 repeticiones en recámara». Solo aparece donde significa algo — en dosis por repeticiones, no en isométricos, segundos, saltos ni pasadas, ni en B0/B4, que no buscan estímulo.
+- **Peso usado en línea** (`PesoUsado.svelte`) en Ejecución, con las kettlebells del perfil (8/12/16 kg) a un toque. Antes el único acceso al campo era el modal de desviación, que obligaba a marcar el ítem como «modificado»: semánticamente falso cuando lo hiciste tal cual. El backend ya aceptaba `carga_kg_real` con estado `completado`; faltaba la pantalla.
+- El peso **no altera la carga calculada**: se acumula para poder sugerir progresión más adelante (`docs/07`), y hay un test que lo fija para que no se cuele una dependencia sin decidirlo.
+- 6 tests nuevos (98 en total, suite en verde): intención y reserva en la propuesta, ejercicios sin carga externa, apuntar el peso sin declarar desviación, el peso no cambia los puntos, y la reserva solo donde aplica.
+
 ## 0.21.3 - Salidas del cierre
 
 - **Trampa introducida en 0.21.2**: el redirigido a Cierre saltaba cada vez que se tocaba «Hoy», no solo al arrancar, así que una sesión sin cerrar dejaba la aplicación bloqueada en esa pantalla. Ahora el cierre se puede **aplazar** («Ahora no»): la sesión sigue pendiente y se recuerda al volver a abrir, pero se puede seguir usando el resto.

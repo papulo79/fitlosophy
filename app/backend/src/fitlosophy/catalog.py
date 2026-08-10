@@ -65,6 +65,39 @@ MATERIAL_A_PERFIL = {
     "cinta": "cinta_velocidad_max_kmh",
 }
 
+# `objetivos[0]` → intención mostrada al atleta (tabla de docs/05). El catálogo
+# usa 27 objetivos distintos; esto los reduce al vocabulario que hace falta para
+# elegir el peso. Lo no mapeado cae en «control», la lectura conservadora: la
+# calidad manda y el peso es secundario.
+INTENCION_POR_OBJETIVO = {
+    "fuerza": "fuerza",
+    "fuerza_unilateral": "fuerza",
+    "potencia": "potencia",
+    "fuerza_resistencia": "resistencia",
+    "volumen": "resistencia",
+    "tecnica": "control",
+    "estabilidad": "control",
+    "estabilidad_lumbopelvica": "control",
+    "estabilidad_lateral": "control",
+    "control": "control",
+    "core": "control",
+    "rotacion": "control",
+    "antirotacion": "control",
+    "activacion": "control",
+    "coordinacion": "coordinacion",
+    "habilidad": "control",
+    "agarre": "control",
+    "calentamiento": "control",
+    "movilidad": "movilidad",
+    "cardio": "cardio",
+    "acondicionamiento": "cardio",
+    "cambio_direccion": "cardio",
+    "aceleracion": "cardio",
+    "recuperacion": "recuperacion",
+    "recuperacion_activa": "recuperacion",
+    "actividad_baja_intensidad": "recuperacion",
+}
+
 
 @dataclass(frozen=True)
 class Exercise:
@@ -93,6 +126,18 @@ class Exercise:
     sustitutos: tuple[str, ...] = ()
     prescripcion: dict = field(default_factory=dict)
     opcional: bool = False
+
+    @property
+    def intencion(self) -> str:
+        """Con qué intención se hace el ejercicio (docs/05).
+
+        La biblioteca no prescribe kilos —el modelo de carga es ciego a la
+        intensidad y el perfil no tiene un dato de fuerza por ejercicio—, así
+        que se declara la intención y el atleta elige el peso. Sale del primer
+        elemento de `objetivos`, que el catálogo lista por importancia.
+        """
+        primero = self.objetivos[0] if self.objetivos else ""
+        return INTENCION_POR_OBJETIVO.get(primero, "control")
 
     def coste(self, dimension: str) -> str | None:
         return self.coste_dimensiones.get(dimension)

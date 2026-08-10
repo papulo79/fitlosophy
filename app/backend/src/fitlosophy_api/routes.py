@@ -47,6 +47,31 @@ router = APIRouter()
 # RPE previsto por familia (plantillas de docs/06).
 RPE_PREVISTO = {"A": "5-6", "B": "7-8", "C": "2-4", "D": "modulable según BJJ"}
 
+# Reserva de repeticiones por familia (tabla de dosificación de docs/06). Es la
+# instrucción para elegir el peso sin prescribir kilos: acota el esfuerzo.
+RESERVA_POR_FAMILIA = {
+    "A": "deja 3-5 repeticiones en recámara",
+    "B": "deja 1-3 repeticiones en recámara",
+    "C": "sin buscar estímulo",
+    "D": "según técnica, sin buscar estímulo",
+}
+
+
+def _reserva(ej, bloque: str, familia: str) -> str:
+    """Reserva a mostrar en un ítem, o cadena vacía si no aplica.
+
+    Solo tiene sentido en ejercicios dosificados en repeticiones: «deja 1-3
+    repeticiones en recámara» no dice nada en una plancha de 32 segundos ni en
+    una serie de 100 saltos de comba. Y B0/B4 no buscan estímulo (regla 8 de
+    docs/06).
+    """
+    if ej is None or bloque in ("B0", "B4"):
+        return ""
+    p = ej.prescripcion or {}
+    if not (p.get("repeticiones") or p.get("repeticiones_totales")):
+        return ""
+    return RESERVA_POR_FAMILIA.get(familia, "")
+
 TOKENS_MATERIAL = set(MATERIAL_A_PERFIL)
 
 
@@ -102,6 +127,14 @@ def _totales_items(items: list[dict]) -> dict[str, float]:
     return totales
 
 
+def _pesos_disponibles(conn) -> list[float]:
+    """Kettlebells del inventario del perfil, para ofrecerlas de un toque al
+    apuntar el peso usado (docs/05: la biblioteca no prescribe kilos)."""
+    raw = get_perfil(conn).raw or {}
+    pesos = (raw.get("material") or {}).get("kettlebells_kg") or []
+    return sorted(p for p in pesos if isinstance(p, (int, float)))
+
+
 def _propuesta_json(row: sqlite3.Row, catalog: Catalog) -> dict:
     items = cargar_json(row["items"], [])
     for it in items:
@@ -112,6 +145,12 @@ def _propuesta_json(row: sqlite3.Row, catalog: Catalog) -> dict:
         # instante en las sesiones ya guardadas.
         it["descripcion"] = ej.descripcion if ej else ""
         it["patrones"] = list(ej.patrones) if ej else []
+        # Intención + reserva: con qué criterio elegir el peso (docs/05).
+        # B0 y B4 no buscan estímulo (regla 8 de docs/06), así que ahí la
+        # reserva de la familia no aplica.
+        it["intencion"] = ej.intencion if ej else ""
+        it["admite_peso"] = bool(ej and "kettlebell" in ej.material)
+        it["reserva"] = _reserva(ej, it.get("bloque", ""), row["familia"])
     return {
         "id": row["id"],
         "estado_diario_id": row["daily_state_id"],
@@ -379,6 +418,9 @@ def _sesion_json(conn, row, catalog) -> dict:
                 "nombre": ej.nombre if ej else (it["exercise_id_real"] or it["exercise_id"]),
                 "descripcion": ej.descripcion if ej else "",
                 "patrones": list(ej.patrones) if ej else [],
+                "intencion": ej.intencion if ej else "",
+                "admite_peso": bool(ej and "kettlebell" in ej.material),
+                "reserva": _reserva(ej, it["bloque"], row["familia"]),
                 "dosis": it["dosis"],
                 "puntos_previstos": cargar_json(it["puntos_previstos"], {}),
                 "justificacion": it["justificacion"],
@@ -403,6 +445,8 @@ def _sesion_json(conn, row, catalog) -> dict:
         "estado": row["estado"],
         "rpe_real": row["rpe_real"],
         "items": items,
+        # Inventario de kettlebells: se ofrece de un toque al apuntar el peso.
+        "pesos_disponibles": _pesos_disponibles(conn),
         "cierre": None
         if cierre is None
         else {
