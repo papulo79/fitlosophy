@@ -21,6 +21,10 @@
     // Marca del proyecto: mancuerna en diagonal (45°).
     logo: "M3 9a1.5 1.5 0 0 1 3 0v6a1.5 1.5 0 0 1-3 0zm4-2a1.5 1.5 0 0 1 3 0v10a1.5 1.5 0 0 1-3 0zm7 0a1.5 1.5 0 0 1 3 0v10a1.5 1.5 0 0 1-3 0zm4 2a1.5 1.5 0 0 1 3 0v6a1.5 1.5 0 0 1-3 0zM10 11h4v2h-4z",
     buscar: "M10 2a8 8 0 1 0 0 16 8 8 0 0 0 0-16zm0 3a5 5 0 1 1 0 10 5 5 0 0 1 0-10zM15.5 14.5l5.5 5.5-1.4 1.4-5.5-5.5z",
+    // Chevron a la derecha (espejo de `atras`): gira 90° al desplegar.
+    chevron: "M9.5 5l7 7-7 7-1.4-1.4 5.6-5.6-5.6-5.6z",
+    // Marco de vídeo con el triángulo de reproducción calado (fill-rule evenodd).
+    video: "M2 5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2zM10 8.5v7l6-3.5z",
   };
   const TRANSFORMS = { logo: "rotate(45 12 12)" };
   let { nombre, tam = 20 } = $props();

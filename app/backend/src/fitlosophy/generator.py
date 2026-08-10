@@ -155,7 +155,14 @@ def _dosis(ejercicio: Exercise, familia: str) -> str:
         return f"{s}×{int(p['saltos'])} saltos"
     if p.get("pasadas_por_patron"):
         r = _rango(p["pasadas_por_patron"])
-        return f"{int(r[0])} pasadas"
+        # Misma regla de familia que el resto de claves: hoy este ejercicio solo
+        # aparece en B0, que ya fuerza dosis mínima (regla 8 de docs/06), pero
+        # así no queda una excepción esperando a que se use en otro bloque.
+        v = r[0] if dosis_minima else round((r[0] + r[1]) / 2)
+        # «por patrón» solo si el catálogo enumera los patrones: si no, la cifra
+        # quedaría referida a algo que el usuario no puede ver (docs/05).
+        sufijo = " por patrón" if ejercicio.patrones else ""
+        return f"{int(v)} pasadas{sufijo}"
     if p.get("recorridos"):
         r = _rango(p["recorridos"])
         v = r[0] if dosis_minima else round((r[0] + r[1]) / 2)

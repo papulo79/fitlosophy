@@ -2,10 +2,10 @@
   import { api, mensajeError } from "../lib/api.js";
   import { flujo } from "../lib/stores.svelte.js";
   import { BLOQUES, FAMILIAS, ESTADOS_ITEM, agruparPorBloque } from "../lib/etiquetas.js";
-  import { urlBusqueda } from "../lib/busqueda.js";
   import Opciones from "../lib/Opciones.svelte";
   import Icon from "../lib/Icon.svelte";
   import BarraProgreso from "../lib/BarraProgreso.svelte";
+  import AccionesEjercicio from "../lib/AccionesEjercicio.svelte";
 
   let sesion = $derived(flujo.sesion);
   let grupos = $derived(agruparPorBloque(sesion?.items));
@@ -129,35 +129,35 @@
         <h3 class="mb-2 text-xs font-bold uppercase tracking-wider text-tenue">{BLOQUES[grupo.bloque] || grupo.bloque}</h3>
         <div class="space-y-2">
           {#each grupo.items as item}
-            <div class="flex items-center gap-3 rounded-xl border border-borde bg-superficie p-3 {item.estado !== 'pendiente' ? 'opacity-60' : ''}">
-              <button
-                onclick={() => marcar(item)}
-                aria-label="Completado"
-                class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border-2 {item.estado === 'pendiente'
-                  ? 'border-borde text-transparent'
-                  : item.estado === 'no_realizado'
-                    ? 'border-rojo bg-rojo/15 text-rojo'
-                    : 'border-acento bg-acento text-fondo'}"
-              >
-                <Icon nombre={item.estado === "no_realizado" ? "cerrar" : "check"} tam={22} />
-              </button>
-              <div class="min-w-0 flex-1">
-                <a href={urlBusqueda(item.nombre)} target="_blank" rel="noopener" title="Buscar vídeo del ejercicio" class="group flex items-center gap-1.5 font-semibold text-texto">
-                  {item.nombre}
-                  <span class="text-tenue group-hover:text-acento"><Icon nombre="buscar" tam={13} /></span>
-                </a>
-                <p class="text-sm text-apagado">{item.dosis}</p>
-                {#if item.estado !== "pendiente"}
-                  <p class="text-xs text-tenue">
-                    {ESTADOS_ITEM[item.estado]}{item.motivo ? ` · ${item.motivo}` : ""}
-                  </p>
+            <div class="rounded-xl border border-borde bg-superficie p-3 {item.estado !== 'pendiente' ? 'opacity-60' : ''}">
+              <div class="flex items-center gap-3">
+                <button
+                  onclick={() => marcar(item)}
+                  aria-label="Completado"
+                  class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border-2 {item.estado === 'pendiente'
+                    ? 'border-borde text-transparent'
+                    : item.estado === 'no_realizado'
+                      ? 'border-rojo bg-rojo/15 text-rojo'
+                      : 'border-acento bg-acento text-fondo'}"
+                >
+                  <Icon nombre={item.estado === "no_realizado" ? "cerrar" : "check"} tam={22} />
+                </button>
+                <div class="min-w-0 flex-1">
+                  <p class="font-semibold text-texto">{item.nombre}</p>
+                  <p class="text-sm text-apagado">{item.dosis}</p>
+                  {#if item.estado !== "pendiente"}
+                    <p class="text-xs text-tenue">
+                      {ESTADOS_ITEM[item.estado]}{item.motivo ? ` · ${item.motivo}` : ""}
+                    </p>
+                  {/if}
+                </div>
+                {#if sesion.estado === "en_curso"}
+                  <button onclick={() => abrirModal(item)} aria-label="Opciones" class="flex min-h-11 shrink-0 items-center rounded-lg border border-borde px-3 py-2 text-apagado">
+                    <Icon nombre="mas" tam={18} />
+                  </button>
                 {/if}
               </div>
-              {#if sesion.estado === "en_curso"}
-                <button onclick={() => abrirModal(item)} aria-label="Opciones" class="flex min-h-11 shrink-0 items-center rounded-lg border border-borde px-3 py-2 text-apagado">
-                  <Icon nombre="mas" tam={18} />
-                </button>
-              {/if}
+              <AccionesEjercicio nombre={item.nombre} descripcion={item.descripcion} patrones={item.patrones} />
             </div>
           {/each}
         </div>

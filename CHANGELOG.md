@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.20.0 - Ejecución de los ejercicios en el catálogo
+
+- El catálogo era un modelo de decisión y dosificación, sin ningún campo que dijera **cómo** se hace cada ejercicio: la pantalla solo podía mostrar nombre, dosis y justificación. Se notaba sobre todo en la escalera de agilidad, cuya prescripción (`pasadas_por_patron`) se expresaba «por patrón» mientras el catálogo no enumeraba esos patrones en ninguna parte: «4 pasadas» era una dosis que no se podía ejecutar.
+- Nueva sección «Ejecución» en `docs/05` con dos campos y sus criterios: `descripcion` (obligatoria, una o dos frases de ejecución con la clave técnica que más importa en este perfil) y `patrones` (obligatoria cuando la dosis se expresa por patrón).
+- `data/ejercicios.yaml`: descripción para los **28** ejercicios y los cinco patrones de la escalera de agilidad. Las descripciones de los ejercicios con `impacto_lumbar: rojo` declaran su límite en palabras, no solo con la etiqueta.
+- La API resuelve `descripcion` y `patrones` desde el catálogo en cada lectura, sin persistirlos con la propuesta: corregir un texto se refleja también en las sesiones ya guardadas.
+- Nuevo `AccionesEjercicio.svelte`: pie de cada ítem con «Cómo se hace» (plegado por defecto) y «Ver vídeo», como dos botones de ancho completo y 44 px de alto. Sustituye a la lupa de 13 px pegada al nombre, que no llegaba al objetivo táctil mínimo y que además convertía el nombre entero en un enlace: tocar el ejercicio sacaba de la aplicación a YouTube sin haberlo pedido. Ahora el nombre es solo texto.
+- La explicación de la propuesta pasa a un plegable «Por qué esta sesión» (nuevo `Plegable.svelte`, reutilizable): ocupaba la pantalla completa del móvil antes del primer ejercicio, y es trazabilidad para consultar, no lectura diaria. La cabecera conserva visibles familia, RPE y duración; el plegable añade además las reglas aplicadas.
+- Dos iconos nuevos en `Icon.svelte`: `chevron` (gira 90° al desplegar) y `video`.
+- `pasadas_por_patron` pasa a respetar la familia como el resto de claves de dosificación. No cambia ninguna dosis actual —este ejercicio solo aparece en B0, que ya fuerza dosis mínima por la regla 8 de `docs/06`— pero deja de ser una excepción a la espera de usarse en otro bloque. La dosis se muestra como «4 pasadas por patrón».
+- 8 tests nuevos (83 en total, suite en verde): integridad del catálogo (descripción obligatoria, sin duplicar la dosis, dosis por patrón ↔ patrones enumerados, aviso en palabras de los ejercicios rojos) y la ejecución expuesta en propuesta, sesión e historial.
+
 ## 0.19.0 - Caché del frontend y puerto del despliegue
 
 - Los estáticos se sirven con `Cache-Control` explícito (`fitlosophy_api/static.py`). `StaticFiles` solo enviaba `ETag` y `Last-Modified`, así que navegador y CDN cacheaban por heurística: tras recompilar, el túnel seguía sirviendo un `index.html` viejo que apuntaba a los JS/CSS de la compilación anterior y los cambios no llegaban a la URL pública. Ahora `assets/` (nombres con hash de contenido de Vite) va con `immutable` a un año, y todo lo de nombre fijo (`index.html`, `favicon.svg`, `icono-*.png`) con `no-cache, must-revalidate`, que revalida con un 304 sin cuerpo. No hace falta ningún `?v=`: el hash del nombre ya identifica la versión.

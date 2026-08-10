@@ -43,7 +43,7 @@ fitlosophy/
 │   │   ├── scripts/init_db.py   # Inicializa la BD y crea el usuario único
 │   │   ├── .env.example         # Plantilla de configuración (el .env real no se versiona)
 │   │   ├── README.md            # Instalación, configuración, arranque, caché y tests
-│   │   └── tests/           # test_load.py, test_cases.py (docs/13), test_api.py, test_config.py, test_static.py
+│   │   └── tests/           # test_load.py, test_cases.py (docs/13), test_api.py, test_catalogo.py, test_config.py, test_static.py
 │   └── frontend/            # MVP: Svelte 5 + Tailwind 4 + Vite (6 pantallas + login)
 │       └── src/             # App.svelte (router hash), routes/ (pantallas), lib/ (api, stores, etiquetas)
 └── data/
@@ -80,7 +80,8 @@ Nota: `docs/10-roadmap-del-producto.md` define las fases del producto (0–12) y
 
 - Empieza con `version: 2` y una sección `valores` que enumera los dominios válidos de los campos categóricos (`impacto_lumbar`, `compatibilidad_bjj`, `nivel`, `lateralidad`, `nivel_coste`, `dimensiones`, `patron`). **Los valores nuevos deben respetar esos dominios**; si se amplía un dominio, actualiza la sección `valores` primero. El dominio `patron` es la taxonomía cerrada de `docs/05`: un patrón nuevo se documenta allí antes de usarse.
 - La lista de ejercicios cuelga de la clave `exercises`.
-- Cada ejercicio tiene: `id` (kebab-case en inglés, ej. `kb-swing-two-hand`), `nombre` (español), `patron` (de la taxonomía de `docs/05`), `secundarios` (opcional, misma taxonomía), `material` (lista, puede ser vacía; cada elemento debe corresponderse con el inventario de `perfil.yaml → material` por concepto: ej. `kettlebell` ↔ `kettlebells_kg`, `goma` ↔ `gomas`, `cinta` ↔ `cinta_velocidad_max_kmh`), `nivel`, `lateralidad`, `coste_dimensiones` (mapa dimensión → bajo/medio/alto, dimensiones de `docs/12`), `impacto_lumbar`, `compatibilidad_bjj`, `objetivos` y, normalmente, `prescripcion`. Opcionales: `explosivo`, `isometrico`, `sin_material` (ejecutable sin nada; el tatami cuenta como suelo), `progresiones`, `regresiones`, `sustitutos` (referencias a otros `id` del catálogo; deben existir).
+- Cada ejercicio tiene: `id` (kebab-case en inglés, ej. `kb-swing-two-hand`), `nombre` (español), `descripcion` (**obligatoria**, ver abajo), `patron` (de la taxonomía de `docs/05`), `secundarios` (opcional, misma taxonomía), `material` (lista, puede ser vacía; cada elemento debe corresponderse con el inventario de `perfil.yaml → material` por concepto: ej. `kettlebell` ↔ `kettlebells_kg`, `goma` ↔ `gomas`, `cinta` ↔ `cinta_velocidad_max_kmh`), `nivel`, `lateralidad`, `coste_dimensiones` (mapa dimensión → bajo/medio/alto, dimensiones de `docs/12`), `impacto_lumbar`, `compatibilidad_bjj`, `objetivos` y, normalmente, `prescripcion`. Opcionales: `patrones`, `explosivo`, `isometrico`, `sin_material` (ejecutable sin nada; el tatami cuenta como suelo), `progresiones`, `regresiones`, `sustitutos` (referencias a otros `id` del catálogo; deben existir).
+- **Ejercicio nuevo = descripción obligatoria** (sección «Ejecución» de `docs/05`): una o dos frases de ejecución, sin repetir el nombre ni la dosis, y declarando en palabras el límite de seguridad si el ejercicio es `impacto_lumbar: rojo` o lleva flags de técnica. Si su prescripción se expresa por patrón (`pasadas_por_patron`), `patrones` debe enumerarlos. `tests/test_catalogo.py` verifica ambas reglas.
 - Las prescripciones usan rangos de dos elementos (`series: [3, 5]`, `repeticiones: [8, 15]`) o valores fijos, más flags booleanos opcionales (`por_lado`, `evitar_fallo`, `detener_si_falla_tecnica`, etc.).
 
 `data/perfil.yaml`: claves snake_case en español; los rangos se expresan como mapas `{min, max}`.

@@ -36,6 +36,8 @@ valores:
 exercises:
   - id: pushup-classic
     nombre: Flexión clásica
+    descripcion: >-
+      Manos bajo los hombros y cuerpo en línea de talones a cabeza. Baja hasta que el pecho roce el suelo sin que la cadera se hunda y sube extendiendo los codos.
     patron: empuje_horizontal
     material: [tatami]
     sin_material: true
@@ -53,6 +55,8 @@ exercises:
 
   - id: pushup-feet-elevated
     nombre: Flexión con pies elevados
+    descripcion: >-
+      Flexión con los pies sobre la caja: cuanto más alta, más peso va al hombro. Mantén la línea del cuerpo; si la cadera cae, baja la altura del apoyo.
     patron: empuje_horizontal
     material: [caja, tatami]
     nivel: intermedio
@@ -69,6 +73,8 @@ exercises:
 
   - id: pike-pushup
     nombre: Flexión en pica
+    descripcion: >-
+      Con las caderas altas en V invertida, baja la coronilla hacia el suelo entre las manos y empuja de vuelta. Cuanto más vertical el tronco, más carga sobre el hombro.
     patron: empuje_vertical
     material: [tatami]
     sin_material: true
@@ -85,6 +91,8 @@ exercises:
 
   - id: kb-press
     nombre: Press militar con kettlebell
+    descripcion: >-
+      De pie, con la pesa en rack a la altura del hombro, empuja vertical hasta extender el codo. Aprieta glúteo y abdomen para no arquear la lumbar al buscar el recorrido final.
     patron: empuje_vertical
     material: [kettlebell]
     nivel: intermedio
@@ -101,6 +109,8 @@ exercises:
 
   - id: trx-row
     nombre: Remo en TRX
+    descripcion: >-
+      Cuerpo en línea y talones fijos, tira de las asas hacia los costados juntando las escápulas. Cuanto más horizontal te coloques, más dura la serie.
     patron: tiron_horizontal
     material: [trx]
     nivel: base
@@ -116,6 +126,8 @@ exercises:
 
   - id: kb-row-supported
     nombre: Remo unilateral con kettlebell y apoyo
+    descripcion: >-
+      Mano y rodilla sobre la caja, espalda paralela al suelo. Rema llevando el codo al costado sin que la cadera rote: resistir esa rotación es parte del ejercicio.
     patron: tiron_horizontal
     secundarios: [core_antirotacion]
     material: [kettlebell, caja]
@@ -133,6 +145,8 @@ exercises:
 
   - id: pullup-strict
     nombre: Dominada estricta
+    descripcion: >-
+      Desde suspensión completa, sube hasta pasar la barbilla por encima de la barra sin impulso de cadera, y baja controlado hasta extender del todo. No se llega al fallo.
     patron: tiron_vertical
     material: [barra_dominadas]
     nivel: avanzado
@@ -148,6 +162,8 @@ exercises:
 
   - id: pullup-band-assisted
     nombre: Dominada asistida con goma
+    descripcion: >-
+      Dominada con la goma bajo la rodilla o el pie. Usa la goma más floja que te permita completar repeticiones limpias, y retírala cuando sobren.
     patron: tiron_vertical
     material: [barra_dominadas, goma]
     nivel: base
@@ -165,6 +181,8 @@ exercises:
 
   - id: goblet-squat
     nombre: Goblet squat
+    descripcion: >-
+      Pesa sujeta contra el pecho con los codos dentro. Baja entre los pies con el tronco erguido, hasta donde puedas sin que la pelvis se enrosque al final del recorrido.
     patron: dominante_rodilla
     material: [kettlebell]
     nivel: base
@@ -180,6 +198,8 @@ exercises:
 
   - id: bulgarian-squat-trx
     nombre: Sentadilla búlgara asistida con TRX
+    descripcion: >-
+      Pie trasero apoyado en la caja y asas del TRX como referencia de equilibrio, no como apoyo de carga. Baja vertical sobre la pierna delantera.
     patron: dominante_rodilla
     material: [trx, caja]
     nivel: intermedio
@@ -197,6 +217,8 @@ exercises:
 
   - id: pistol-trx
     nombre: Pistol asistida con TRX
+    descripcion: >-
+      Sentadilla a una pierna asistiéndote lo justo con el TRX. Exige control de rodilla y tobillo: si la rodilla se desvía hacia dentro, vuelve a la búlgara.
     patron: dominante_rodilla
     material: [trx]
     nivel: avanzado
@@ -213,6 +235,8 @@ exercises:
 
   - id: glute-bridge
     nombre: Puente de glúteos
+    descripcion: >-
+      Tumbado boca arriba con los pies cerca del glúteo, eleva la cadera empujando con los talones hasta alinear rodilla, cadera y hombro. El empuje sale del glúteo, no de la lumbar.
     patron: dominante_cadera
     material: [tatami]
     sin_material: true
@@ -229,6 +253,8 @@ exercises:
 
   - id: kb-deadlift
     nombre: Peso muerto con kettlebell
+    descripcion: >-
+      Pesa entre los pies. Bisagra de cadera con la espalda neutra, tira empujando el suelo y bloquea arriba apretando el glúteo. Es el patrón que enseña el swing.
     patron: dominante_cadera
     material: [kettlebell]
     nivel: intermedio
@@ -245,6 +271,8 @@ exercises:
 
   - id: kb-swing-two-hand
     nombre: Swing a dos manos
+    descripcion: >-
+      Balanceo de cadera, no sentadilla: la pesa cae entre las piernas y sube por la extensión explosiva de cadera hasta la altura del pecho, con los brazos solo acompañando. Corta la serie en cuanto la espalda empiece a redondearse.
     patron: dominante_cadera
     material: [kettlebell]
     nivel: intermedio
@@ -263,6 +291,8 @@ exercises:
 
   - id: kb-swing-one-hand
     nombre: Swing a una mano
+    descripcion: >-
+      Swing sujetando con una sola mano, lo que añade una fuerte demanda de agarre y de resistencia a la rotación. Impacto lumbar alto: fuera de días amarillos o rojos y de las vísperas de BJJ.
     patron: dominante_cadera
     secundarios: [core_antirotacion]
     material: [kettlebell]
@@ -277,6 +307,8 @@ exercises:
 
   - id: windmill
     nombre: Windmill con kettlebell
+    descripcion: >-
+      Con la pesa bloqueada sobre la cabeza y la mirada puesta en ella, baja la mano libre hacia el suelo girando la cadera. Movilidad cargada exigente y de impacto lumbar alto: se hace despacio o no se hace.
     patron: movilidad_cargada
     secundarios: [core_lateral]
     material: [kettlebell]
@@ -293,6 +325,8 @@ exercises:
 
   - id: plank-front
     nombre: Plancha frontal
+    descripcion: >-
+      Antebrazos bajo los hombros y cuerpo en línea. Aprieta glúteo y abdomen para que la lumbar no se arquee; cuando se arquea, la serie ha terminado aunque queden segundos.
     patron: core_antiextension
     material: [tatami]
     sin_material: true
@@ -310,6 +344,8 @@ exercises:
 
   - id: dead-bug
     nombre: Dead bug
+    descripcion: >-
+      Boca arriba con la lumbar pegada al suelo, extiende brazo y pierna contrarios sin perder ese contacto. Si la espalda se despega, acorta el recorrido.
     patron: core_antiextension
     material: [tatami]
     sin_material: true
@@ -327,6 +363,8 @@ exercises:
 
   - id: pallof-press
     nombre: Pallof press con goma
+    descripcion: >-
+      De pie y de perfil a la goma, lleva las manos del pecho al frente resistiendo el tirón que intenta girarte. El ejercicio consiste en no rotar.
     patron: core_antirotacion
     material: [goma]
     nivel: base
@@ -343,6 +381,8 @@ exercises:
 
   - id: side-plank
     nombre: Plancha lateral
+    descripcion: >-
+      Apoyo sobre el antebrazo y el canto del pie, con la cadera alta y alineada. Si el hombro molesta, apoya la rodilla de abajo.
     patron: core_lateral
     material: [tatami]
     sin_material: true
@@ -360,6 +400,8 @@ exercises:
 
   - id: hanging-knee-raise
     nombre: Elevación de rodillas colgado
+    descripcion: >-
+      Colgado de la barra, sube las rodillas hacia el pecho sin balanceo, enroscando ligeramente la pelvis al final. Suele limitar antes el agarre que el abdomen.
     patron: core_flexion_cadera
     material: [barra_dominadas]
     nivel: intermedio
@@ -375,6 +417,8 @@ exercises:
 
   - id: russian-twist
     nombre: Russian twist cargado
+    descripcion: >-
+      Sentado con el tronco inclinado atrás, lleva la pesa de un lado a otro rotando el tronco. Es rotación lumbar cargada: ante cualquier molestia se cambia por el pallof press.
     patron: core_rotacion
     material: [kettlebell, tatami]
     nivel: avanzado
@@ -388,6 +432,8 @@ exercises:
 
   - id: rope-technical
     nombre: Comba técnica
+    descripcion: >-
+      Series de comba a ritmo cómodo, buscando continuidad y aterrizaje suave por delante de la velocidad. Corta la serie si el pie empieza a golpear fuerte el suelo.
     patron: acondicionamiento
     material: [comba]
     nivel: base
@@ -402,6 +448,14 @@ exercises:
 
   - id: agility-ladder-basic
     nombre: Escalera de agilidad básica
+    descripcion: >-
+      Pasadas por la escalera a pie ligero y con la mirada al frente, buscando cadencia limpia antes que velocidad. Se completan las pasadas indicadas de cada patrón de la lista.
+    patrones:
+      - Un pie por casilla
+      - Dos pies por casilla
+      - Entradas y salidas laterales
+      - Dentro-dentro-fuera-fuera
+      - Desplazamiento lateral cruzando (carioca)
     patron: agilidad
     material: [escalera_agilidad]
     nivel: base
@@ -415,6 +469,8 @@ exercises:
 
   - id: cones-zigzag
     nombre: Zigzag entre conos
+    descripcion: >-
+      Carreras cortas cambiando de dirección en cada cono, bajando el centro de gravedad al frenar y apoyando el pie externo para reorientar. Es lo que más se parece al desplazamiento en pie del BJJ.
     patron: agilidad
     material: [conos]
     nivel: intermedio
@@ -429,6 +485,8 @@ exercises:
 
   - id: treadmill-walk
     nombre: Caminata en cinta
+    descripcion: >-
+      Caminata continua a ritmo conversacional y sin inclinación agresiva. El objetivo es mover sangre, no acumular fatiga.
     patron: recuperacion
     material: [cinta]
     nivel: base
@@ -443,6 +501,8 @@ exercises:
 
   - id: squat-libre
     nombre: Sentadilla libre
+    descripcion: >-
+      Sentadilla sin carga con los pies a la anchura de los hombros. Baja controlado hasta donde mantengas el tronco firme y la pelvis neutra.
     patron: dominante_rodilla
     material: []
     sin_material: true
@@ -459,6 +519,8 @@ exercises:
 
   - id: lunge-forward
     nombre: Zancada hacia delante
+    descripcion: >-
+      Da un paso al frente y baja vertical hasta que la rodilla trasera roce el suelo, con el tronco erguido. Empuja con el talón delantero para volver.
     patron: dominante_rodilla
     material: []
     sin_material: true

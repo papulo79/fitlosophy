@@ -2,8 +2,9 @@
   import { api, mensajeError } from "../lib/api.js";
   import { flujo } from "../lib/stores.svelte.js";
   import { BLOQUES, FAMILIAS, agruparPorBloque } from "../lib/etiquetas.js";
-  import { urlBusqueda } from "../lib/busqueda.js";
   import Icon from "../lib/Icon.svelte";
+  import Plegable from "../lib/Plegable.svelte";
+  import AccionesEjercicio from "../lib/AccionesEjercicio.svelte";
 
   let propuesta = $derived(flujo.propuesta);
   let grupos = $derived(agruparPorBloque(propuesta?.items));
@@ -77,7 +78,19 @@
         {#if propuesta.reducida}· <span class="font-semibold text-ambar">versión reducida</span>{/if}
         {#if propuesta.bjj_efectivo && propuesta.bjj_efectivo !== "no"}· BJJ {propuesta.bjj_efectivo}{/if}
       </p>
-      <p class="mt-2 text-sm text-texto">{propuesta.explicacion}</p>
+      <!-- Plegada: en el móvil ocupaba la pantalla entera antes del primer
+           ejercicio. Es trazabilidad de la decisión, útil cuando se consulta,
+           no cada día al abrir la sesión. -->
+      <div class="mt-1">
+        <Plegable titulo="Por qué esta sesión">
+          <p class="text-sm leading-relaxed text-apagado">{propuesta.explicacion}</p>
+          {#if propuesta.reglas_aplicadas?.length}
+            <p class="mt-2 text-xs text-tenue">
+              Reglas: {propuesta.reglas_aplicadas.join(", ")}
+            </p>
+          {/if}
+        </Plegable>
+      </div>
     </header>
 
     {#if propuesta.incertidumbres?.length}
@@ -118,20 +131,20 @@
         <div class="space-y-2">
           {#each grupo.items as item}
             {@const idx = propuesta.items.indexOf(item)}
-            <div class="flex items-start justify-between gap-2 rounded-xl border border-borde bg-superficie p-4">
-              <div>
-                <a href={urlBusqueda(item.nombre)} target="_blank" rel="noopener" title="Buscar vídeo del ejercicio" class="group flex items-center gap-1.5 font-semibold text-texto">
-                  {item.nombre}
-                  <span class="text-tenue group-hover:text-acento"><Icon nombre="buscar" tam={13} /></span>
-                </a>
-                <p class="text-sm text-apagado">{item.dosis}</p>
-                {#if item.justificacion}
-                  <p class="mt-1 text-xs text-tenue">{item.justificacion}</p>
-                {/if}
+            <div class="rounded-xl border border-borde bg-superficie p-4">
+              <div class="flex items-start justify-between gap-2">
+                <div class="min-w-0">
+                  <p class="font-semibold text-texto">{item.nombre}</p>
+                  <p class="text-sm text-apagado">{item.dosis}</p>
+                  {#if item.justificacion}
+                    <p class="mt-1 text-xs text-tenue">{item.justificacion}</p>
+                  {/if}
+                </div>
+                <button onclick={() => abrirSustitucion(idx)} class="flex min-h-11 shrink-0 items-center gap-1.5 rounded-lg border border-borde px-3 py-2 text-sm font-semibold text-apagado">
+                  <Icon nombre="corregir" tam={14} /> Cambiar
+                </button>
               </div>
-              <button onclick={() => abrirSustitucion(idx)} class="flex min-h-11 shrink-0 items-center gap-1.5 rounded-lg border border-borde px-3 py-2 text-sm font-semibold text-apagado">
-                <Icon nombre="corregir" tam={14} /> Cambiar
-              </button>
+              <AccionesEjercicio nombre={item.nombre} descripcion={item.descripcion} patrones={item.patrones} />
             </div>
           {/each}
         </div>

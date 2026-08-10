@@ -70,6 +70,32 @@ fitlosophy/
     └── ejercicios.yaml
 ```
 
+## Puesta en marcha y despliegue
+
+La aplicación corre como servicio systemd del usuario en el propio servidor, que
+es a la vez entorno de desarrollo y de producción, y se publica por un túnel de
+Cloudflare. Un único proceso sirve la API y el frontend compilado.
+
+**Desplegar una actualización** (recompila, reinicia y verifica):
+
+```bash
+./scripts/desplegar.sh
+```
+
+Recompilar no es opcional: el backend sirve `app/frontend/dist`, así que un
+cambio en Svelte que no se compile no llega a la URL aunque reinicies.
+
+**Primera instalación**, resumida (detalle completo en
+[`app/backend/README.md`](app/backend/README.md)):
+
+1. Dependencias: `cd app/backend && python3 -m venv .venv && ./.venv/bin/pip install -e ".[dev]"`, y `cd app/frontend && npm ci`.
+2. Configuración: `cp app/backend/.env.example app/backend/.env` y rellenarlo.
+3. Usuario único: `./.venv/bin/python scripts/init_db.py` (una sola vez; no hay registro).
+4. Servicio: `systemctl --user enable --now fitlosophy` y `sudo loginctl enable-linger $USER`.
+5. Cortafuegos: reglas de ufw para la LAN y para `docker0`, sin las cuales el túnel no alcanza el host.
+
+Comandos útiles: `systemctl --user status fitlosophy`, `journalctl --user -u fitlosophy -f`.
+
 ## Estado actual
 
 Las fases 0 a 6 del roadmap están cerradas en su primera versión: contexto y visión, modelo de dominio (`docs/11`), biblioteca (`data/ejercicios.yaml`, `docs/05`), modelo de carga (`docs/12`), motor de decisión (`docs/03`), generador de sesiones (`docs/06`) y validación manual con casos de uso (`docs/13`). Todos los valores numéricos son provisionales y se calibrarán con uso real.

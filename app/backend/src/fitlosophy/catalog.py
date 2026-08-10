@@ -73,6 +73,10 @@ class Exercise:
     id: str
     nombre: str
     patron: str
+    # Ejecución para el usuario (docs/05): la descripción es obligatoria en el
+    # catálogo; `patrones` enumera las variantes cuando la dosis va por patrón.
+    descripcion: str = ""
+    patrones: tuple[str, ...] = ()
     secundarios: tuple[str, ...] = ()
     material: tuple[str, ...] = ()
     sin_material: bool = False
@@ -141,6 +145,8 @@ class Catalog:
                     id=e["id"],
                     nombre=e["nombre"],
                     patron=e["patron"],
+                    descripcion=(e.get("descripcion") or "").strip(),
+                    patrones=tuple(e.get("patrones", ())),
                     secundarios=tuple(e.get("secundarios", ())),
                     material=tuple(e.get("material", ())),
                     sin_material=bool(e.get("sin_material", False)),

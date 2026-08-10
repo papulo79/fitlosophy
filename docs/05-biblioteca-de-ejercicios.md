@@ -61,6 +61,21 @@ Cada ejercicio define:
 - Compatibilidad con BJJ posterior.
 - Progresiones, regresiones y sustitutos (referencias a otros `id` del catálogo).
 - Rango orientativo de series y repeticiones.
+- Descripción de ejecución y, cuando la dosis lo exige, la lista de patrones a recorrer (ver la sección siguiente).
+
+## Ejecución
+
+Las etiquetas anteriores sirven al motor para decidir; no le dicen nada al usuario sobre **cómo** se hace el ejercicio. Para eso, cada ejercicio lleva:
+
+- `descripcion` (obligatorio): una o dos frases con la ejecución y la clave técnica que más importa en este perfil. Es lo que se muestra bajo la dosis en la propuesta y en la ejecución. Se escribe en imperativo y en español, sin repetir el nombre del ejercicio.
+- `patrones` (opcional): lista ordenada de las variantes concretas que se recorren dentro del ejercicio.
+
+Criterios:
+
+1. La descripción declara la restricción de seguridad cuando existe. Si el ejercicio tiene `impacto_lumbar: rojo` o algún flag de técnica (`detener_si_falla_tecnica`, `sin_balanceo`, `evitar_fallo`), su descripción lo dice con palabras, no solo con la etiqueta.
+2. La descripción no repite la dosis: las series y repeticiones ya salen de `prescripcion`, y duplicarlas las desincronizaría.
+3. **`patrones` es obligatorio cuando la prescripción se expresa por patrón** (hoy, `pasadas_por_patron`). Sin esa lista la dosis es incompleta: «4 pasadas» no dice de qué, y el usuario no puede ejecutar la sesión. Un test del catálogo lo verifica.
+4. La descripción explica *qué* hacer, no *por qué* está hoy en la sesión: el motivo lo genera el motor en la justificación del ítem (`docs/03`).
 
 ## Criterio lumbar
 

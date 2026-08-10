@@ -732,3 +732,42 @@ def test_cookie_secure_forzable_por_configuracion(app, monkeypatch):
     with TestClient(app, base_url="http://fitlosophy.local") as c:
         r = c.post("/api/auth/login", json={"username": USUARIO, "password": PASSWORD})
         assert "secure" in r.headers["set-cookie"].lower()
+
+
+# --- Ejecución del ejercicio en la propuesta y en la sesión (docs/05) ---------------
+
+
+def test_la_propuesta_lleva_la_ejecucion_de_cada_ejercicio(client):
+    """El calentamiento incluye la escalera: sin descripción ni patrones, «4
+    pasadas» no le dice al usuario qué tiene que hacer."""
+    propuesta = _crear_propuesta(client)
+    assert all(i["descripcion"] for i in propuesta["items"])
+
+    escalera = next(
+        (i for i in propuesta["items"] if i["exercise_id"] == "agility-ladder-basic"), None
+    )
+    assert escalera is not None, "el B0 debería incluir la escalera de agilidad"
+    assert escalera["patrones"], "la dosis va por patrón: hay que enumerarlos"
+    assert "por patrón" in escalera["dosis"]
+
+
+def test_la_sesion_en_curso_tambien_la_lleva(client):
+    """En Ejecución es donde más falta hace: es la pantalla que se mira entre
+    series."""
+    propuesta = _crear_propuesta(client)
+    r = client.post("/api/sesiones", json={"proposal_id": propuesta["id"]})
+    assert r.status_code == 201
+    items = r.json()["sesion"]["items"]
+    assert all(i["descripcion"] for i in items)
+
+
+def test_la_ejecucion_se_resuelve_desde_el_catalogo(client, app):
+    """No se persiste con la propuesta: corregir una descripción debe verse
+    también en las sesiones ya guardadas."""
+    propuesta = _crear_propuesta(client)
+    ej = app.state.catalog["dead-bug"]
+    object.__setattr__(ej, "descripcion", "Texto corregido a posteriori.")
+    r = client.get(f"/api/historial/{datetime.now().date().isoformat()}")
+    items = r.json()["propuestas"][0]["items"]
+    dead_bug = next(i for i in items if i["exercise_id"] == "dead-bug")
+    assert dead_bug["descripcion"] == "Texto corregido a posteriori."

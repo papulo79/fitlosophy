@@ -101,6 +101,37 @@ Detrás de un proxy inverso o de un túnel (Cloudflare), añade
 `--proxy-headers --forwarded-allow-ips 127.0.0.1` para que la IP del cliente
 que ve el freno de fuerza bruta sea la real y no la del proxy.
 
+## Desplegar una actualización
+
+Desde la raíz del repositorio, un solo comando:
+
+```bash
+./scripts/desplegar.sh
+```
+
+Hace, en orden: recompila el frontend (`npm run build`), reinicia el servicio
+systemd, espera a que responda, comprueba que la cabecera de caché sigue puesta
+y, si hay `CLOUDFLARE_API_TOKEN` y `CLOUDFLARE_ZONE_ID` en el `.env`, purga el
+caché del borde.
+
+**Recompilar no es opcional**: el backend sirve `app/frontend/dist`, así que un
+cambio en Svelte que no se compile no llega a la URL por mucho que reinicies el
+servicio. Ese fue el origen de los cambios que «no se reflejaban» en remoto.
+
+Cuándo hace falta algo más que este comando:
+
+| Cambio | Además de `desplegar.sh` |
+|---|---|
+| Código Python o Svelte | nada |
+| `data/*.yaml` | nada: el catálogo se recarga al arrancar el servicio |
+| Claves del `.env` | nada: las lee la aplicación al arrancar |
+| `FITLOSOPHY_HOST` / `PORT` | `systemctl --user daemon-reload` (los lee systemd) |
+| Fichero `.service` | `systemctl --user daemon-reload` |
+| Esquema de la BD | nada: `crear_esquema` usa `CREATE TABLE IF NOT EXISTS` |
+| Puerto nuevo | regla de ufw y `service` del túnel en el panel |
+
+Antes de desplegar, la suite: `./.venv/bin/python -m pytest`.
+
 ## Despliegue: red y cortafuegos
 
 El servicio corre en el host (systemd, no en Docker) y escucha en
@@ -146,7 +177,7 @@ Por lo mismo, `--forwarded-allow-ips` del servicio systemd incluye
 `172.17.0.0/16`: cloudflared llega desde ahí, no desde loopback, y sin ello
 uvicorn ignoraría `X-Forwarded-Proto` y la cookie nunca se marcaría `Secure`.
 
-## Caché del frontend y despliegue
+## Caché del frontend
 
 `StaticFiles` no envía ningún `Cache-Control`, así que navegador y CDN cachean
 por heurística: tras recompilar, el túnel puede seguir sirviendo un
@@ -165,15 +196,9 @@ necesita revalidarse es lo de nombre fijo, y de eso se encarga `no-cache`, que
 no significa «no cachear» sino «no reutilizar sin preguntar» (la revalidación
 normal es un 304 sin cuerpo).
 
-Para desplegar, desde la raíz del repo:
-
-```bash
-./scripts/desplegar.sh
-```
-
-Recompila el frontend, reinicia el servicio, comprueba que responde y verifica
-que la cabecera sigue en su sitio. Si defines `CLOUDFLARE_API_TOKEN` y
-`CLOUDFLARE_ZONE_ID` en el `.env`, purga además el caché del borde.
+Por eso el despliegue nunca es solo reiniciar el servicio: hay que **recompilar
+el frontend**, o el `dist/` servido seguirá siendo el anterior. De eso se ocupa
+`./scripts/desplegar.sh` (ver «Desplegar una actualización»).
 
 ## Protección del login
 

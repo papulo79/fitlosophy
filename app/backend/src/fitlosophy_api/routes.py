@@ -107,6 +107,11 @@ def _propuesta_json(row: sqlite3.Row, catalog: Catalog) -> dict:
     for it in items:
         ej = catalog.get(it["exercise_id"])
         it["nombre"] = ej.nombre if ej else it["exercise_id"]
+        # Ejecución para el usuario (docs/05): no se persiste con la propuesta,
+        # se resuelve desde el catálogo para que un cambio en él se refleje al
+        # instante en las sesiones ya guardadas.
+        it["descripcion"] = ej.descripcion if ej else ""
+        it["patrones"] = list(ej.patrones) if ej else []
     return {
         "id": row["id"],
         "estado_diario_id": row["daily_state_id"],
@@ -343,6 +348,8 @@ def _sesion_json(conn, row, catalog) -> dict:
                 "exercise_id": it["exercise_id"],
                 "exercise_id_real": it["exercise_id_real"],
                 "nombre": ej.nombre if ej else (it["exercise_id_real"] or it["exercise_id"]),
+                "descripcion": ej.descripcion if ej else "",
+                "patrones": list(ej.patrones) if ej else [],
                 "dosis": it["dosis"],
                 "puntos_previstos": cargar_json(it["puntos_previstos"], {}),
                 "justificacion": it["justificacion"],
