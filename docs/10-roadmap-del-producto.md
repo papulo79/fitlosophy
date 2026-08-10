@@ -56,7 +56,7 @@ Concentrar el contexto personal, deportivo y funcional del problema.
 
 ## Estado
 
-Muy avanzada.
+Cerrada. Contexto, perfil y filosofía fijados en `docs/00`–`docs/02`.
 
 ---
 
@@ -84,7 +84,7 @@ Definir los conceptos del sistema y sus relaciones sin decidir todavía base de 
 
 ## Estado
 
-En curso.
+Cerrada. Modelo de dominio en `docs/11`, implementado en `fitlosophy/models.py`.
 
 ---
 
@@ -111,7 +111,7 @@ Construir la biblioteca que permite interpretar ejercicios, variantes y activida
 
 ## Estado
 
-Iniciada e incompleta.
+Cerrada en su primera versión. `docs/05` y `data/ejercicios.yaml`: 28 ejercicios con patrón, material, coste por dimensión, impacto lumbar, prescripción, descripción de ejecución e intención. Seguirá creciendo con el uso.
 
 ---
 
@@ -140,7 +140,7 @@ Definir cómo la biblioteca y el historial se transforman en conocimiento útil 
 
 ## Estado
 
-Pendiente de definición detallada.
+Cerrada. `docs/12` implementado en `fitlosophy/load.py`, con su aritmética verificada en `test_load.py`.
 
 ---
 
@@ -171,7 +171,7 @@ Definir la secuencia que transforma el estado diario y el historial en una famil
 
 ## Estado
 
-Diseño inicial existente; falta formalización.
+Cerrada. `docs/03` implementado en `fitlosophy/engine.py`; las reglas D/C/P se citan en la explicación de cada propuesta.
 
 ---
 
@@ -199,7 +199,7 @@ Definir cómo se construye una sesión concreta una vez elegidos su familia, pat
 
 ## Estado
 
-Pendiente.
+Cerrada. `docs/06` implementado en `fitlosophy/generator.py`, incluidas composición, dosificación, sustitución y validación.
 
 ---
 
@@ -228,11 +228,13 @@ Validar el diseño antes de construir software.
 
 ## Estado
 
-Pendiente.
+Cerrada. Los 10 casos de `docs/13` son pruebas ejecutables en `test_cases.py`.
 
 ---
 
 # Puerta de entrada a la aplicación
+
+> **Puerta superada.** Las fases 0 a 6 se cerraron y el modelo funcional validable se alcanzó antes de escribir la aplicación. Esta sección se conserva porque su criterio sigue vigente para cualquier ampliación futura del modelo: primero se documenta, después se construye.
 
 La construcción de la aplicación no debe comenzar hasta que las **fases 0 a 6** estén suficientemente cerradas.
 
@@ -309,7 +311,7 @@ Definir la primera aplicación útil y sus criterios de aceptación.
 
 ## Estado
 
-Pendiente.
+Cerrada. `docs/14` define pantallas, flujo de uso y los 9 criterios de aceptación funcionales.
 
 ---
 
@@ -340,7 +342,7 @@ Declarar estado diario
 
 ## Estado
 
-No iniciada.
+Cerrada. La aplicación está desplegada y en uso: FastAPI + SQLite (`fitlosophy_api`) y Svelte 5 + Tailwind 4 (`app/frontend`), un único proceso sirviendo API y frontend tras un túnel de Cloudflare. Los 9 criterios de `docs/14` están cubiertos y la suite tiene 98 tests en verde.
 
 ---
 
@@ -368,7 +370,7 @@ Usar el MVP con datos reales para ajustar el modelo.
 
 ## Estado
 
-No iniciada.
+En curso desde el 10 de agosto de 2026. Empieza el uso diario con datos reales; los valores numéricos de `docs/12` siguen siendo provisionales y es esta fase la que debe calibrarlos.
 
 ---
 
@@ -444,6 +446,15 @@ No iniciada.
 
 # Próximo hito
 
-Completar las fases 1 a 6 hasta alcanzar un **modelo funcional validable**.
+**Calibrar el modelo con uso real** (Fase 9).
 
-Se considerará alcanzado cuando, usando únicamente documentación, biblioteca, historial de ejemplo y pseudocódigo, pueda generarse y justificarse una sesión para los escenarios principales sin decisiones improvisadas.
+El hito anterior —modelo funcional validable— se alcanzó, y con él se construyó y desplegó el MVP. Lo que queda ya no se programa: se entrena. Todos los valores numéricos de `docs/12` (puntos por nivel de coste, multiplicadores de dosis, ventanas de decaimiento) se declararon provisionales a la espera de datos propios.
+
+Se considerará alcanzado cuando exista historial real suficiente para que:
+
+- Las propuestas rechazadas o modificadas de forma sistemática revelen dónde el generador se equivoca.
+- El RPE real contrastado con el previsto permita ajustar los costes por dimensión.
+- La respuesta posterior valide —o corrija— el criterio lumbar, que es la restricción de seguridad dominante del sistema.
+- Los campos que generan fricción sin aportar valor se identifiquen y se retiren.
+
+Los datos necesarios ya se persisten y se exportan con `GET /api/export`: no hace falta registrar nada aparte del uso normal.

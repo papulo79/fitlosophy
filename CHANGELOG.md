@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.22.1 - Roadmap al día
+
+- `docs/10` conservaba los estados de antes de escribir una sola línea de código: la Fase 8 figuraba como «No iniciada» con la aplicación desplegada y en uso, y el «Próximo hito» seguía apuntando a completar las fases 1–6. Las fases 0 a 8 pasan a **cerradas**, cada una con el documento y el módulo que la implementan, y la **Fase 9 (uso personal y calibración) queda en curso desde el 10 de agosto de 2026**.
+- El «Próximo hito» pasa a ser calibrar el modelo con uso real, con sus criterios: propuestas rechazadas de forma sistemática, RPE real contra previsto, validación del criterio lumbar por la respuesta posterior y retirada de campos que generan fricción. Se anota que los datos ya se persisten y salen por `GET /api/export`.
+- La sección «Puerta de entrada a la aplicación» se marca como superada pero se conserva: su criterio —primero se documenta, después se construye— sigue vigente para cualquier ampliación del modelo.
+- `README.md` y `AGENTS.md` sincronizados con ese estado.
+
 ## 0.22.0 - Intención del ejercicio y peso usado
 
 - El catálogo no decía nada sobre el peso: «Swing a dos manos 8×9» no indicaba con qué kettlebell. La biblioteca **sigue sin prescribir kilos** —el modelo de carga de `docs/12` es ciego a la intensidad y el perfil no tiene un dato de fuerza por ejercicio— y en su lugar declara **con qué intención** se hace el ejercicio, dejando que el atleta ajuste.

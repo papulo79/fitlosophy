@@ -53,7 +53,7 @@ fitlosophy/
 
 Nota: `docs/00-contexto-completo-del-programa.md` es un documento agregador que concentra el contexto completo del programa para lectores (humanos o IA) que lleguen sin contexto previo. El detalle normativo vive en los documentos `01`–`09`; si editas uno de ellos, comprueba si el cambio debe reflejarse también en `00` para no dejarlos desincronizados.
 
-Nota: `docs/10-roadmap-del-producto.md` define las fases del producto (0–12) y la puerta de entrada a la aplicación (fases 0–6 cerradas). No empieces trabajo de implementación de la app sin comprobar esa puerta; el README resume el estado actual.
+Nota: `docs/10-roadmap-del-producto.md` define las fases del producto (0–12). Las fases 0 a 8 están cerradas y la aplicación está desplegada y en uso; la **Fase 9 (uso personal y calibración) está en curso desde el 10 de agosto de 2026**. Su criterio sigue vigente para cualquier ampliación del modelo: primero se documenta, después se construye. El README resume el estado actual.
 
 ## Cómo trabajar en este proyecto
 
