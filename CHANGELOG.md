@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.21.1 - Rotación de contraseña
+
+- Nuevo `scripts/cambiar_password.py`. `init_db.py` no toca un usuario existente (no hay registro, docs/14) y termina con éxito diciéndolo, así que era fácil creer que había cambiado la contraseña cuando no. El script nuevo actualiza el hash, **invalida todas las sesiones abiertas** —una contraseña se rota porque la anterior ya no es de fiar, y sus cookies durarían 30 días más— y limpia los intentos fallidos. Exige un mínimo de 12 caracteres.
+- `.gitignore`: la BD y **sus copias**. `*.db` no cubría `fitlosophy.db.bak-…`; ahora se ignoran también `*.db.*`, `*.bak`, `*.sqlite` y los ficheros WAL/SHM. La base contiene datos personales de salud, el hash de la contraseña y los tokens de sesión.
+
 ## 0.21.0 - Una sola sesión en marcha
 
 - **Causa raíz**: el estado del frontend vivía solo en memoria, así que recargar o reabrir la aplicación a mitad de sesión dejaba en la pantalla de estado diario, donde lo único posible era declararlo otra vez → nueva propuesta → y al aceptar, una **segunda sesión en curso** el mismo día. No era mal uso: era la consecuencia inevitable de recargar.

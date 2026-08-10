@@ -11,7 +11,8 @@ app/backend/
 ├── pyproject.toml
 ├── .env.example            # plantilla de configuración (el .env real no se versiona)
 ├── scripts/
-│   └── init_db.py          # inicializa la BD y crea el usuario único
+│   ├── init_db.py          # inicializa la BD y crea el usuario único
+│   └── cambiar_password.py # rota la contraseña e invalida las sesiones
 ├── src/
 │   ├── fitlosophy/         # núcleo del dominio (sin dependencias web)
 │   │   ├── catalog.py      # carga de data/ejercicios.yaml y data/perfil.yaml
@@ -82,10 +83,24 @@ FITLOSOPHY_USER=mi_usuario FITLOSOPHY_PASSWORD=mi_contraseña \
   ./.venv/bin/python scripts/init_db.py
 ```
 
-Si la BD ya tiene usuario, el script no lo toca ni cambia la contraseña. Las
-contraseñas se guardan con hash pbkdf2-sha256 y salt: **no son recuperables**;
-si se olvida una, se borra el usuario de la tabla `users` y se vuelve a crear.
-El script también siembra el perfil editable desde `../../data/perfil.yaml`.
+Si la BD ya tiene usuario, el script **no lo toca ni cambia la contraseña**: lo
+dice por pantalla y termina bien, así que es fácil creer que la ha cambiado
+cuando no. Para rotarla:
+
+```bash
+cd app/backend
+# con la contraseña nueva en FITLOSOPHY_PASSWORD del .env
+./.venv/bin/python scripts/cambiar_password.py
+```
+
+Además de actualizar el hash, **invalida todas las sesiones abiertas** y limpia
+los intentos fallidos: una contraseña se rota porque la anterior ya no es de
+fiar, y las cookies emitidas con ella durarían 30 días más. Hay que volver a
+entrar en todos los dispositivos.
+
+Las contraseñas se guardan con hash pbkdf2-sha256 y salt: **no son
+recuperables**. El script siembra también el perfil editable desde
+`../../data/perfil.yaml`.
 
 ## Lanzar el servidor
 
