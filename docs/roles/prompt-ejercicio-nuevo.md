@@ -1,6 +1,6 @@
 # Prompt: proponer un ejercicio nuevo para el catálogo
 
-Prompt para pegar en un agente externo (Claude, Kimi, ChatGPT…) junto con una transcripción de vídeo o un artículo, para que devuelva un ejercicio con la forma que espera `data/ejercicios.yaml`.
+Prompt de catálogo para usar **solo después** del proceso de candidatos de `../15-incorporacion-de-ejercicios-candidatos.md`: el revisor humano ya ha decidido que un candidato puede proponerse como estable. No es el punto de entrada de una transcripción o un artículo ni convierte por sí solo un ejercicio en elegible.
 
 Vive en el repositorio a propósito: los vocabularios de abajo son copia de la sección `valores` del catálogo y del inventario de `data/perfil.yaml`. Si se amplía un dominio, este documento se actualiza en el mismo commit — `tests/test_prompt_ejercicio.py` falla si se desincronizan.
 
@@ -15,7 +15,7 @@ cd app/backend
 
 ## El prompt
 
-> Eres un asistente que propone entradas para el catálogo de ejercicios de un sistema personal de entrenamiento. Te doy una fuente (transcripción de vídeo o artículo) y quiero **un único ejercicio** extraído de ella, en YAML, con el contrato exacto que te indico.
+> Eres un asistente que propone una entrada para el catálogo de ejercicios de un sistema personal de entrenamiento. Recibes un **candidato ya revisado** con sus fuentes y quiero un único ejercicio en YAML, con el contrato exacto que te indico. No completes campos que el dossier no justifique: devuelve la carencia fuera del YAML para que la persona revisora lo resuelva.
 >
 > ### Sobre el atleta
 >
@@ -86,9 +86,9 @@ cd app/backend
 >
 > Nada más: sin introducción ni resumen.
 >
-> ### Fuente
+> ### Dossier candidato revisado
 >
-> [pega aquí la transcripción o el artículo]
+> [pega aquí el dossier, sus fuentes y la decisión de revisión]
 
 ---
 
@@ -96,5 +96,4 @@ cd app/backend
 
 1. Guarda el YAML en un fichero, por ejemplo `propuesta.yaml`.
 2. Valídalo: `./.venv/bin/python scripts/validar_ejercicio.py propuesta.yaml`. Comprueba dominios, referencias, unicidad y coherencia, e imprime **qué cubre ya el catálogo en ese patrón** para poder decidir si aporta algo.
-3. Decide con criterio lo único que no es mecánico: si aporta cobertura nueva, si el impacto lumbar es correcto para este atleta y si los costes por dimensión son plausibles.
-4. Pega el bloque en `data/ejercicios.yaml` y ejecuta la suite: `./.venv/bin/python -m pytest`.
+3. La persona revisora decide la promoción; solo entonces pega el bloque en `data/ejercicios.yaml` y ejecuta la suite: `./.venv/bin/python -m pytest`.

@@ -19,7 +19,9 @@ La validación de sintaxis YAML sigue siendo obligatoria tras tocar `data/`, per
 
 ## Añadir ejercicios al catálogo
 
-Para enriquecer `data/ejercicios.yaml` a partir de una transcripción de vídeo o un artículo, ver **`prompt-ejercicio-nuevo.md`**: un prompt para el agente externo y un validador determinista (`app/backend/scripts/validar_ejercicio.py`) que comprueba todo lo comprobable antes de insertar. El criterio humano se reserva a lo que lo necesita — si aporta cobertura nueva, si el impacto lumbar es correcto para este atleta y si los costes por dimensión son plausibles.
+La puerta de entrada es `../15-incorporacion-de-ejercicios-candidatos.md`: el analista (`analista-candidatos.md`) extrae y documenta uno o varios ejercicios, y el revisor (`revisor-candidatos.md`) decide si se descartan, requieren evidencia o pueden probarse de forma controlada. Los candidatos viven separados en `data/candidatos.yaml`; no los lee el motor.
+
+Solo cuando una persona revisora decide proponer un candidato como estable se usa **`prompt-ejercicio-nuevo.md`** y el validador determinista `app/backend/scripts/validar_ejercicio.py`. El resultado sigue siendo una propuesta revisable, no una inserción automática.
 
 ## Topes del bucle
 

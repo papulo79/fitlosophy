@@ -31,6 +31,7 @@ fitlosophy/
 │   ├── 12-modelo-de-carga-e-inferencia.md  # Dimensiones de carga, decaimiento, dosis y BJJ estimado
 │   ├── 13-casos-de-uso-y-validacion.md     # Validación manual: casos ejecutados e incoherencias
 │   ├── 14-diseno-del-mvp.md                # MVP: pantallas, flujo de uso, criterios de aceptación
+│   ├── 15-incorporacion-de-ejercicios-candidatos.md # Puerta de evidencia y pruebas controladas
 │   ├── roles/               # Orquestación opcional de dos IAs (ver sección más abajo)
 │   └── superpowers/         # Planes de trabajo para ese flujo
 ├── opencode.json            # Agentes del orquestador en el flujo de dos IAs
@@ -86,12 +87,20 @@ Nota: `docs/10-roadmap-del-producto.md` define las fases del producto (0–12). 
 
 `data/perfil.yaml`: claves snake_case en español; los rangos se expresan como mapas `{min, max}`.
 
+`data/candidatos.yaml`:
+
+- Es un registro de investigación, no un segundo catálogo: el motor y la aplicación no pueden leerlo para generar sesiones.
+- Sus estados son `pendiente_de_evidencia`, `candidato`, `experimental` y `descartado`; solo una promoción humana, documentada y validada puede añadir una entrada a `ejercicios.yaml`.
+- Sigue `docs/15`: guarda trazabilidad de fuentes e incertidumbres, pero nunca perfiles, historiales, molestias, credenciales ni transcripciones completas sujetas a derechos.
+
 ### Código (app/backend)
 
 - Python 3.11+, solo dependencias declaradas en `pyproject.toml` (hoy: `pyyaml`, `fastapi`, `uvicorn`; dev: `pytest`, `httpx2`). No añadir dependencias sin necesidad real: por eso el lector de `.env` (`fitlosophy_api/config.py`) está escrito con la librería estándar en lugar de usar `python-dotenv`.
 - **Configuración del despliegue**: siempre por variable de entorno con respaldo en `app/backend/.env` (precedencia entorno > `.env` > valor por defecto). Toda clave nueva se documenta en `.env.example`; el `.env` real nunca se versiona. Los tests no leen el `.env` local (`tests/conftest.py`), así que un test no debe depender de él.
 - Identificadores en inglés; los valores de dominio se escriben exactamente como en los YAML (`dominante_cadera`, `verde`, `tiron_horizontal`...). Los textos al usuario (explicaciones) se generan en español.
 - Las reglas del motor se citan por su código (D1-D6, C1-C6, P1-P3) en la explicación, igual que en `docs/03`.
+- **Multiusuario (criterio 10 de `docs/14`)**: el despliegue es familiar y todo dato pertenece a un usuario. Cualquier consulta nueva sobre `daily_states`, `proposals`, `training_sessions`, `bjj_records` o `profiles` **debe filtrar por `user_id`**; las de `session_items` y `session_closures`, por su sesión. Un endpoint que reciba un id en la ruta pasa por los helpers `_sesion_propia`, `_propuesta_propia` o `_bjj_propio` de `routes.py`, que responden **404 y no 403**: un 403 confirmaría que ese identificador es de alguien. El núcleo `fitlosophy/` no sabe de usuarios y así debe seguir: recibe historial y material por parámetro.
+- El alta de usuarios es **solo por línea de órdenes** (`scripts/`). No añadas endpoints de registro, gestión de cuentas ni administración: la ausencia de esa superficie es una decisión de seguridad, no un olvido.
 
 ### Consistencia entre documentos
 

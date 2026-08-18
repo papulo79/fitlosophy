@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.25.0 - Proceso garantista para ejercicios candidatos
+
+- Nuevo `docs/15-incorporacion-de-ejercicios-candidatos.md`: separa la biblioteca estable del registro de investigación, define extracción desde fuentes arbitrarias, deduplicación mecánica, dossier trazable, puerta de evidencia, revisión independiente y prueba experimental conservadora.
+- Nuevo `data/candidatos.yaml`: un fichero deliberadamente separado que el motor no lee. Sus cuatro estados impiden que una sugerencia de un vídeo se convierta en una propuesta automática.
+- Nuevos roles `analista-candidatos.md` y `revisor-candidatos.md`: guardarraíles para LLMs, con prohibición de inventar datos, aprobar por sí mismos, recibir información personal o editar el catálogo estable.
+- `prompt-ejercicio-nuevo.md` deja de ser la entrada desde una transcripción: ahora solo transforma en YAML un candidato ya revisado. La validación determinista y la aprobación humana siguen siendo obligatorias para la promoción.
+
 ## 0.23.0 - Flujo para añadir ejercicios desde una fuente externa
 
 - Nuevo `docs/roles/prompt-ejercicio-nuevo.md`: prompt versionado para pedir a un agente externo un ejercicio extraído de una transcripción o un artículo, con los vocabularios cerrados y el inventario de material embebidos. Vive en el repositorio para que no se desincronice del catálogo, y `tests/test_prompt_ejercicio.py` falla si alguien amplía un dominio sin actualizarlo.

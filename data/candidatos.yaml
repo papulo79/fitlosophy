@@ -1,0 +1,11 @@
+version: 1
+
+# Este fichero no es parte del catálogo ejecutable. El motor y la aplicación
+# solo leen `ejercicios.yaml`; una entrada aquí nunca puede proponerse sola.
+estados:
+  - pendiente_de_evidencia
+  - candidato
+  - experimental
+  - descartado
+
+candidatos: []

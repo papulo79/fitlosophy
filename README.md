@@ -61,12 +61,14 @@ fitlosophy/
 │   ├── 11-glosario-y-modelo-de-dominio.md
 │   ├── 12-modelo-de-carga-e-inferencia.md
 │   ├── 13-casos-de-uso-y-validacion.md
-│   └── 14-diseno-del-mvp.md
+│   ├── 14-diseno-del-mvp.md
+│   └── 15-incorporacion-de-ejercicios-candidatos.md
 ├── app/
 │   ├── backend/             # Motor en Python (fitlosophy) + API FastAPI/SQLite (fitlosophy_api) + tests pytest
 │   └── frontend/            # MVP: Svelte 5 + Tailwind 4, 6 pantallas + login (Vite)
 └── data/
     ├── perfil.yaml
+    ├── candidatos.yaml       # Registro de investigación; no lo lee el motor
     └── ejercicios.yaml
 ```
 
