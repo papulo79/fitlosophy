@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.26.0 - Prompt versionado para la skill de OpenClaw
+
+- Nuevo `docs/roles/prompt-crear-skill-openclaw-candidatos.md`: instrucciones completas para crear la skill remota de análisis por Telegram, con repositorio canónico, documentos obligatorios, formato de salida y guardarraíles de seguridad.
+- La primera iteración queda explícitamente limitada a lectura de GitHub; la creación de issues es una capacidad separada que exige permiso y confirmación explícitos.
+
 ## 0.25.0 - Proceso garantista para ejercicios candidatos
 
 - Nuevo `docs/15-incorporacion-de-ejercicios-candidatos.md`: separa la biblioteca estable del registro de investigación, define extracción desde fuentes arbitrarias, deduplicación mecánica, dossier trazable, puerta de evidencia, revisión independiente y prueba experimental conservadora.

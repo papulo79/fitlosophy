@@ -23,6 +23,10 @@ La puerta de entrada es `../15-incorporacion-de-ejercicios-candidatos.md`: el an
 
 Solo cuando una persona revisora decide proponer un candidato como estable se usa **`prompt-ejercicio-nuevo.md`** y el validador determinista `app/backend/scripts/validar_ejercicio.py`. El resultado sigue siendo una propuesta revisable, no una inserción automática.
 
+## Skill de OpenClaw
+
+`prompt-crear-skill-openclaw-candidatos.md` prepara una skill local de OpenClaw para recibir fuentes por Telegram y producir dossiers, sin permisos de escritura sobre GitHub ni sobre la biblioteca estable. Sus permisos de primera iteración son solo lectura del repositorio.
+
 ## Topes del bucle
 
 Deterministas, definidos en `orquestador-*.md` §5: 4 intentos propios + 2 asistidos por tarea; revisión inicial + 2 rondas por PR; 2 fallos consecutivos de invocación al revisor. Cualquier condición de parada detiene el bucle con informe al usuario.
