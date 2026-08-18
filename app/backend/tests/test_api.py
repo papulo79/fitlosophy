@@ -18,19 +18,33 @@ from fitlosophy_api.auth import (
     MAX_INTENTOS_GLOBAL,
     MAX_INTENTOS_IP,
     VENTANA_MIN,
-    crear_usuario,
 )
+from fitlosophy_api.db import conectar
 from fitlosophy_api.history import construir_historial
+from fitlosophy_api.usuarios import alta_usuario
 
 USUARIO = "atleta"
-PASSWORD = "secreto123"
+PASSWORD = "secreto123456"
 
 
 @pytest.fixture()
 def app(tmp_path):
     aplicacion = create_app(tmp_path / "test.db")
-    crear_usuario(aplicacion.state.db, USUARIO, PASSWORD)
+    with conectar(aplicacion.state.db_path) as conn:
+        aplicacion.state.user_id = alta_usuario(conn, USUARIO, PASSWORD)
     return aplicacion
+
+
+@pytest.fixture()
+def bd(app):
+    """Conexión propia para comprobar la persistencia desde el test.
+
+    Cada petición abre la suya (`db.db_conn`), así que el test no puede
+    reutilizar la de la aplicación: no existe.
+    """
+    conn = conectar(app.state.db_path)
+    yield conn
+    conn.close()
 
 
 @pytest.fixture(autouse=True)
@@ -363,7 +377,7 @@ def test_sustitucion_valida_actualiza_propuesta(client):
 # --- Criterio 5: respuesta negativa congela la ventana (docs/12) ------------------------
 
 
-def test_respuesta_negativa_congela_dimension(client, app):
+def test_respuesta_negativa_congela_dimension(client, app, bd):
     propuesta = _crear_propuesta(client, preferencia="fuerza")
     resultado = _ejecutar_sesion(client, propuesta)
     puntos_real = resultado["puntos_sesion_real"]
@@ -379,7 +393,7 @@ def test_respuesta_negativa_congela_dimension(client, app):
     # 30 h después, la ventana normal decae a ×0.6 pero la lumbar queda congelada
     # a ×1.0 durante 24 h adicionales (docs/12).
     catalog = app.state.catalog
-    historial = construir_historial(app.state.db, catalog)
+    historial = construir_historial(bd, catalog, app.state.user_id)
     futuro = datetime.now() + timedelta(hours=30)
     carga = compute_load(historial, catalog, futuro)
     assert carga.puntos["lumbar"] == pytest.approx(puntos_real["lumbar"] * 1.0)
@@ -453,7 +467,7 @@ def test_correcciones_de_sesion_y_cierre(client):
     assert r.json()["sesion"]["rpe_real"] == 8
 
 
-def test_correccion_item_recalcula_puntos_y_carga(client, app):
+def test_correccion_item_recalcula_puntos_y_carga(client, app, bd):
     """Criterios 7 + 4: corregir la dosis real de un ítem recalcula la carga."""
     propuesta = _crear_propuesta(client)
     resultado = _ejecutar_sesion(client, propuesta)
@@ -473,7 +487,9 @@ def test_correccion_item_recalcula_puntos_y_carga(client, app):
     # La carga activa se recalcula desde el registro corregido (criterio 4):
     # los puntos del ítem desaparecen del historial (ventana ×1.0, recién hecha).
     catalog = app.state.catalog
-    carga = compute_load(construir_historial(app.state.db, catalog), catalog, datetime.now())
+    carga = compute_load(
+        construir_historial(bd, catalog, app.state.user_id), catalog, datetime.now()
+    )
     for dimension, puntos in item["puntos_reales"].items():
         assert carga.puntos.get(dimension, 0.0) == pytest.approx(
             resultado["puntos_sesion_real"].get(dimension, 0.0) - puntos
@@ -536,10 +552,11 @@ def test_export_completo_sin_credenciales(client):
     r = client.get("/api/export")
     assert r.status_code == 200
     datos = r.json()["datos"]
-    for tabla in ("daily_states", "proposals", "bjj_records", "profile"):
+    for tabla in ("daily_states", "proposals", "bjj_records", "profiles"):
         assert tabla in datos
     assert datos["daily_states"] and datos["bjj_records"]
     assert "users" not in datos and "password_hash" not in r.text
+    assert r.json()["usuario"] == USUARIO
 
 
 # --- Material: modo sin material desde la API (regla 9 de docs/06) -----------------------
@@ -648,15 +665,15 @@ def test_login_correcto_limpia_los_fallos(app):
         assert _fallar_login(c, MAX_INTENTOS_IP) == [401] * MAX_INTENTOS_IP
 
 
-def test_el_bloqueo_expira_al_pasar_la_ventana(app):
+def test_el_bloqueo_expira_al_pasar_la_ventana(app, bd):
     """Con los fallos fuera de la ventana, la IP vuelve a poder entrar."""
     with TestClient(app) as c:
         _fallar_login(c, MAX_INTENTOS_IP)
         antiguo = (datetime.now() - timedelta(minutes=VENTANA_MIN + BLOQUEO_BASE_MIN + 1)).isoformat(
             timespec="seconds"
         )
-        app.state.db.execute("UPDATE login_failures SET ts = ?", (antiguo,))
-        app.state.db.commit()
+        bd.execute("UPDATE login_failures SET ts = ?", (antiguo,))
+        bd.commit()
         r = c.post(
             "/api/auth/login",
             json={"username": USUARIO, "password": PASSWORD},
@@ -666,12 +683,17 @@ def test_el_bloqueo_expira_al_pasar_la_ventana(app):
 
 
 def test_umbral_global_frena_el_ataque_distribuido(app):
-    """Muchas IPs distintas, ninguna por su cuenta bloqueada, frenan igualmente."""
+    """Barrido repartido en IPs y cuentas distintas: ni el límite por IP ni el
+    de usuario lo verían, y el global sí.
+
+    Cada intento estrena IP y nombre de usuario, así que ningún cubo individual
+    se acerca a su umbral. Es exactamente el hueco que cubre el límite global.
+    """
     with TestClient(app) as c:
         for i in range(MAX_INTENTOS_GLOBAL):
             c.post(
                 "/api/auth/login",
-                json={"username": USUARIO, "password": "incorrecta"},
+                json={"username": f"atleta{i}", "password": "incorrecta"},
                 headers={"CF-Connecting-IP": f"10.1.{i // 256}.{i % 256}"},
             )
         # IP nueva y limpia: el límite por IP no la afectaría, el global sí.

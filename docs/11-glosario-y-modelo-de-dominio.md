@@ -52,14 +52,23 @@ El sistema distingue además entre dato conocido, estimado y desconocido, y act�
 
 ## Entidades
 
+### Usuario
+
+El atleta que usa el sistema. Un despliegue puede tener varios (uso familiar, `docs/14`).
+
+- Obligatorio: identificador de acceso y credencial.
+- Origen: declarado. Se da de alta fuera de la aplicación, en el servidor.
+- Relaciones: **es el dueño de todo lo demás.** Perfil, estados diarios, propuestas, sesiones realizadas, registros de BJJ y respuestas posteriores pertenecen a un usuario y solo tienen sentido dentro del suyo. El historial y la carga activa se calculan por usuario.
+- No es dueño de la biblioteca de ejercicios ni del vocabulario del modelo: esos son comunes al despliegue.
+
 ### Perfil
 
-Quién es el usuario y qué condiciona todas las decisiones.
+Quién es el usuario y qué condiciona todas las decisiones. Hay uno por usuario.
 
 - Obligatorio: medidas básicas, objetivos ordenados, material disponible, consideraciones de salud.
 - Opcional: capacidades conocidas, horario habitual de BJJ.
 - Origen: declarado. Persiste entre sesiones; cambia poco.
-- Relaciones: tiene objetivos, material y restricciones permanentes.
+- Relaciones: pertenece a un usuario; tiene objetivos, material y restricciones permanentes.
 
 ### Objetivo
 
@@ -157,9 +166,10 @@ Quién es el usuario y qué condiciona todas las decisiones.
 ## Relaciones principales
 
 ```text
+Usuario ──posee──▶ Perfil, Estado diario, Sesión propuesta, Sesión realizada, Registro de BJJ
 Perfil ──tiene──▶ Objetivo, Material, Restricción permanente
 Estado diario ──declarado por──▶ Perfil
-Historial = Sesiones realizadas + Registros de BJJ + Respuestas posteriores
+Historial (de un usuario) = Sesiones realizadas + Registros de BJJ + Respuestas posteriores
 Historial + Biblioteca ──inferencia──▶ Variables derivadas (carga activa por dimensión)
 Estado diario + Variables derivadas ──reglas──▶ Familia de sesión + Presupuesto de carga
 Familia + Presupuesto + Biblioteca ──generador──▶ Sesión propuesta (bloques, ejercicios, dosis)

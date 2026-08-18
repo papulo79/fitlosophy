@@ -1,0 +1,74 @@
+# Plantilla de perfil para un usuario nuevo (docs/14: acceso y privacidad).
+#
+# `scripts/crear_usuario.py` la copia como perfil inicial. El perfil de un
+# atleta NUNCA se copia a otro: aquí solo va lo que de verdad es común.
+#
+# Qué está relleno y por qué:
+#
+# - `material`: el inventario del lugar de entrenamiento, que se comparte. Es
+#   además lo único del perfil que usa el motor, junto con
+#   `bjj.sesiones_semana.min`, así que con esto la aplicación ya propone
+#   sesiones correctas desde el primer día.
+# - Todo lo demás queda vacío: son datos personales de salud y rendimiento que
+#   cada uno rellena desde la pantalla Perfil.
+#
+# Mantén las claves aunque el valor esté vacío: documentan qué se espera y la
+# pantalla Perfil edita este mismo JSON. Los rangos son mapas {min, max}.
+
+version: 1
+
+persona:
+  altura_cm: null
+  peso_kg: null
+  grasa_corporal_estimada_pct:
+    min: null
+    max: null
+  trabajo:
+    tipo: null
+    horas_sentado_dia: null
+    pasos_diarios: null
+  sueno_horas:
+    min: null
+    max: null
+
+# Ordenados de más a menos importante: el primero define la intención que se
+# muestra al elegir el peso (docs/05).
+objetivos:
+  peso_orientativo_kg: null
+  prioridades: []
+
+bjj:
+  experiencia_anos:
+    min: null
+    max: null
+  grado: null
+  # `sesiones_semana.min` sí lo lee el motor; 3 es su valor por defecto.
+  sesiones_semana:
+    min: 3
+    max: null
+  intensidad_habitual: null
+  competicion: false
+
+fuerza_actual: {}
+
+movilidad_1_5: {}
+
+# Inventario compartido del lugar de entrenamiento. Cada clave se corresponde
+# con un token de `material` de data/ejercicios.yaml (ver MATERIAL_A_PERFIL):
+# lo que esté a false o vacío excluye los ejercicios que lo necesiten.
+material:
+  trx: true
+  tatami: true
+  barra_dominadas: true
+  kettlebells_kg: [8, 12, 16]
+  comba: true
+  caja: true
+  gomas: true
+  conos: true
+  escalera_agilidad: true
+  cinta_velocidad_max_kmh: 12
+
+# Restricciones permanentes y preferencias. Vacío = ninguna declarada; el
+# criterio lumbar del día sigue viniendo del dolor declarado en el estado
+# diario, no de aquí.
+consideraciones: {}

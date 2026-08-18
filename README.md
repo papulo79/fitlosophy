@@ -92,7 +92,7 @@ cambio en Svelte que no se compile no llega a la URL aunque reinicies.
 
 1. Dependencias: `cd app/backend && python3 -m venv .venv && ./.venv/bin/pip install -e ".[dev]"`, y `cd app/frontend && npm ci`.
 2. Configuración: `cp app/backend/.env.example app/backend/.env` y rellenarlo.
-3. Usuario único: `./.venv/bin/python scripts/init_db.py` (una sola vez; no hay registro).
+3. Base de datos y primer usuario: `./.venv/bin/python scripts/init_db.py`. Los demás usuarios, con `./.venv/bin/python scripts/crear_usuario.py <usuario>` (no hay registro por HTTP: las altas se hacen por SSH).
 4. Servicio: `systemctl --user enable --now fitlosophy` y `sudo loginctl enable-linger $USER`.
 5. Cortafuegos: reglas de ufw para la LAN y para `docker0`, sin las cuales el túnel no alcanza el host.
 
@@ -102,6 +102,8 @@ Comandos útiles: `systemctl --user status fitlosophy`, `journalctl --user -u fi
 
 **Las fases 0 a 8 del roadmap están cerradas** (`docs/10`): contexto y visión, modelo de dominio (`docs/11`), biblioteca (`data/ejercicios.yaml`, `docs/05`), modelo de carga (`docs/12`), motor de decisión (`docs/03`), generador de sesiones (`docs/06`), validación con casos de uso (`docs/13`), diseño del MVP (`docs/14`) y su construcción.
 
-La aplicación está **desplegada y en uso**: un único proceso sirve la API y el frontend compilado tras un túnel de Cloudflare. Los 9 criterios de aceptación de `docs/14` están cubiertos y la suite tiene 98 tests en verde (`cd app/backend && ./.venv/bin/python -m pytest`). Stack: Svelte 5 + Tailwind 4 (frontend responsive), FastAPI + SQLite (backend), systemd + Cloudflare Tunnel (despliegue).
+La aplicación está **desplegada y en uso**: un único proceso sirve la API y el frontend compilado tras un túnel de Cloudflare. Los 10 criterios de aceptación de `docs/14` están cubiertos y la suite tiene 126 tests en verde (`cd app/backend && ./.venv/bin/python -m pytest`). Stack: Svelte 5 + Tailwind 4 (frontend responsive), FastAPI + SQLite (backend), systemd + Cloudflare Tunnel (despliegue).
+
+Desde el 11 de agosto de 2026 el despliegue es **familiar**: varios atletas, cada uno con su usuario, su perfil y su historial aislado del de los demás (`docs/14`, «Acceso y privacidad»). Las altas se hacen a mano en el servidor; la aplicación no expone ninguna gestión de cuentas.
 
 **La Fase 9 (uso personal y calibración) está en curso desde el 10 de agosto de 2026.** Es la que no se programa: todos los valores numéricos de `docs/12` —puntos por nivel de coste, multiplicadores de dosis, ventanas de decaimiento— siguen siendo provisionales y se calibran con historial real. Los datos necesarios se persisten con el uso normal y se exportan con `GET /api/export`.

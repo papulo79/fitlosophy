@@ -8,7 +8,6 @@ la propuesta, gestionan la ejecución y el cierre, y exponen el historial.
 from __future__ import annotations
 
 import sqlite3
-import threading
 from datetime import date, datetime, timedelta
 
 from fastapi import APIRouter, Depends, HTTPException, Request, Response
@@ -26,7 +25,7 @@ from fitlosophy.generator import (
 from fitlosophy.models import DailyState, Proposal, SessionItem, SessionProposal
 
 from .auth import LoginIn, login, logout, usuario_actual
-from .db import cargar_json, volcar_json
+from .db import cargar_json, db_conn, volcar_json
 from .history import construir_historial, dimensiones_de_molestias
 from .schemas import (
     BjjIn,
@@ -78,23 +77,63 @@ TOKENS_MATERIAL = set(MATERIAL_A_PERFIL)
 # --- Dependencias y helpers ------------------------------------------------------
 
 
-def db_conn(request: Request):
-    """Conexión única serializada (app personal de un solo usuario)."""
-    with request.app.state.lock:
-        yield request.app.state.db
-
-
 def get_catalog(request: Request) -> Catalog:
     return request.app.state.catalog
 
 
-def get_perfil(conn: sqlite3.Connection):
-    fila = conn.execute("SELECT data FROM profile WHERE id = 1").fetchone()
+def get_perfil(conn: sqlite3.Connection, user_id: int):
+    fila = conn.execute("SELECT data FROM profiles WHERE user_id = ?", (user_id,)).fetchone()
     if fila is None:
-        from fitlosophy.catalog import load_default_perfil
+        # Defensivo: el alta siembra el perfil. Se cae a la plantilla, nunca al
+        # perfil de otro atleta (docs/14).
+        from fitlosophy.catalog import load_perfil_plantilla
 
-        return load_default_perfil()
+        return load_perfil_plantilla()
     return perfil_desde_dict(cargar_json(fila["data"], {}))
+
+
+# --- Propiedad de los recursos (docs/14, criterio 10) --------------------------------
+#
+# Un recurso que no es tuyo no existe para ti: se responde 404 y no 403, porque
+# un 403 confirmaría que ese identificador pertenece a alguien. Todo endpoint
+# que reciba un id en la ruta pasa por uno de estos helpers.
+
+
+def _propuesta_propia(conn, propuesta_id: int, user_id: int) -> sqlite3.Row:
+    row = conn.execute(
+        "SELECT * FROM proposals WHERE id = ? AND user_id = ?", (propuesta_id, user_id)
+    ).fetchone()
+    if row is None:
+        raise HTTPException(status_code=404, detail="Propuesta no encontrada")
+    return row
+
+
+def _sesion_propia(conn, sesion_id: int, user_id: int) -> sqlite3.Row:
+    row = conn.execute(
+        "SELECT * FROM training_sessions WHERE id = ? AND user_id = ?", (sesion_id, user_id)
+    ).fetchone()
+    if row is None:
+        raise HTTPException(status_code=404, detail="Sesión no encontrada")
+    return row
+
+
+def _bjj_propio(conn, registro_id: int, user_id: int) -> sqlite3.Row:
+    row = conn.execute(
+        "SELECT * FROM bjj_records WHERE id = ? AND user_id = ?", (registro_id, user_id)
+    ).fetchone()
+    if row is None:
+        raise HTTPException(status_code=404, detail="Registro de BJJ no encontrado")
+    return row
+
+
+def _item_de_sesion(conn, sesion_id: int, item_id: int) -> sqlite3.Row:
+    """Ítem de una sesión **ya comprobada como propia** con `_sesion_propia`."""
+    row = conn.execute(
+        "SELECT * FROM session_items WHERE id = ? AND session_id = ?", (item_id, sesion_id)
+    ).fetchone()
+    if row is None:
+        raise HTTPException(status_code=404, detail="Ítem no encontrado")
+    return row
 
 
 def _prop_desde_fila(row: sqlite3.Row) -> Proposal:
@@ -127,10 +166,10 @@ def _totales_items(items: list[dict]) -> dict[str, float]:
     return totales
 
 
-def _pesos_disponibles(conn) -> list[float]:
+def _pesos_disponibles(conn, user_id: int) -> list[float]:
     """Kettlebells del inventario del perfil, para ofrecerlas de un toque al
     apuntar el peso usado (docs/05: la biblioteca no prescribe kilos)."""
-    raw = get_perfil(conn).raw or {}
+    raw = get_perfil(conn, user_id).raw or {}
     pesos = (raw.get("material") or {}).get("kettlebells_kg") or []
     return sorted(p for p in pesos if isinstance(p, (int, float)))
 
@@ -181,13 +220,15 @@ def _propuesta_json(row: sqlite3.Row, catalog: Catalog) -> dict:
     }
 
 
-def _guardar_propuesta(conn, estado_id: int, prop: Proposal, sesion: SessionProposal) -> int:
+def _guardar_propuesta(conn, user_id: int, estado_id: int, prop: Proposal, sesion: SessionProposal) -> int:
     # Volver a declarar el estado diario sustituye la propuesta anterior del día
     # en lugar de acumularla (docs/14): el estado real cambia a lo largo de la
-    # tarde, pero solo una propuesta está vigente en cada momento.
+    # tarde, pero solo una propuesta está vigente en cada momento. El invariante
+    # es de cada usuario: descartar las de todos dejaría a los demás sin la suya.
     conn.execute(
-        "UPDATE proposals SET estado = 'descartada' WHERE estado = 'vigente' AND date(fecha) = date(?)",
-        (prop.fecha.isoformat(timespec="seconds"),),
+        "UPDATE proposals SET estado = 'descartada' "
+        "WHERE user_id = ? AND estado = 'vigente' AND date(fecha) = date(?)",
+        (user_id, prop.fecha.isoformat(timespec="seconds")),
     )
     items = [
         {
@@ -202,12 +243,13 @@ def _guardar_propuesta(conn, estado_id: int, prop: Proposal, sesion: SessionProp
     carga = prop.carga
     cur = conn.execute(
         """INSERT INTO proposals (
-            daily_state_id, fecha, familia, reducida, techo, bjj_efectivo, rpe_previsto,
+            user_id, daily_state_id, fecha, familia, reducida, techo, bjj_efectivo, rpe_previsto,
             presupuestos, patrones_prioritarios, patrones_restringidos, patrones_dosificados,
             d3, d4, d5, reglas, incertidumbres, explicacion, carga, items, notas,
             duracion_estimada_min, valida, violaciones, created_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
         (
+            user_id,
             estado_id,
             prop.fecha.isoformat(timespec="seconds"),
             prop.familia,
@@ -266,16 +308,19 @@ def ruta_me(user=Depends(usuario_actual)):
 # --- 1. Estado diario → propuesta (criterio 2) --------------------------------------
 
 
-def _sesion_activa(conn) -> sqlite3.Row | None:
-    """Sesión `en_curso`, si la hay. El flujo del MVP admite una como mucho
-    (docs/14): mientras exista, no se empieza otra."""
+def _sesion_activa(conn, user_id: int) -> sqlite3.Row | None:
+    """Sesión `en_curso` del usuario, si la hay. El flujo del MVP admite una
+    como mucho **por usuario** (docs/14): mientras exista, esa persona no
+    empieza otra. Que otro esté entrenando no le afecta."""
     return conn.execute(
-        "SELECT * FROM training_sessions WHERE estado = 'en_curso' ORDER BY id DESC LIMIT 1"
+        "SELECT * FROM training_sessions WHERE user_id = ? AND estado = 'en_curso' "
+        "ORDER BY id DESC LIMIT 1",
+        (user_id,),
     ).fetchone()
 
 
-def _exigir_sin_sesion_activa(conn) -> None:
-    activa = _sesion_activa(conn)
+def _exigir_sin_sesion_activa(conn, user_id: int) -> None:
+    activa = _sesion_activa(conn, user_id)
     if activa is not None:
         raise HTTPException(
             status_code=409,
@@ -289,13 +334,14 @@ def _exigir_sin_sesion_activa(conn) -> None:
 @router.post("/api/estado-diario", status_code=201)
 def crear_estado_diario(datos: EstadoDiarioIn, request: Request, user=Depends(usuario_actual), conn=Depends(db_conn)):
     catalog = get_catalog(request)
-    _exigir_sin_sesion_activa(conn)
+    user_id = user["id"]
+    _exigir_sin_sesion_activa(conn, user_id)
     if datos.material_disponible is not None:
         desconocidos = sorted(set(datos.material_disponible) - TOKENS_MATERIAL)
         if desconocidos:
             raise HTTPException(status_code=422, detail=f"Material desconocido: {', '.join(desconocidos)}")
 
-    perfil = get_perfil(conn)
+    perfil = get_perfil(conn, user_id)
     ahora = datetime.now()
     estado = DailyState(
         fecha=ahora,
@@ -310,16 +356,17 @@ def crear_estado_diario(datos: EstadoDiarioIn, request: Request, user=Depends(us
         preferencia=datos.preferencia,
         circunstancias=datos.circunstancias,
     )
-    historial = construir_historial(conn, catalog)
+    historial = construir_historial(conn, catalog, user_id)
     prop = decide(estado, historial, catalog)
     sesion = generate(prop, estado, catalog, perfil.material)
 
     cur = conn.execute(
         """INSERT INTO daily_states (
-            fecha, recuperacion, dolor, zona_dolor, bjj_disponible, tipo_bjj, limitacion,
+            user_id, fecha, recuperacion, dolor, zona_dolor, bjj_disponible, tipo_bjj, limitacion,
             sueno, tiempo_disponible, preferencia, circunstancias, material_disponible, created_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
         (
+            user_id,
             ahora.isoformat(timespec="seconds"),
             datos.recuperacion,
             datos.dolor,
@@ -336,7 +383,7 @@ def crear_estado_diario(datos: EstadoDiarioIn, request: Request, user=Depends(us
         ),
     )
     estado_id = int(cur.lastrowid)
-    propuesta_id = _guardar_propuesta(conn, estado_id, prop, sesion)
+    propuesta_id = _guardar_propuesta(conn, user_id, estado_id, prop, sesion)
     conn.commit()
 
     row = conn.execute("SELECT * FROM proposals WHERE id = ?", (propuesta_id,)).fetchone()
@@ -349,9 +396,7 @@ def crear_estado_diario(datos: EstadoDiarioIn, request: Request, user=Depends(us
 @router.post("/api/propuestas/{propuesta_id}/sustituir")
 def sustituir_item(propuesta_id: int, datos: SustituirIn, request: Request, user=Depends(usuario_actual), conn=Depends(db_conn)):
     catalog = get_catalog(request)
-    row = conn.execute("SELECT * FROM proposals WHERE id = ?", (propuesta_id,)).fetchone()
-    if row is None:
-        raise HTTPException(status_code=404, detail="Propuesta no encontrada")
+    row = _propuesta_propia(conn, propuesta_id, user["id"])
     aceptada = conn.execute(
         "SELECT COUNT(*) FROM training_sessions WHERE proposal_id = ?", (propuesta_id,)
     ).fetchone()[0]
@@ -445,8 +490,9 @@ def _sesion_json(conn, row, catalog) -> dict:
         "estado": row["estado"],
         "rpe_real": row["rpe_real"],
         "items": items,
-        # Inventario de kettlebells: se ofrece de un toque al apuntar el peso.
-        "pesos_disponibles": _pesos_disponibles(conn),
+        # Inventario de kettlebells del dueño de la sesión: se ofrece de un
+        # toque al apuntar el peso.
+        "pesos_disponibles": _pesos_disponibles(conn, row["user_id"]),
         "cierre": None
         if cierre is None
         else {
@@ -460,9 +506,8 @@ def _sesion_json(conn, row, catalog) -> dict:
 @router.post("/api/sesiones", status_code=201)
 def aceptar_propuesta(datos: SesionIn, request: Request, user=Depends(usuario_actual), conn=Depends(db_conn)):
     catalog = get_catalog(request)
-    prop = conn.execute("SELECT * FROM proposals WHERE id = ?", (datos.proposal_id,)).fetchone()
-    if prop is None:
-        raise HTTPException(status_code=404, detail="Propuesta no encontrada")
+    user_id = user["id"]
+    prop = _propuesta_propia(conn, datos.proposal_id, user_id)
     existente = conn.execute(
         "SELECT id FROM training_sessions WHERE proposal_id = ?", (datos.proposal_id,)
     ).fetchone()
@@ -470,7 +515,7 @@ def aceptar_propuesta(datos: SesionIn, request: Request, user=Depends(usuario_ac
         raise HTTPException(status_code=409, detail="La propuesta ya tiene una sesión en curso o registrada")
     # Una sola sesión activa a la vez (docs/14). Sin esto, recargar la página
     # llevaba al estado diario y aceptar de nuevo abría una segunda sesión.
-    _exigir_sin_sesion_activa(conn)
+    _exigir_sin_sesion_activa(conn, user_id)
     if prop["estado"] == "descartada":
         raise HTTPException(
             status_code=409,
@@ -479,8 +524,9 @@ def aceptar_propuesta(datos: SesionIn, request: Request, user=Depends(usuario_ac
 
     ahora = datetime.now()
     cur = conn.execute(
-        "INSERT INTO training_sessions (proposal_id, fecha, familia, estado, created_at) VALUES (?, ?, ?, 'en_curso', ?)",
-        (datos.proposal_id, ahora.isoformat(timespec="seconds"), prop["familia"], ahora.isoformat(timespec="seconds")),
+        "INSERT INTO training_sessions (user_id, proposal_id, fecha, familia, estado, created_at) "
+        "VALUES (?, ?, ?, ?, 'en_curso', ?)",
+        (user_id, datos.proposal_id, ahora.isoformat(timespec="seconds"), prop["familia"], ahora.isoformat(timespec="seconds")),
     )
     sesion_id = int(cur.lastrowid)
     for it in cargar_json(prop["items"], []):
@@ -508,9 +554,7 @@ def cancelar_sesion(sesion_id: int, request: Request, user=Depends(usuario_actua
     y la corrección se hace por ítem desde el historial.
     """
     catalog = get_catalog(request)
-    sesion = conn.execute("SELECT * FROM training_sessions WHERE id = ?", (sesion_id,)).fetchone()
-    if sesion is None:
-        raise HTTPException(status_code=404, detail="Sesión no encontrada")
+    sesion = _sesion_propia(conn, sesion_id, user["id"])
     if sesion["estado"] not in ("en_curso", "finalizada"):
         raise HTTPException(
             status_code=409,
@@ -534,19 +578,22 @@ def estado_de_hoy(request: Request, user=Depends(usuario_actual), conn=Depends(d
     creando una propuesta y una sesión nuevas.
     """
     catalog = get_catalog(request)
-    activa = _sesion_activa(conn)
+    user_id = user["id"]
+    activa = _sesion_activa(conn, user_id)
     # Finalizada pero sin cierre: falta la respuesta posterior, que es la que
     # congela la ventana de una dimensión tras una molestia (docs/12,
     # criterio 5). Si no se devolviera, recargar en esa pantalla la perdería
     # en silencio y sin manera de volver.
     pendiente_cierre = conn.execute(
-        "SELECT * FROM training_sessions WHERE estado = 'finalizada' ORDER BY id DESC LIMIT 1"
+        "SELECT * FROM training_sessions WHERE user_id = ? AND estado = 'finalizada' "
+        "ORDER BY id DESC LIMIT 1",
+        (user_id,),
     ).fetchone()
     hoy = datetime.now().date().isoformat()
     propuesta = conn.execute(
-        "SELECT * FROM proposals WHERE estado = 'vigente' AND date(fecha) = date(?) "
+        "SELECT * FROM proposals WHERE user_id = ? AND estado = 'vigente' AND date(fecha) = date(?) "
         "ORDER BY id DESC LIMIT 1",
-        (hoy,),
+        (user_id, hoy),
     ).fetchone()
     return {
         "sesion_activa": _sesion_json(conn, activa, catalog) if activa is not None else None,
@@ -559,25 +606,17 @@ def estado_de_hoy(request: Request, user=Depends(usuario_actual), conn=Depends(d
 
 @router.get("/api/sesiones/{sesion_id}")
 def obtener_sesion(sesion_id: int, request: Request, user=Depends(usuario_actual), conn=Depends(db_conn)):
-    row = conn.execute("SELECT * FROM training_sessions WHERE id = ?", (sesion_id,)).fetchone()
-    if row is None:
-        raise HTTPException(status_code=404, detail="Sesión no encontrada")
+    row = _sesion_propia(conn, sesion_id, user["id"])
     return {"sesion": _sesion_json(conn, row, get_catalog(request))}
 
 
 @router.patch("/api/sesiones/{sesion_id}/items/{item_id}")
 def marcar_item(sesion_id: int, item_id: int, datos: ItemPatchIn, request: Request, user=Depends(usuario_actual), conn=Depends(db_conn)):
     catalog = get_catalog(request)
-    sesion = conn.execute("SELECT * FROM training_sessions WHERE id = ?", (sesion_id,)).fetchone()
-    if sesion is None:
-        raise HTTPException(status_code=404, detail="Sesión no encontrada")
+    sesion = _sesion_propia(conn, sesion_id, user["id"])
     if sesion["estado"] != "en_curso":
         raise HTTPException(status_code=409, detail="La sesión ya está finalizada; usa PUT para corregir el registro")
-    item = conn.execute(
-        "SELECT * FROM session_items WHERE id = ? AND session_id = ?", (item_id, sesion_id)
-    ).fetchone()
-    if item is None:
-        raise HTTPException(status_code=404, detail="Ítem no encontrado")
+    _item_de_sesion(conn, sesion_id, item_id)
     if datos.estado == "sustituido" and catalog.get(datos.exercise_id_real) is None:
         raise HTTPException(status_code=422, detail="Ejercicio desconocido en el catálogo")
 
@@ -601,16 +640,10 @@ def corregir_item(sesion_id: int, item_id: int, datos: ItemPatchIn, request: Req
     reales del ítem, y con ellos la carga de los días siguientes (criterio 4).
     """
     catalog = get_catalog(request)
-    sesion = conn.execute("SELECT * FROM training_sessions WHERE id = ?", (sesion_id,)).fetchone()
-    if sesion is None:
-        raise HTTPException(status_code=404, detail="Sesión no encontrada")
+    sesion = _sesion_propia(conn, sesion_id, user["id"])
     if sesion["estado"] == "en_curso":
         raise HTTPException(status_code=409, detail="La sesión está en curso; usa PATCH para marcar el ítem")
-    item = conn.execute(
-        "SELECT * FROM session_items WHERE id = ? AND session_id = ?", (item_id, sesion_id)
-    ).fetchone()
-    if item is None:
-        raise HTTPException(status_code=404, detail="Ítem no encontrado")
+    _item_de_sesion(conn, sesion_id, item_id)
     if datos.estado == "sustituido" and catalog.get(datos.exercise_id_real) is None:
         raise HTTPException(status_code=422, detail="Ejercicio desconocido en el catálogo")
 
@@ -692,9 +725,7 @@ def _puntos_reales_item(item: sqlite3.Row, catalog: Catalog, familia: str) -> di
 @router.post("/api/sesiones/{sesion_id}/finalizar")
 def finalizar_sesion(sesion_id: int, datos: FinalizarIn, request: Request, user=Depends(usuario_actual), conn=Depends(db_conn)):
     catalog = get_catalog(request)
-    sesion = conn.execute("SELECT * FROM training_sessions WHERE id = ?", (sesion_id,)).fetchone()
-    if sesion is None:
-        raise HTTPException(status_code=404, detail="Sesión no encontrada")
+    sesion = _sesion_propia(conn, sesion_id, user["id"])
     if sesion["estado"] != "en_curso":
         raise HTTPException(status_code=409, detail="La sesión ya está finalizada")
 
@@ -726,9 +757,7 @@ def finalizar_sesion(sesion_id: int, datos: FinalizarIn, request: Request, user=
 
 @router.post("/api/sesiones/{sesion_id}/cierre", status_code=201)
 def cerrar_sesion(sesion_id: int, datos: CierreIn, request: Request, user=Depends(usuario_actual), conn=Depends(db_conn)):
-    sesion = conn.execute("SELECT * FROM training_sessions WHERE id = ?", (sesion_id,)).fetchone()
-    if sesion is None:
-        raise HTTPException(status_code=404, detail="Sesión no encontrada")
+    sesion = _sesion_propia(conn, sesion_id, user["id"])
     if sesion["estado"] not in ("finalizada", "cerrada"):
         raise HTTPException(status_code=409, detail="Finaliza la sesión antes del cierre")
     existente = conn.execute("SELECT id FROM session_closures WHERE session_id = ?", (sesion_id,)).fetchone()
@@ -766,17 +795,23 @@ def _fecha_de(row_fecha: str) -> str:
 @router.get("/api/historial")
 def historial_lista(request: Request, dias: int = 30, user=Depends(usuario_actual), conn=Depends(db_conn)):
     hoy = date.today()
+    user_id = user["id"]
     salida = []
     for i in range(dias):
         fecha = (hoy - timedelta(days=i)).isoformat()
         sesiones = conn.execute(
-            "SELECT id, familia, estado FROM training_sessions WHERE substr(fecha, 1, 10) = ?", (fecha,)
+            "SELECT id, familia, estado FROM training_sessions "
+            "WHERE user_id = ? AND substr(fecha, 1, 10) = ?",
+            (user_id, fecha),
         ).fetchall()
         bjjs = conn.execute(
-            "SELECT id, clasificacion, duracion_minutos FROM bjj_records WHERE substr(fecha, 1, 10) = ?", (fecha,)
+            "SELECT id, clasificacion, duracion_minutos FROM bjj_records "
+            "WHERE user_id = ? AND substr(fecha, 1, 10) = ?",
+            (user_id, fecha),
         ).fetchall()
         estado = conn.execute(
-            "SELECT id FROM daily_states WHERE substr(fecha, 1, 10) = ?", (fecha,)
+            "SELECT id FROM daily_states WHERE user_id = ? AND substr(fecha, 1, 10) = ?",
+            (user_id, fecha),
         ).fetchone()
 
         tipos: list[str] = []
@@ -808,22 +843,27 @@ def historial_detalle(fecha: str, request: Request, user=Depends(usuario_actual)
     except ValueError:
         raise HTTPException(status_code=422, detail="Fecha inválida (formato YYYY-MM-DD)")
     catalog = get_catalog(request)
+    user_id = user["id"]
 
     estados = conn.execute(
-        "SELECT * FROM daily_states WHERE substr(fecha, 1, 10) = ? ORDER BY id", (fecha,)
+        "SELECT * FROM daily_states WHERE user_id = ? AND substr(fecha, 1, 10) = ? ORDER BY id",
+        (user_id, fecha),
     ).fetchall()
     # Las propuestas descartadas y las sesiones canceladas no se muestran: son
     # ruido de haber redeclarado el estado, no lo que pasó ese día (docs/14).
     propuestas = conn.execute(
-        "SELECT * FROM proposals WHERE substr(fecha, 1, 10) = ? AND estado != 'descartada' ORDER BY id",
-        (fecha,),
+        "SELECT * FROM proposals WHERE user_id = ? AND substr(fecha, 1, 10) = ? "
+        "AND estado != 'descartada' ORDER BY id",
+        (user_id, fecha),
     ).fetchall()
     sesiones = conn.execute(
-        "SELECT * FROM training_sessions WHERE substr(fecha, 1, 10) = ? AND estado != 'cancelada' ORDER BY id",
-        (fecha,),
+        "SELECT * FROM training_sessions WHERE user_id = ? AND substr(fecha, 1, 10) = ? "
+        "AND estado != 'cancelada' ORDER BY id",
+        (user_id, fecha),
     ).fetchall()
     bjjs = conn.execute(
-        "SELECT * FROM bjj_records WHERE substr(fecha, 1, 10) = ? ORDER BY id", (fecha,)
+        "SELECT * FROM bjj_records WHERE user_id = ? AND substr(fecha, 1, 10) = ? ORDER BY id",
+        (user_id, fecha),
     ).fetchall()
 
     return {
@@ -867,9 +907,10 @@ def historial_detalle(fecha: str, request: Request, user=Depends(usuario_actual)
 def registrar_bjj(datos: BjjIn, request: Request, user=Depends(usuario_actual), conn=Depends(db_conn)):
     fecha = datos.fecha or datetime.now()
     cur = conn.execute(
-        """INSERT INTO bjj_records (fecha, clasificacion, duracion_minutos, fatiga_agarre,
-           intensidad_percibida, notas, estimado, created_at) VALUES (?, ?, ?, ?, ?, ?, 0, ?)""",
+        """INSERT INTO bjj_records (user_id, fecha, clasificacion, duracion_minutos, fatiga_agarre,
+           intensidad_percibida, notas, estimado, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, 0, ?)""",
         (
+            user["id"],
             fecha.isoformat(timespec="seconds"),
             datos.clasificacion,
             datos.duracion_minutos,
@@ -885,9 +926,7 @@ def registrar_bjj(datos: BjjIn, request: Request, user=Depends(usuario_actual), 
 
 @router.put("/api/bjj/{registro_id}")
 def corregir_bjj(registro_id: int, datos: BjjPut, user=Depends(usuario_actual), conn=Depends(db_conn)):
-    row = conn.execute("SELECT * FROM bjj_records WHERE id = ?", (registro_id,)).fetchone()
-    if row is None:
-        raise HTTPException(status_code=404, detail="Registro de BJJ no encontrado")
+    _bjj_propio(conn, registro_id, user["id"])
     campos = {
         "clasificacion": datos.clasificacion,
         "duracion_minutos": datos.duracion_minutos,
@@ -905,9 +944,7 @@ def corregir_bjj(registro_id: int, datos: BjjPut, user=Depends(usuario_actual), 
 
 @router.put("/api/sesiones/{sesion_id}")
 def corregir_sesion(sesion_id: int, datos: SesionPut, user=Depends(usuario_actual), conn=Depends(db_conn)):
-    row = conn.execute("SELECT * FROM training_sessions WHERE id = ?", (sesion_id,)).fetchone()
-    if row is None:
-        raise HTTPException(status_code=404, detail="Sesión no encontrada")
+    _sesion_propia(conn, sesion_id, user["id"])
     if datos.rpe_real is not None:
         conn.execute("UPDATE training_sessions SET rpe_real = ? WHERE id = ?", (datos.rpe_real, sesion_id))
     if datos.fecha is not None:
@@ -918,6 +955,7 @@ def corregir_sesion(sesion_id: int, datos: SesionPut, user=Depends(usuario_actua
 
 @router.put("/api/sesiones/{sesion_id}/cierre")
 def corregir_cierre(sesion_id: int, datos: CierrePut, user=Depends(usuario_actual), conn=Depends(db_conn)):
+    _sesion_propia(conn, sesion_id, user["id"])
     row = conn.execute("SELECT * FROM session_closures WHERE session_id = ?", (sesion_id,)).fetchone()
     if row is None:
         raise HTTPException(status_code=404, detail="La sesión no tiene cierre registrado")
@@ -941,7 +979,9 @@ def corregir_cierre(sesion_id: int, datos: CierrePut, user=Depends(usuario_actua
 
 @router.get("/api/perfil")
 def obtener_perfil(user=Depends(usuario_actual), conn=Depends(db_conn)):
-    fila = conn.execute("SELECT data, updated_at FROM profile WHERE id = 1").fetchone()
+    fila = conn.execute(
+        "SELECT data, updated_at FROM profiles WHERE user_id = ?", (user["id"],)
+    ).fetchone()
     if fila is None:
         raise HTTPException(status_code=404, detail="Perfil no inicializado")
     data = cargar_json(fila["data"], {})
@@ -954,9 +994,9 @@ def actualizar_perfil(datos: PerfilPut, user=Depends(usuario_actual), conn=Depen
     if not isinstance(datos.data, dict) or not datos.data:
         raise HTTPException(status_code=422, detail="El perfil debe ser un objeto con la forma de data/perfil.yaml")
     conn.execute(
-        "INSERT INTO profile (id, data, updated_at) VALUES (1, ?, ?) "
-        "ON CONFLICT(id) DO UPDATE SET data = excluded.data, updated_at = excluded.updated_at",
-        (volcar_json(datos.data), datetime.now().isoformat(timespec="seconds")),
+        "INSERT INTO profiles (user_id, data, updated_at) VALUES (?, ?, ?) "
+        "ON CONFLICT(user_id) DO UPDATE SET data = excluded.data, updated_at = excluded.updated_at",
+        (user["id"], volcar_json(datos.data), datetime.now().isoformat(timespec="seconds")),
     )
     conn.commit()
     return {"detalle": "Perfil actualizado"}
@@ -976,21 +1016,32 @@ def listar_ejercicios(request: Request, user=Depends(usuario_actual)):
 
 @router.get("/api/export")
 def exportar(user=Depends(usuario_actual), conn=Depends(db_conn)):
-    tablas = [
-        "daily_states",
-        "proposals",
-        "training_sessions",
-        "session_items",
-        "session_closures",
-        "bjj_records",
-        "profile",
-    ]
+    """Copia completa de **tus** datos (docs/14: portabilidad y criterio 10).
+
+    Las tablas que cuelgan de una sesión se filtran por ella; el resto, por
+    `user_id`. La exportación es el sitio donde un filtro olvidado se lleva de
+    golpe el historial de salud de los demás.
+    """
+    filtros = {
+        "daily_states": "user_id = ?",
+        "proposals": "user_id = ?",
+        "training_sessions": "user_id = ?",
+        "session_items": "session_id IN (SELECT id FROM training_sessions WHERE user_id = ?)",
+        "session_closures": "session_id IN (SELECT id FROM training_sessions WHERE user_id = ?)",
+        "bjj_records": "user_id = ?",
+        "profiles": "user_id = ?",
+    }
     volcado = {
-        t: [dict(fila) for fila in conn.execute(f"SELECT * FROM {t}").fetchall()] for t in tablas
+        tabla: [
+            dict(fila)
+            for fila in conn.execute(f"SELECT * FROM {tabla} WHERE {donde}", (user["id"],)).fetchall()
+        ]
+        for tabla, donde in filtros.items()
     }
     return {
         "aplicacion": "fitlosophy",
         "version": "0.1.0",
+        "usuario": user["username"],
         "exportado_en": datetime.now().isoformat(timespec="seconds"),
         "datos": volcado,
     }

@@ -96,12 +96,19 @@ def _item_a_performed(fila: sqlite3.Row, catalog: Catalog, rpe_real: int | None,
     )
 
 
-def construir_historial(conn: sqlite3.Connection, catalog: Catalog) -> list[Event]:
-    """Historial completo (sesiones físicas + BJJ) ordenado por fecha."""
+def construir_historial(conn: sqlite3.Connection, catalog: Catalog, user_id: int) -> list[Event]:
+    """Historial de **un usuario** (sesiones físicas + BJJ) ordenado por fecha.
+
+    El filtro por `user_id` no es solo privacidad: sin él, la carga activa de
+    cada atleta incluiría los entrenamientos de los demás y el motor propondría
+    a todos sesiones sistemáticamente reducidas (docs/14, criterio 10).
+    """
     eventos: list[Event] = []
 
     sesiones = conn.execute(
-        "SELECT * FROM training_sessions WHERE estado IN ('finalizada', 'cerrada') ORDER BY fecha"
+        "SELECT * FROM training_sessions WHERE user_id = ? AND estado IN ('finalizada', 'cerrada') "
+        "ORDER BY fecha",
+        (user_id,),
     ).fetchall()
     for sesion in sesiones:
         items = conn.execute(
@@ -128,7 +135,9 @@ def construir_historial(conn: sqlite3.Connection, catalog: Catalog) -> list[Even
             )
         )
 
-    for rec in conn.execute("SELECT * FROM bjj_records ORDER BY fecha").fetchall():
+    for rec in conn.execute(
+        "SELECT * FROM bjj_records WHERE user_id = ? ORDER BY fecha", (user_id,)
+    ).fetchall():
         eventos.append(
             BjjRecord(
                 fecha=datetime.fromisoformat(rec["fecha"]),

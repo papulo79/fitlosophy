@@ -372,6 +372,8 @@ Usar el MVP con datos reales para ajustar el modelo.
 
 En curso desde el 10 de agosto de 2026. Empieza el uso diario con datos reales; los valores numéricos de `docs/12` siguen siendo provisionales y es esta fase la que debe calibrarlos.
 
+El 11 de agosto de 2026 el despliegue pasó a **uso familiar**: varios atletas, cada uno con su usuario, su perfil y su historial aislado (`docs/14`, «Acceso y privacidad»). No cambia el objetivo de la fase, pero sí lo que hay que vigilar al calibrar: las muestras son de personas distintas y **no se agregan**. Un coste recalibrado con el historial de un atleta no se traslada a otro sin decirlo; la calibración por usuario es precisamente lo que la Fase 11 (aprendizaje individual) recogerá más adelante.
+
 ---
 
 # Fase 10. Producto personal completo

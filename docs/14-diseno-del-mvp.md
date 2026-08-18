@@ -26,7 +26,7 @@ Estado diario → Propuesta → Ejecución y registro → Finalizar (cierre)
 
 ### Una sola sesión en marcha
 
-El flujo es lineal y el día tiene un único momento de decisión, así que en cada instante existe **como mucho una sesión activa** y **una propuesta vigente**:
+El flujo es lineal y el día tiene un único momento de decisión, así que en cada instante existe **como mucho una sesión activa** y **una propuesta vigente** *por usuario* (ver «Acceso y privacidad»: el invariante es individual, no del despliegue):
 
 - Con una sesión `en_curso` no se puede declarar otro estado diario ni aceptar otra propuesta: primero se finaliza o se cancela. Reabrir la aplicación a mitad de sesión debe **devolver a esa sesión**, no ofrecer empezar de cero.
 - Declarar de nuevo el estado diario sin haber empezado sí está permitido —el estado real cambia a lo largo de la tarde— y **descarta** la propuesta anterior del día en lugar de acumularla.
@@ -120,9 +120,12 @@ Fuera (post-MVP, roadmap fases 9-12):
 
 ## Acceso y privacidad
 
-- Aplicación personal de un único usuario: acceso protegido con usuario y contraseña.
-- No hay registro de cuentas, roles ni gestión de múltiples usuarios.
-- Los datos son personales de salud y rendimiento: no se comparten con terceros y el despliegue es privado (local o servidor propio).
+- Aplicación privada de **uso familiar**: varios atletas comparten el despliegue, cada uno con su usuario y contraseña. El acceso está protegido; sin sesión válida no se consulta ni se registra nada.
+- **Cada usuario es un sistema independiente.** Su perfil, su estado diario, sus propuestas, sus sesiones, su BJJ y su historial son suyos. La carga activa se calcula solo con sus propios eventos: los entrenamientos de otro usuario no reducen ni condicionan la sesión de nadie. Los invariantes del flujo (una sesión activa, una propuesta vigente) son individuales.
+- **No hay registro, ni roles, ni gestión de cuentas desde la aplicación.** Las altas y las contraseñas se administran a mano en el servidor, por línea de órdenes. La API no expone ninguna operación de gestión de usuarios: es la superficie que no existe la que no se puede atacar.
+- Un recurso que no es tuyo **no existe para ti**: se responde 404, no 403. Un 403 confirmaría que ese identificador pertenece a alguien.
+- Los datos son personales de salud y rendimiento: no se comparten con terceros —tampoco entre usuarios del mismo despliegue— y el despliegue es privado (local o servidor propio).
+- El material del catálogo es el del lugar de entrenamiento y se comparte; lo personal (medidas, objetivos, fuerza, movilidad, consideraciones) es de cada uno y se edita desde su pantalla de perfil.
 - Sesión persistente razonable: no pedir credenciales en cada uso diario, pero sí proteger el acceso desde dispositivos nuevos.
 
 ## Criterios de aceptación funcionales
@@ -138,6 +141,7 @@ El MVP es aceptable cuando:
 7. Los datos pueden exportarse y cualquier registro puede corregirse.
 8. Ninguna regla dura puede saltarse desde la interfaz: las sustituciones que la violan se rechazan con su motivo.
 9. El acceso exige usuario y contraseña; sin sesión válida no se puede consultar ni registrar nada.
+10. **Ningún usuario puede leer ni modificar datos de otro.** Con la sesión de A, ningún identificador de un recurso de B es accesible (404), el historial y la carga activa de A se calculan solo con sus eventos, la exportación de A contiene solo lo suyo, y lo que A haga —empezar una sesión, redeclarar su estado diario— no altera el flujo de B.
 
 ## Decisiones tomadas en esta fase
 
@@ -145,4 +149,5 @@ El MVP es aceptable cuando:
 - BJJ: declarado cada día por el usuario; el sistema no asume días fijos.
 - Marcado: check = tal cual; modal para cualquier desviación; la modificación es la excepción, no la norma.
 - Cierre: «Finalizar» dispara la respuesta posterior y termina el uso hasta el siguiente día.
-- Acceso: aplicación privada de un único usuario con usuario y contraseña; sin cuentas múltiples ni registro.
+- Acceso: aplicación privada de uso familiar. Varios usuarios con usuario y contraseña, aislados entre sí; sin registro ni gestión de cuentas por HTTP. Las altas y las rotaciones de contraseña se hacen por línea de órdenes en el servidor.
+- Perfil de un usuario nuevo: se siembra desde una plantilla con el material del lugar de entrenamiento —compartido— y el resto de secciones vacías, para que cada uno las rellene. El perfil de un atleta nunca se copia a otro.

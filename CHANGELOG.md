@@ -7,6 +7,53 @@
 - Nuevos roles `analista-candidatos.md` y `revisor-candidatos.md`: guardarraíles para LLMs, con prohibición de inventar datos, aprobar por sí mismos, recibir información personal o editar el catálogo estable.
 - `prompt-ejercicio-nuevo.md` deja de ser la entrada desde una transcripción: ahora solo transforma en YAML un candidato ya revisado. La validación determinista y la aprobación humana siguen siendo obligatorias para la promoción.
 
+## 0.24.0 - Multiusuario: uso familiar con historiales aislados
+
+La aplicación pasa de ser de un único atleta a soportar varios en el mismo despliegue, cada uno con su usuario, su perfil, su historial y sus propuestas. `docs/14` decía lo contrario en tres sitios; se reescribe primero la documentación y después el código, como exige `AGENTS.md`.
+
+**Documentación (primero)**
+
+- `docs/14`, «Acceso y privacidad» reescrita: despliegue familiar, cada usuario es un sistema independiente, sin registro ni gestión de cuentas por HTTP, y un recurso ajeno responde 404 y no 403 —un 403 confirmaría que ese identificador pertenece a alguien—. **Criterio de aceptación 10 nuevo**: ningún usuario puede leer ni modificar datos de otro. El invariante de «una sola sesión activa» se declara individual.
+- `docs/11`: entidad **Usuario**, dueña de perfil, estados diarios, propuestas, sesiones y BJJ. No es dueña de la biblioteca de ejercicios, que es común al despliegue.
+- `docs/10`: la Fase 9 anota que las muestras de calibración son de personas distintas y **no se agregan**.
+
+**Esquema y migración**
+
+- `user_id NOT NULL REFERENCES users(id)` en `daily_states`, `proposals`, `training_sessions` y `bjj_records`. `session_items` y `session_closures` no lo repiten: cuelgan de su sesión, y duplicar el dueño abriría la puerta a que las dos columnas discrepen.
+- `profile` (fila única con `CHECK (id = 1)`) pasa a `profiles`, con una fila por usuario.
+- SQLite no admite añadir con `ALTER TABLE` una columna que sea a la vez `NOT NULL` y `REFERENCES`, así que la migración **reconstruye** las tablas con su definición definitiva conservando los identificadores, en vez de dejar la columna anulable: una base de datos migrada y una recién creada quedan con el mismo esquema, y hay un test que lo compara. Es idempotente y verifica `foreign_key_check` al terminar. Si encuentra datos y ningún usuario al que asignárselos, aborta con un mensaje claro en lugar de inventar un dueño.
+- Las definiciones de tabla viven ahora en un diccionario `TABLAS` en vez de en un bloque de SQL suelto: la migración necesita la misma definición que usa una base de datos nueva, y con dos copias del `CREATE TABLE` acabarían divergiendo.
+- Índices por `(user_id, fecha)` en las cuatro tablas, más `(username, ts)` en `login_failures`.
+
+**Aislamiento (criterio 10)**
+
+- Helpers de propiedad `_sesion_propia`, `_propuesta_propia`, `_bjj_propio` e `_item_de_sesion`: los 13 endpoints con identificador en la ruta pasan por ellos.
+- Corregidas las consultas globales, que no eran solo un problema de privacidad: `_sesion_activa` habría hecho que **la primera persona en empezar a entrenar bloqueara a todas las demás**; el `UPDATE ... SET estado = 'descartada'` de `_guardar_propuesta` habría descartado las propuestas de todos al declarar uno su estado diario; `/api/hoy` habría llevado a cerrar la sesión de otro. Y sobre todo `construir_historial`: **la carga activa de cada atleta habría incluido los entrenamientos de los demás**, con propuestas sistemáticamente reducidas por trabajo ajeno.
+- `GET /api/export` filtra las siete tablas por usuario e incluye a quién pertenece la copia.
+- El núcleo `fitlosophy/` no ha necesitado un solo cambio: `decide`, `generate` y `compute_load` ya recibían historial y material por parámetro. El aislamiento vive entero en `fitlosophy_api/`.
+
+**Alta de usuarios: solo por SSH**
+
+- Nuevo `fitlosophy_api/usuarios.py` y tres scripts: `crear_usuario.py`, `listar_usuarios.py` y `cambiar_password.py` (que ahora recibe el usuario como argumento). La API **no expone ninguna operación de gestión de cuentas**: la superficie que no existe no se puede atacar.
+- La contraseña se pide por terminal con `getpass`, dos veces, mínimo 12 caracteres. No se pasa como argumento —`argv` lo ve cualquier proceso con `ps`— ni se guarda en el `.env`. `FITLOSOPHY_USER`/`FITLOSOPHY_PASSWORD` quedan solo para crear el primer usuario de un despliegue nuevo.
+- Nuevo `data/perfil-plantilla.yaml`: perfil inicial con el material del lugar de entrenamiento —que se comparte y es lo único del perfil que lee el motor, junto con `bjj.sesiones_semana.min`— y el resto vacío. El perfil de un atleta nunca se copia a otro. `init_db.py` deja de sembrar un perfil global.
+- `perfil_desde_dict` tolera valores nulos en `bjj.sesiones_semana.min`: con la plantilla, un campo sin rellenar ya no puede reventar la decisión del día.
+
+**Freno de fuerza bruta por usuario**
+
+- Tercer umbral, por `username` (10 fallos en la ventana, mismo escalado): cubre el ataque repartido entre muchas IPs contra una contraseña concreta, que el límite por IP no veía. El precio, documentado, es que quien conozca un nombre de usuario puede bloquear a esa persona mientras dure; por eso el umbral es el doble que el de IP. Un login correcto limpia los fallos de esa IP **y** los de esa cuenta.
+
+**Concurrencia**
+
+- **Una conexión SQLite por petición** en lugar de una única conexión compartida cuyo lock global se mantenía tomado durante toda la petición: el servidor atendía a una persona cada vez, y declarar el estado diario reconstruye el historial y ejecuta motor y generador. Además cada petición tiene ahora su propia transacción, así que un fallo a mitad no puede confirmar el trabajo a medias de otra. Con `journal_mode = WAL` los lectores no esperan al escritor y `busy_timeout` evita el «database is locked».
+- `db_conn` se muda a `db.py` para que `auth.py` pueda depender de ella sin ciclo de importación; `usuario_actual` la recibe por dependencia.
+
+**Tests**
+
+- Nuevo `tests/test_multiusuario.py` (17 tests): 404 cruzado en los 13 endpoints con id, el historial del motor solo ve lo propio, dos pueden entrenar a la vez, redeclarar el estado no descarta la propuesta ajena, `/api/hoy` no arrastra el cierre pendiente de otro, exportación y perfiles independientes, freno por usuario, y la migración desde el esquema antiguo —con su esquema literal— comprobando dueños, identificadores conservados, idempotencia y equivalencia con una base de datos nueva.
+- **Corregida una contaminación entre módulos de la propia suite**: `config.cargar_env` escribe en `os.environ` a propósito y `monkeypatch` no puede deshacer esa escritura, así que `FITLOSOPHY_COOKIE_SECURE=true` se filtraba desde los tests del cargador a todo lo que corriera después, marcando la cookie como `Secure` sobre HTTP y dejando sin sesión a los tests siguientes. `conftest.py` restaura el entorno tras cada test. El fallo estaba latente desde antes; el módulo nuevo lo destapó por orden alfabético.
+- 126 tests en verde.
+
 ## 0.23.0 - Flujo para añadir ejercicios desde una fuente externa
 
 - Nuevo `docs/roles/prompt-ejercicio-nuevo.md`: prompt versionado para pedir a un agente externo un ejercicio extraído de una transcripción o un artículo, con los vocabularios cerrados y el inventario de material embebidos. Vive en el repositorio para que no se desincronice del catálogo, y `tests/test_prompt_ejercicio.py` falla si alguien amplía un dominio sin actualizarlo.

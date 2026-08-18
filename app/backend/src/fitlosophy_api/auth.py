@@ -1,12 +1,12 @@
-"""Autenticación de usuario único (docs/14: acceso y privacidad).
+"""Autenticación (docs/14: acceso y privacidad).
 
 - Contraseña con hash `hashlib.pbkdf2_hmac` (stdlib).
-- Sesión con cookie HttpOnly firmada: token opaco almacenado en la tabla
+- Sesión con cookie HttpOnly: token opaco almacenado en la tabla
   `auth_sessions` con expiración de 30 días (el usuario no se loguea a diario).
-- Sin registro: el usuario se crea al inicializar la BD.
+- Sin registro por HTTP: las altas se hacen en el servidor (ver `usuarios.py`).
 - Freno de fuerza bruta en el login: la app queda expuesta a internet por un
-  túnel, y un único usuario sin límite de intentos es el punto débil evidente.
-  Ver `_comprobar_freno`.
+  túnel, y unas pocas cuentas sin límite de intentos son el punto débil
+  evidente. Ver `_comprobar_freno`.
 """
 
 from __future__ import annotations
@@ -23,6 +23,7 @@ from fastapi import Depends, HTTPException, Request, Response
 from pydantic import BaseModel
 
 from .config import leer_int
+from .db import db_conn
 
 COOKIE_NOMBRE = "fitlosophy_session"
 DURACION_SESION_DIAS = 30
@@ -31,6 +32,15 @@ ITERACIONES_PBKDF2 = 200_000
 # --- Freno de fuerza bruta (configurable por .env) --------------------------
 # Umbral por IP: fallos dentro de la ventana que disparan el bloqueo.
 MAX_INTENTOS_IP = 5
+# Umbral por usuario: fallos contra una misma cuenta, vengan de donde vengan.
+# El límite por IP no ve el ataque repartido entre muchas direcciones contra
+# una sola cuenta, que es justo el que va a por una contraseña concreta.
+#
+# El precio es que quien conozca un nombre de usuario puede dejar a esa persona
+# sin entrar durante el bloqueo. Por eso el umbral es el doble que el de IP: en
+# un despliegue familiar detrás de un túnel privado, frenar el ataque
+# distribuido compensa ese riesgo, y el afectado sabe a quién preguntar.
+MAX_INTENTOS_USUARIO = 10
 # Ventana de conteo, en minutos: también es la memoria del bloqueo, porque al
 # expirar la ventana los fallos dejan de contar.
 VENTANA_MIN = 15
@@ -64,19 +74,6 @@ def verificar_password(password: str, salt_hex: str, hash_hex: str) -> bool:
     return hmac.compare_digest(digest, hash_hex)
 
 
-def crear_usuario(conn: sqlite3.Connection, username: str, password: str) -> None:
-    hash_hex, salt_hex = hash_password(password)
-    conn.execute(
-        "INSERT INTO users (username, password_hash, salt, created_at) VALUES (?, ?, ?, ?)",
-        (username, hash_hex, salt_hex, datetime.now().isoformat(timespec="seconds")),
-    )
-    conn.commit()
-
-
-def hay_usuario(conn: sqlite3.Connection) -> bool:
-    return conn.execute("SELECT COUNT(*) FROM users").fetchone()[0] > 0
-
-
 def _crear_sesion(conn: sqlite3.Connection, user_id: int) -> tuple[str, datetime]:
     token = secrets.token_hex(32)
     expira = datetime.now() + timedelta(days=DURACION_SESION_DIAS)
@@ -88,10 +85,13 @@ def _crear_sesion(conn: sqlite3.Connection, user_id: int) -> tuple[str, datetime
     return token, expira
 
 
-def usuario_actual(request: Request) -> dict:
+def usuario_actual(request: Request, conn: sqlite3.Connection = Depends(db_conn)) -> dict:
     """Dependencia FastAPI: exige sesión válida en todas las rutas protegidas
-    (criterio de aceptación 9)."""
-    conn: sqlite3.Connection = request.app.state.db
+    (criterio de aceptación 9).
+
+    Devuelve `{"id", "username"}`. El `id` es lo que usa cada endpoint para
+    filtrar sus consultas: sin él no hay aislamiento (criterio 10).
+    """
     token = request.cookies.get(COOKIE_NOMBRE)
     if not token:
         raise HTTPException(status_code=401, detail="Sesión requerida")
@@ -180,51 +180,72 @@ def _registrar_fallo(conn: sqlite3.Connection, ip: str, username: str, ahora: da
 
 
 def _contar_fallos(
-    conn: sqlite3.Connection, desde: datetime, ip: str | None = None
+    conn: sqlite3.Connection,
+    desde: datetime,
+    ip: str | None = None,
+    username: str | None = None,
 ) -> tuple[int, datetime | None]:
-    """Fallos desde `desde` (opcionalmente de una IP) y fecha del último."""
-    marca = desde.isoformat(timespec="seconds")
-    if ip is None:
-        sql = "SELECT COUNT(*) AS n, MAX(ts) AS ultimo FROM login_failures WHERE ts >= ?"
-        params: tuple = (marca,)
-    else:
-        sql = "SELECT COUNT(*) AS n, MAX(ts) AS ultimo FROM login_failures WHERE ts >= ? AND ip = ?"
-        params = (marca, ip)
+    """Fallos desde `desde` y fecha del último.
+
+    Sin `ip` ni `username` cuenta todos (umbral global). Con uno de los dos,
+    solo los de esa IP o los dirigidos a esa cuenta.
+    """
+    sql = "SELECT COUNT(*) AS n, MAX(ts) AS ultimo FROM login_failures WHERE ts >= ?"
+    params: tuple = (desde.isoformat(timespec="seconds"),)
+    if ip is not None:
+        sql += " AND ip = ?"
+        params += (ip,)
+    if username is not None:
+        sql += " AND username = ?"
+        params += (username,)
     fila = conn.execute(sql, params).fetchone()
     ultimo = datetime.fromisoformat(fila["ultimo"]) if fila["ultimo"] else None
     return fila["n"], ultimo
 
 
-def _comprobar_freno(conn: sqlite3.Connection, ip: str, ahora: datetime) -> None:
-    """Rechaza con 429 si la IP (o el conjunto) ha agotado los intentos.
+def _comprobar_freno(conn: sqlite3.Connection, ip: str, username: str, ahora: datetime) -> None:
+    """Rechaza con 429 si la IP, la cuenta o el conjunto han agotado intentos.
 
-    Dos niveles:
+    Tres niveles, cada uno para un ataque distinto:
 
     - Por IP: `MAX_INTENTOS_IP` fallos en `VENTANA_MIN` bloquean esa IP. La
       duración parte de `BLOQUEO_BASE_MIN` y se duplica por cada tanda de
       fallos acumulada en 24 h, con techo en `BLOQUEO_MAX_MIN`, de modo que
       insistir sale cada vez más caro.
+    - Por usuario: `MAX_INTENTOS_USUARIO` fallos contra la misma cuenta, con el
+      mismo escalado. Cubre el ataque repartido entre muchas IPs contra una
+      contraseña concreta, que el límite por IP no vería.
     - Global: `MAX_INTENTOS_GLOBAL` fallos en la ventana frenan el login desde
-      cualquier IP. Cubre el ataque repartido entre muchas direcciones, que el
-      límite por IP no vería.
+      cualquier IP. Cubre el barrido distribuido contra cuentas distintas, que
+      tampoco dispara ninguno de los dos anteriores.
 
     Los intentos rechazados aquí no se registran como fallo: así un refresco
     del usuario legítimo no alarga su propio bloqueo.
     """
     max_ip = leer_int("FITLOSOPHY_LOGIN_MAX_INTENTOS", MAX_INTENTOS_IP)
+    max_usuario = leer_int("FITLOSOPHY_LOGIN_MAX_USUARIO", MAX_INTENTOS_USUARIO)
     ventana = leer_int("FITLOSOPHY_LOGIN_VENTANA_MIN", VENTANA_MIN)
     bloqueo_base = leer_int("FITLOSOPHY_LOGIN_BLOQUEO_MIN", BLOQUEO_BASE_MIN)
     bloqueo_max = leer_int("FITLOSOPHY_LOGIN_BLOQUEO_MAX_MIN", BLOQUEO_MAX_MIN)
     max_global = leer_int("FITLOSOPHY_LOGIN_MAX_GLOBAL", MAX_INTENTOS_GLOBAL)
 
     inicio_ventana = ahora - timedelta(minutes=ventana)
+    inicio_dia = ahora - timedelta(hours=24)
 
-    fallos_ip, ultimo_ip = _contar_fallos(conn, inicio_ventana, ip)
-    if fallos_ip >= max_ip and ultimo_ip is not None:
-        fallos_dia, _ = _contar_fallos(conn, ahora - timedelta(hours=24), ip)
-        nivel = max(1, fallos_dia // max_ip)
+    def _frenar(maximo: int, motivo: str, **filtro) -> None:
+        """Bloquea si se ha alcanzado `maximo` fallos, con el escalado por
+        tandas acumuladas en 24 h."""
+        fallos, ultimo = _contar_fallos(conn, inicio_ventana, **filtro)
+        if fallos < maximo or ultimo is None:
+            return
+        fallos_dia, _ = _contar_fallos(conn, inicio_dia, **filtro)
+        nivel = max(1, fallos_dia // maximo)
         minutos = min(bloqueo_base * (2 ** (nivel - 1)), bloqueo_max)
-        _rechazar(ultimo_ip + timedelta(minutes=minutos), ahora, "Demasiados intentos fallidos")
+        _rechazar(ultimo + timedelta(minutes=minutos), ahora, motivo)
+
+    _frenar(max_ip, "Demasiados intentos fallidos", ip=ip)
+    if username:
+        _frenar(max_usuario, "Demasiados intentos fallidos para este usuario", username=username)
 
     fallos_todos, ultimo_todos = _contar_fallos(conn, inicio_ventana)
     if fallos_todos >= max_global and ultimo_todos is not None:
@@ -252,15 +273,17 @@ def login(
 ) -> dict:
     ahora = datetime.now()
     ip = ip_cliente(request)
-    _comprobar_freno(conn, ip, ahora)
+    _comprobar_freno(conn, ip, datos.username, ahora)
 
     fila = conn.execute("SELECT * FROM users WHERE username = ?", (datos.username,)).fetchone()
     if fila is None or not verificar_password(datos.password, fila["salt"], fila["password_hash"]):
         _registrar_fallo(conn, ip, datos.username, ahora)
         raise HTTPException(status_code=401, detail="Usuario o contraseña incorrectos")
 
-    # Acierto: la IP queda limpia y no arrastra los fallos previos.
-    conn.execute("DELETE FROM login_failures WHERE ip = ?", (ip,))
+    # Acierto: ni esa IP ni esa cuenta arrastran los fallos previos. Limpiar
+    # ambos evita que un despiste propio deje al usuario a un intento del
+    # bloqueo durante el resto de la ventana.
+    conn.execute("DELETE FROM login_failures WHERE ip = ? OR username = ?", (ip, datos.username))
     conn.commit()
 
     token, expira = _crear_sesion(conn, fila["id"])

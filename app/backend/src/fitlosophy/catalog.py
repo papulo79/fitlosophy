@@ -242,14 +242,26 @@ def perfil_desde_dict(data: dict) -> Perfil:
         valor = data.get("material", {}).get(clave)
         if valor:  # true o lista no vacía o número
             material.add(token)
-    bjj = data.get("bjj", {})
+    # El perfil se edita a mano desde la aplicación y la plantilla de un usuario
+    # nuevo deja casi todo a null, así que un valor ausente o nulo cae al
+    # defecto en lugar de reventar la decisión del día.
+    minimo = ((data.get("bjj") or {}).get("sesiones_semana") or {}).get("min")
     return Perfil(
         material=frozenset(material),
-        bjj_sesiones_semana_min=int(bjj.get("sesiones_semana", {}).get("min", 3)),
+        bjj_sesiones_semana_min=int(minimo) if minimo is not None else 3,
         raw=data,
     )
 
 
 def load_default_perfil() -> Perfil:
     data = yaml.safe_load((DATA_DIR / "perfil.yaml").read_text(encoding="utf-8"))
+    return perfil_desde_dict(data)
+
+
+def load_perfil_plantilla() -> Perfil:
+    """Perfil inicial de un usuario nuevo (`data/perfil-plantilla.yaml`).
+
+    Lleva el material del lugar de entrenamiento —común a todos— y el resto
+    vacío: los datos personales de un atleta no se copian a otro (docs/14)."""
+    data = yaml.safe_load((DATA_DIR / "perfil-plantilla.yaml").read_text(encoding="utf-8"))
     return perfil_desde_dict(data)

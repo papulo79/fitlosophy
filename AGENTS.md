@@ -40,16 +40,18 @@ fitlosophy/
 ├── app/
 │   ├── backend/             # Motor (paquete fitlosophy) + API (fitlosophy_api) + tests pytest
 │   │   ├── src/fitlosophy/  # catalog, models, load, engine, generator
-│   │   ├── src/fitlosophy_api/  # FastAPI + SQLite: auth, config, static, rutas, persistencia
-│   │   ├── scripts/init_db.py   # Inicializa la BD y crea el usuario único
+│   │   ├── src/fitlosophy_api/  # FastAPI + SQLite: auth, usuarios, config, static, rutas, persistencia
+│   │   ├── scripts/         # init_db.py, crear_usuario.py, listar_usuarios.py, cambiar_password.py
 │   │   ├── .env.example         # Plantilla de configuración (el .env real no se versiona)
-│   │   ├── README.md            # Instalación, configuración, arranque, caché y tests
-│   │   └── tests/           # test_load.py, test_cases.py (docs/13), test_api.py, test_catalogo.py, test_config.py, test_static.py
+│   │   ├── README.md            # Instalación, configuración, usuarios, arranque, caché y tests
+│   │   └── tests/           # test_load.py, test_cases.py (docs/13), test_api.py, test_multiusuario.py, test_catalogo.py, test_config.py, test_static.py
 │   └── frontend/            # MVP: Svelte 5 + Tailwind 4 + Vite (6 pantallas + login)
 │       └── src/             # App.svelte (router hash), routes/ (pantallas), lib/ (api, stores, etiquetas)
 └── data/
-    ├── perfil.yaml      # Datos del atleta: medidas, objetivos, BJJ, fuerza, movilidad, material, consideraciones
-    └── ejercicios.yaml  # Catálogo de ejercicios con metadatos y prescripción
+    ├── perfil.yaml           # Datos del atleta: medidas, objetivos, BJJ, fuerza, movilidad, material, consideraciones
+    ├── perfil-plantilla.yaml # Perfil inicial de un usuario nuevo: material común, nada personal
+    ├── candidatos.yaml       # Registro no ejecutable de ejercicios en evaluación
+    └── ejercicios.yaml       # Catálogo de ejercicios con metadatos y prescripción
 ```
 
 Nota: `docs/00-contexto-completo-del-programa.md` es un documento agregador que concentra el contexto completo del programa para lectores (humanos o IA) que lleguen sin contexto previo. El detalle normativo vive en los documentos `01`–`09`; si editas uno de ellos, comprueba si el cambio debe reflejarse también en `00` para no dejarlos desincronizados.
@@ -125,3 +127,5 @@ Existe una orquestación de agentes lista para usar en `docs/roles/` (ver su `RE
 ## Seguridad y sentido común
 
 Este repositorio describe decisiones de entrenamiento reales para una persona con episodios lumbares recientes (`perfil.yaml → consideraciones`). Al modificar reglas, plantillas o ejercicios, **no elimines ni relajes las restricciones de seguridad lumbar** (semáforo, `impacto_lumbar: rojo`, límites de doble sesión) sin una instrucción explícita. Los datos de `perfil.yaml` son datos personales de salud y condición física: trátalos con discreción y no los expongas fuera del repo.
+
+Desde que el despliegue es familiar, eso se extiende a los usuarios entre sí: el historial y el perfil de cada atleta son datos de salud que **no se comparten con los demás usuarios del despliegue**. Al tocar la API, el filtro por `user_id` es una restricción de seguridad, no una optimización.

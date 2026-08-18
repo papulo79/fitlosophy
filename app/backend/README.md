@@ -11,11 +11,14 @@ app/backend/
 ├── pyproject.toml
 ├── .env.example            # plantilla de configuración (el .env real no se versiona)
 ├── scripts/
-│   ├── init_db.py          # inicializa la BD y crea el usuario único
-│   └── cambiar_password.py # rota la contraseña e invalida las sesiones
+│   ├── _comun.py           # utilidades de los scripts (conexión, getpass)
+│   ├── init_db.py          # crea el esquema, migra y crea el primer usuario
+│   ├── crear_usuario.py    # alta de un usuario con su perfil inicial
+│   ├── listar_usuarios.py  # quién hay dado de alta y su actividad
+│   └── cambiar_password.py # rota la contraseña e invalida sus sesiones
 ├── src/
 │   ├── fitlosophy/         # núcleo del dominio (sin dependencias web)
-│   │   ├── catalog.py      # carga de data/ejercicios.yaml y data/perfil.yaml
+│   │   ├── catalog.py      # carga de data/ejercicios.yaml y data/perfil*.yaml
 │   │   ├── models.py       # entidades (dataclasses)
 │   │   ├── load.py         # carga activa por dimensiones (docs/12)
 │   │   ├── engine.py       # motor de decisión D/C/P (docs/03)
@@ -23,17 +26,23 @@ app/backend/
 │   └── fitlosophy_api/     # capa HTTP del MVP (docs/14)
 │       ├── app.py          # fábrica FastAPI (create_app)
 │       ├── config.py       # variables de entorno con respaldo en .env
-│       ├── db.py           # esquema SQLite (stdlib sqlite3)
-│       ├── auth.py         # usuario único, pbkdf2, cookie 30 días, freno de fuerza bruta
-│       ├── history.py      # historial persistido → eventos del motor
+│       ├── db.py           # esquema SQLite, migraciones y conexión por petición
+│       ├── auth.py         # login, pbkdf2, cookie 30 días, freno de fuerza bruta
+│       ├── usuarios.py     # altas y contraseñas (solo desde los scripts)
+│       ├── history.py      # historial persistido de un usuario → eventos del motor
 │       ├── schemas.py      # entradas validadas (pydantic)
 │       └── routes.py       # endpoints del flujo diario
 └── tests/
     ├── test_load.py        # modelo de carga (docs/12)
     ├── test_cases.py       # los 10 casos de docs/13 (criterio 1)
     ├── test_config.py      # cargador de .env
+    ├── test_multiusuario.py# aislamiento entre usuarios y migración (criterio 10)
     └── test_api.py         # flujo extremo a extremo de la API
 ```
+
+El núcleo (`fitlosophy/`) no sabe que hay usuarios: `decide`, `generate` y
+`compute_load` reciben el historial y el material por parámetro. El aislamiento
+vive entero en `fitlosophy_api/`.
 
 ## Instalación
 
@@ -68,39 +77,50 @@ freno de fuerza bruta.
 
 ## Inicializar la base de datos
 
-El usuario único se crea una sola vez (no hay registro, docs/14). Con el `.env`
-relleno basta:
-
 ```bash
 cd app/backend
 ./.venv/bin/python scripts/init_db.py
 ```
 
-O pasando las credenciales a mano, sin tocar el `.env`:
+Crea el esquema y aplica las migraciones pendientes. Es **idempotente**: se
+puede ejecutar sobre una base de datos en uso para migrarla sin tocar los
+datos. Si el `.env` trae `FITLOSOPHY_USER` y `FITLOSOPHY_PASSWORD`, crea además
+ese primer usuario; si ya existe, no lo toca.
 
-```bash
-FITLOSOPHY_USER=mi_usuario FITLOSOPHY_PASSWORD=mi_contraseña \
-  ./.venv/bin/python scripts/init_db.py
-```
+## Gestionar usuarios
 
-Si la BD ya tiene usuario, el script **no lo toca ni cambia la contraseña**: lo
-dice por pantalla y termina bien, así que es fácil creer que la ha cambiado
-cuando no. Para rotarla:
+El despliegue es familiar: varios atletas, cada uno con su perfil y su
+historial, aislados entre sí (`docs/14`). **La aplicación no expone ninguna
+gestión de cuentas por HTTP** —ni registro, ni roles, ni pantalla de
+administración—: todo se hace por SSH con estos scripts. La superficie que no
+existe no se puede atacar.
 
 ```bash
 cd app/backend
-# con la contraseña nueva en FITLOSOPHY_PASSWORD del .env
-./.venv/bin/python scripts/cambiar_password.py
+./.venv/bin/python scripts/crear_usuario.py <usuario>     # alta
+./.venv/bin/python scripts/listar_usuarios.py             # quién hay y su actividad
+./.venv/bin/python scripts/cambiar_password.py <usuario>  # rotar la contraseña
 ```
 
-Además de actualizar el hash, **invalida todas las sesiones abiertas** y limpia
-los intentos fallidos: una contraseña se rota porque la anterior ya no es de
-fiar, y las cookies emitidas con ella durarían 30 días más. Hay que volver a
-entrar en todos los dispositivos.
+La contraseña se pide **por terminal** (mínimo 12 caracteres) y se escribe dos
+veces: no se pasa como argumento —`argv` lo ve cualquier proceso de la máquina
+con `ps`— ni se guarda en el `.env`. El nombre de usuario va en minúscula, de 3
+a 64 caracteres y sin espacios; se admiten `. _ + - @`, así que una dirección
+de correo vale. `cambiar_password.py` no valida el formato: busca el usuario
+tal y como esté guardado.
+
+El alta siembra el perfil del usuario desde `../../data/perfil-plantilla.yaml`:
+lleva el material del lugar de entrenamiento, que es común, y el resto vacío
+para que cada uno lo complete desde la pantalla Perfil. El perfil de un atleta
+nunca se copia a otro.
+
+`cambiar_password.py` **invalida todas las sesiones abiertas de ese usuario** y
+limpia sus intentos fallidos: una contraseña se rota porque la anterior ya no
+es de fiar, y las cookies emitidas con ella durarían 30 días más. Tiene que
+volver a entrar en todos sus dispositivos; los demás usuarios no se enteran.
 
 Las contraseñas se guardan con hash pbkdf2-sha256 y salt: **no son
-recuperables**. El script siembra también el perfil editable desde
-`../../data/perfil.yaml`.
+recuperables**.
 
 ## Lanzar el servidor
 
@@ -217,19 +237,26 @@ el frontend**, o el `dist/` servido seguirá siendo el anterior. De eso se ocupa
 
 ## Protección del login
 
-El acceso es de un único usuario sin registro, así que el login es el punto
-expuesto. Además del hash pbkdf2 (200 000 iteraciones), `auth.py` frena los
-intentos por fuerza bruta con dos umbrales:
+No hay registro, así que el login es el único punto expuesto. Además del hash
+pbkdf2 (200 000 iteraciones), `auth.py` frena los intentos por fuerza bruta con
+tres umbrales, cada uno para un ataque que los otros no verían:
 
 - **Por IP**: 5 fallos en 15 min bloquean esa IP durante 15 min, y la duración
   se duplica por cada tanda acumulada en 24 h hasta un techo de 1 h. Durante el
   bloqueo se rechaza incluso la contraseña correcta (HTTP 429 con
   `Retry-After`); un intento rechazado no alarga el bloqueo.
+- **Por usuario**: 10 fallos en 15 min contra la misma cuenta, con el mismo
+  escalado. Cubre el ataque repartido entre muchas IPs contra una contraseña
+  concreta. El precio es que quien conozca un nombre de usuario puede dejar a
+  esa persona sin entrar mientras dure el bloqueo: por eso el umbral es el
+  doble que el de IP.
 - **Global**: 50 fallos en 15 min desde cualquier conjunto de IPs frenan el
-  login por completo. Cubre el ataque repartido, que el límite por IP no vería.
+  login por completo. Cubre el barrido repartido entre cuentas distintas, que
+  no dispara ninguno de los dos anteriores.
 
-Un login correcto borra los fallos de esa IP. Los umbrales se ajustan por
-`.env` y los fallos viven en la tabla `login_failures`, que se purga a las 48 h.
+Un login correcto borra los fallos de esa IP y los de esa cuenta. Los umbrales
+se ajustan por `.env` y los fallos viven en la tabla `login_failures`, que se
+purga a las 48 h.
 
 Esto es una defensa de fondo, no un sustituto de poner **Cloudflare Access**
 delante si la aplicación se publica en internet.
