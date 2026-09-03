@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.27.0 - Regla de variedad en el generador (anti-monotonía)
+
+- `docs/06`: nueva regla 10 de composición. El generador recibe el historial y, a igualdad de criterio de preferencia, elige el ejercicio con más días desde su último uso (nunca usado = máxima prioridad). La variedad es solo un desempate tras D3-D5, plantilla y material: no relaja ninguna regla de seguridad. B0, C y D dejan de ser listas fijas y pasan a ser pools por patrón/función ordenados con la misma regla. Sin historial, el orden es idéntico al anterior.
+- `fitlosophy/load.py`: nueva `ultimo_uso_por_ejercicio(historial)`, que cuenta cualquier ejercicio realizado (también B0/B4) para que el calentamiento rote.
+- `fitlosophy/generator.py`: `generate()` acepta `historial` opcional; `_orden_preferencia` añade la recencia como última clave de ordenación; `_b0`, `_generar_c` y `_generar_d` seleccionan desde pools del catálogo. La justificación anota «(variedad: nunca usado / no usado desde <fecha>)» cuando la recencia decidió el desempate.
+- `fitlosophy_api/routes.py`: la generación de la propuesta pasa el historial del usuario al generador; el núcleo sigue sin saber de usuarios.
+- Nuevos tests en `tests/test_variedad.py`: rotación con historial, identidad sin historial y rotación de B0. Los casos de `docs/13` siguen en verde sin tocarlos.
+
 ## 0.26.0 - Prompt versionado para la skill de OpenClaw
 
 - Nuevo `docs/roles/prompt-crear-skill-openclaw-candidatos.md`: instrucciones completas para crear la skill remota de análisis por Telegram, con repositorio canónico, documentos obligatorios, formato de salida y guardarraíles de seguridad.

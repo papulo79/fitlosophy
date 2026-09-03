@@ -358,7 +358,7 @@ def crear_estado_diario(datos: EstadoDiarioIn, request: Request, user=Depends(us
     )
     historial = construir_historial(conn, catalog, user_id)
     prop = decide(estado, historial, catalog)
-    sesion = generate(prop, estado, catalog, perfil.material)
+    sesion = generate(prop, estado, catalog, perfil.material, historial)
 
     cur = conn.execute(
         """INSERT INTO daily_states (

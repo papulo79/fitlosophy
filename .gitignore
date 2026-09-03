@@ -27,3 +27,6 @@ copias/
 
 # Mockups del flujo de brainstorming (locales)
 .superpowers/
+
+# Temporales
+temp/

@@ -254,6 +254,23 @@ def resumen_ayer(historial: list[Event], catalog: Catalog, ahora: datetime) -> d
     }
 
 
+def ultimo_uso_por_ejercicio(historial: list[Event]) -> dict[str, datetime]:
+    """Última fecha en que se realizó cada ejercicio, por `exercise_id`.
+
+    Cuenta cualquier ejercicio registrado, también los de B0/B4 (sin
+    `cuenta_estimulo`): la regla de variedad de docs/06 (regla 10) rota
+    incluso el calentamiento.
+    """
+    ultimo: dict[str, datetime] = {}
+    for evento in historial:
+        if not isinstance(evento, PerformedSession):
+            continue
+        for pe in evento.ejercicios:
+            if pe.exercise_id not in ultimo or evento.fecha > ultimo[pe.exercise_id]:
+                ultimo[pe.exercise_id] = evento.fecha
+    return ultimo
+
+
 def ultimo_estimulo_por_patron(historial: list[Event], catalog: Catalog) -> dict[str, datetime]:
     """Último estímulo registrado de cada patrón (principal y secundarios).
 
