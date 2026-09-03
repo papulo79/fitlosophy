@@ -65,10 +65,10 @@ fitlosophy/
 │   └── 15-incorporacion-de-ejercicios-candidatos.md
 ├── app/
 │   ├── backend/             # Motor en Python (fitlosophy) + API FastAPI/SQLite (fitlosophy_api) + tests pytest
-│   └── frontend/            # MVP: Svelte 5 + Tailwind 4, 6 pantallas + login (Vite)
+│   └── frontend/            # MVP: Svelte 5 + Tailwind 4, 7 pantallas + login (Vite)
 └── data/
     ├── perfil.yaml
-    ├── candidatos.yaml       # Registro de investigación; no lo lee el motor
+    ├── candidatos.yaml       # Registro de investigación (se regenera por script); no lo lee el motor
     └── ejercicios.yaml
 ```
 
@@ -102,7 +102,9 @@ Comandos útiles: `systemctl --user status fitlosophy`, `journalctl --user -u fi
 
 **Las fases 0 a 8 del roadmap están cerradas** (`docs/10`): contexto y visión, modelo de dominio (`docs/11`), biblioteca (`data/ejercicios.yaml`, `docs/05`), modelo de carga (`docs/12`), motor de decisión (`docs/03`), generador de sesiones (`docs/06`), validación con casos de uso (`docs/13`), diseño del MVP (`docs/14`) y su construcción.
 
-La aplicación está **desplegada y en uso**: un único proceso sirve la API y el frontend compilado tras un túnel de Cloudflare. Los 10 criterios de aceptación de `docs/14` están cubiertos y la suite tiene 126 tests en verde (`cd app/backend && ./.venv/bin/python -m pytest`). Stack: Svelte 5 + Tailwind 4 (frontend responsive), FastAPI + SQLite (backend), systemd + Cloudflare Tunnel (despliegue).
+La aplicación está **desplegada y en uso**: un único proceso sirve la API y el frontend compilado tras un túnel de Cloudflare. Los 10 criterios de aceptación de `docs/14` están cubiertos y la suite tiene 138 tests en verde (`cd app/backend && ./.venv/bin/python -m pytest`). Stack: Svelte 5 + Tailwind 4 (frontend responsive), FastAPI + SQLite (backend), systemd + Cloudflare Tunnel (despliegue).
+
+Desde septiembre de 2026 la biblioteca puede crecer por **importación masiva revisada** (`docs/15`): 473 ejercicios de un dataset público viven como candidatos en la aplicación (`#/perfil/candidatos`, filtrados por el material del perfil) y solo entran en `data/ejercicios.yaml` cuando una persona los revisa y acepta desde la interfaz.
 
 Desde el 11 de agosto de 2026 el despliegue es **familiar**: varios atletas, cada uno con su usuario, su perfil y su historial aislado del de los demás (`docs/14`, «Acceso y privacidad»). Las altas se hacen a mano en el servidor; la aplicación no expone ninguna gestión de cuentas.
 

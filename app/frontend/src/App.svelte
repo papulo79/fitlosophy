@@ -8,6 +8,7 @@
   import Cierre from "./routes/Cierre.svelte";
   import Historial from "./routes/Historial.svelte";
   import Perfil from "./routes/Perfil.svelte";
+  import Candidatos from "./routes/Candidatos.svelte";
   import { session, flujo } from "./lib/stores.svelte.js";
   import { api } from "./lib/api.js";
 
@@ -35,7 +36,10 @@
 
   let base = $derived("/" + (hash.split("/")[1] || "estado"));
   let parametro = $derived(hash.split("/").slice(2).join("/") || null);
-  let Componente = $derived(componentes[base] || EstadoDiario);
+  // Sub-ruta de Perfil: la revisión de candidatos importados (docs/15).
+  let Componente = $derived(
+    base === "/perfil" && parametro === "candidatos" ? Candidatos : componentes[base] || EstadoDiario
+  );
 
   // Repuebla el flujo desde el servidor tras recargar (ver stores.svelte.js).
   let recuperando = false;

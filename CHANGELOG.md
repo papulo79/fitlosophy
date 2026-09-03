@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.28.0 - Importación masiva de candidatos con revisión en la aplicación
+
+- Nueva vía en `docs/15`: una colección externa de ejercicios se importa como candidatos revisables desde la app. El flujo manual queda intacto; la aceptación humana en la interfaz es la revisión explícita y es la única que escribe en `data/ejercicios.yaml`.
+- Nueva tabla `candidates` en la BD (dato global de catálogo, sin `user_id`; cada decisión registra `revisado_por` y `revisado_at`). Estados: `pendiente_revision` → `aceptado` | `descartado`.
+- `scripts/importar_candidatos.py`: lee el dataset (1.324 ejercicios), descarta en origen lo no ejecutable con el inventario de `data/perfil.yaml` (851 descartados: cable, máquinas, barra, mancuernas…), deduplica heurísticamente contra el catálogo (`posible_equivalente`, 50 marcados) y pre-rellena las etiquetas por inferencia conservadora (tablas documentadas en `fitlosophy_api/candidatos.py`). Idempotente por `dataset_id`. Importados: 473 (325 peso corporal, 54 band, 41 kettlebell, 36 weighted, 10 rope, 7 resistance band). Los GIFs se copian a `app/backend/media/candidatos/` y se sirven con atribución «© Gym visual — https://gymvisual.com/».
+- Endpoints con auth: `GET /api/candidatos` (lista + contadores), `GET /api/candidatos/{id}`, `GET /api/candidatos/{id}/gif`, `PUT /api/candidatos/{id}` (valida dominios contra `valores`), `POST .../aceptar` (valida con la misma puerta de `validar_ejercicio.py`, ahora en `fitlosophy_api/validacion.py`, y añade al catálogo; 422 con errores si no pasa) y `POST .../descartar`.
+- `scripts/exportar_candidatos.py`: regenera `data/candidatos.yaml` desde la BD con la trazabilidad (dataset_id, fuente, estado, decisión, fecha).
+- Frontend: nueva pantalla `#/perfil/candidatos` (dos niveles: material → grupo muscular, filtro por patrón, formulario pre-rellenado con las etiquetas inferidas) y enlace desde Perfil con contador de pendientes.
+- 11 tests nuevos (`test_candidatos.py`); suite completa: 138 en verde.
+
 ## 0.27.1 - Variedad: la recencia pasa a ser el primer criterio
 
 El simulacro de 12 días mostró que la regla 10 como último desempate casi nunca actuaba (el orden de preferencia estricto raramente empata: `pushup-classic` salió 8 de 12 días y los días B eran idénticos entre sí).

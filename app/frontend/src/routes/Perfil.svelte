@@ -8,6 +8,14 @@
   let mensaje = $state("");
   let error = $state("");
   let cargando = $state(false);
+  let pendientes = $state(0);
+
+  $effect(() => {
+    api
+      .get("/api/candidatos?estado=pendiente_revision")
+      .then((r) => (pendientes = r.candidatos.length))
+      .catch(() => {});
+  });
 
   $effect(() => {
     api
@@ -85,6 +93,14 @@
 
   <a href="/api/export" download="fitlosophy-export.json" class="flex items-center justify-center gap-2 rounded-xl border border-borde bg-superficie py-3 font-medium text-apagado">
     <Icon nombre="exportar" tam={16} /> Descargar copia de tus datos (JSON)
+  </a>
+
+  <!-- Revisión de los ejercicios importados del dataset (docs/15). -->
+  <a href="#/perfil/candidatos" class="flex items-center justify-center gap-2 rounded-xl border border-borde bg-superficie py-3 font-medium text-apagado">
+    <Icon nombre="video" tam={16} /> Candidatos importados
+    {#if pendientes > 0}
+      <span class="rounded-full bg-acento/15 px-2 py-0.5 text-xs font-semibold text-acento">{pendientes} pendientes</span>
+    {/if}
   </a>
 
   <button onclick={salir} class="flex w-full items-center justify-center gap-2 rounded-xl border border-rojo/40 py-3 font-medium text-rojo">
