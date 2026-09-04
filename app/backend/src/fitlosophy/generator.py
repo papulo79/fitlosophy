@@ -1,17 +1,19 @@
 """Generador de sesiones (docs/06).
 
 De familia + presupuesto + patrones prioritarios/restringidos a una sesión
-concreta: bloques B0-B4, composición (9 reglas), dosificación por familia,
+concreta: bloques B0-B4, composición (10 reglas), dosificación por familia,
 filtro de material, sustitución y validación final.
 Todos los valores numéricos son provisionales (Fase 9).
 """
 
 from __future__ import annotations
 
+from datetime import datetime
+
 from .catalog import PUNTOS_COSTE, Catalog, Exercise
 from .engine import PATRONES_FAMILIA
-from .load import puntos_registro
-from .models import DailyState, Proposal, SessionItem, SessionProposal
+from .load import puntos_registro, ultimo_uso_por_ejercicio
+from .models import DailyState, Event, Proposal, SessionItem, SessionProposal
 
 # Orden de bloques y tamaños por plantilla (docs/06).
 B1_TAMANO = {"A": (2, 3), "B": (3, 4)}  # (mínimo, máximo); C y D no tienen B1
@@ -29,6 +31,54 @@ _MACRO_GRUPOS = [
     ("core", {"core_antiextension", "core_antirotacion", "core_lateral", "core_flexion_cadera"}),
     ("locomocion", {"acondicionamiento", "agilidad"}),
 ]
+
+# Pools base de los bloques con selección abierta (regla 10 de docs/06): el
+# orden de estas tuplas es el orden de preferencia sin historial; el resto del
+# pool se ordena por orden de catálogo detrás.
+_B0_BASE = ("dead-bug", "agility-ladder-basic", "glute-bridge")
+_B0_PATRONES = {"core_antiextension", "core_antirotacion", "core_lateral", "movilidad_cargada", "agilidad"}
+_C_BASE = ("dead-bug", "glute-bridge", "plank-front")
+# B2 de la plantilla C: core verde y movilidad en dosis baja (docs/06), no
+# cualquier patrón admitido en la familia.
+_C_B2_PATRONES = {"core_antiextension", "core_antirotacion", "core_lateral", "movilidad_cargada"}
+_D_BASE = ("cones-zigzag", "rope-technical", "agility-ladder-basic")
+
+
+def _clave_variedad(ejercicio: Exercise, ultimo_uso: dict[str, datetime], fecha: datetime):
+    """Regla 10: nunca usado primero; luego, más tiempo desde el último uso;
+    usado en las últimas 24 h al final de la cola (solo si no hay alternativa)."""
+    uso = ultimo_uso.get(ejercicio.id)
+    if uso is None:
+        return (0, 0.0)
+    segundos = (fecha - uso).total_seconds()
+    if segundos < 24 * 3600:
+        return (2, -segundos)
+    return (1, -segundos)
+
+
+def _nota_variedad(ejercicio: Exercise, ultimo_uso: dict[str, datetime]) -> str:
+    uso = ultimo_uso.get(ejercicio.id)
+    if uso is None:
+        return " (variedad: nunca usado)"
+    return f" (variedad: no usado desde {uso.date().isoformat()})"
+
+
+def _orden_pool(
+    pool: list[Exercise],
+    base: tuple[str, ...],
+    ultimo_uso: dict[str, datetime],
+    fecha: datetime,
+) -> list[Exercise]:
+    """Ordena un pool (B0, C, D): regla de variedad y, a igualdad, primero la
+    lista base en su orden y después el orden de catálogo (sort estable). Sin
+    historial el resultado es el orden clásico: lista base y luego catálogo."""
+    return sorted(
+        pool,
+        key=lambda e: (
+            _clave_variedad(e, ultimo_uso, fecha),
+            base.index(e.id) if e.id in base else len(base),
+        ),
+    )
 
 
 def puntos_propuesta(ejercicio: Exercise, familia: str, dosis_minima: bool) -> dict[str, float]:
@@ -203,20 +253,37 @@ def _sumar(puntos: dict[str, float], totales: dict[str, float]) -> None:
         totales[d] = totales.get(d, 0.0) + p
 
 
-def _b0(catalog: Catalog, material, notas: list[str]) -> list[SessionItem]:
-    """B0 · Calentamiento (no computa en el presupuesto, regla 8)."""
+def _b0(
+    catalog: Catalog,
+    material,
+    ultimo_uso: dict[str, datetime],
+    fecha: datetime,
+) -> list[SessionItem]:
+    """B0 · Calentamiento (no computa en el presupuesto, regla 8).
+
+    Pool (regla 10): coste bajo, `impacto_lumbar` verde y patrones de core,
+    movilidad o agilidad; se eligen 2 ordenados por variedad."""
+    pool = [
+        ej
+        for ej in catalog
+        if (ej.patron in _B0_PATRONES or ej.id in _B0_BASE)
+        and ej.impacto_lumbar == "verde"
+        and all(c == "bajo" for c in ej.coste_dimensiones.values())
+        and ej.disponible_con(material)
+    ]
+    base_ids = {e.id for e in _orden_pool(pool, _B0_BASE, {}, fecha)[:2]}
     items: list[SessionItem] = []
-    for eid in ("dead-bug", "agility-ladder-basic", "glute-bridge"):
-        ej = catalog.get(eid)
-        if ej is None or not ej.disponible_con(material):
-            continue
+    for ej in _orden_pool(pool, _B0_BASE, ultimo_uso, fecha):
+        justificacion = "Calentamiento: activación y coordinación (no computa, regla 8)"
+        if ultimo_uso and ej.id not in base_ids:
+            justificacion += _nota_variedad(ej, ultimo_uso)
         items.append(
             SessionItem(
                 exercise_id=ej.id,
                 bloque="B0",
                 dosis=_dosis(ej, "C"),
                 puntos={},
-                justificacion="Calentamiento: activación y coordinación (no computa, regla 8)",
+                justificacion=justificacion,
             )
         )
         if len(items) == 2:
@@ -229,8 +296,12 @@ def generate(
     estado: DailyState,
     catalog: Catalog,
     material_perfil: set[str] | frozenset[str] | None = None,
+    historial: list[Event] | None = None,
 ) -> SessionProposal:
-    """Genera la sesión concreta a partir de la salida del motor (docs/06)."""
+    """Genera la sesión concreta a partir de la salida del motor (docs/06).
+
+    `historial` alimenta la regla de variedad (regla 10); sin él el resultado
+    es el orden de preferencia clásico."""
     if estado.material_disponible is None:
         material = set(material_perfil or set())
     else:
@@ -238,6 +309,7 @@ def generate(
     material.add("tatami")  # el tatami cuenta siempre como disponible (el suelo lo sustituye)
 
     familia = prop.familia
+    ultimo_uso = ultimo_uso_por_ejercicio(historial or [])
     notas: list[str] = []
     items: list[SessionItem] = []
     totales: dict[str, float] = {}
@@ -268,16 +340,16 @@ def generate(
         usados_ids.add(ej.id)
         return True
 
-    items.extend(_b0(catalog, material, notas))
+    items.extend(_b0(catalog, material, ultimo_uso, prop.fecha))
     # B0 no computa ni para la regla 1 de patrones, pero no repetimos ejercicio.
     usados_ids.update(i.exercise_id for i in items)
 
     if familia == "C":
-        _generar_c(prop, catalog, material, anadir, notas)
+        _generar_c(prop, catalog, material, anadir, notas, ultimo_uso)
     elif familia == "D":
-        _generar_d(prop, catalog, material, anadir, notas, items)
+        _generar_d(prop, catalog, material, anadir, notas, items, ultimo_uso)
     else:
-        _generar_ab(prop, catalog, material, familia, anadir, usados_principal, usados_secundario, notas)
+        _generar_ab(prop, catalog, material, familia, anadir, usados_principal, usados_secundario, notas, ultimo_uso)
 
     _ordenar_bloques(items, catalog)
     sesion = SessionProposal(
@@ -293,7 +365,7 @@ def generate(
     return sesion
 
 
-def _generar_ab(prop, catalog, material, familia, anadir, usados_principal, usados_secundario, notas) -> None:
+def _generar_ab(prop, catalog, material, familia, anadir, usados_principal, usados_secundario, notas, ultimo_uso) -> None:
     """Familias A y B: B1 (patrones prioritarios primero, regla 2) + B2 (+ B3 en B)."""
     n_min, n_max = B1_TAMANO[familia]
     # Tamaño objetivo: extremo conservador del rango (interpretación provisional;
@@ -332,8 +404,13 @@ def _generar_ab(prop, catalog, material, familia, anadir, usados_principal, usad
         if patron in usados_principal:
             continue
         justificacion = f"Patrón {patron}" + (" prioritario (P1)" if patron in prop.patrones_prioritarios else "")
-        for candidato in _orden_preferencia(por_patron[patron], familia):
-            if anadir(candidato, "B1", justificacion):
+        cands = por_patron[patron]
+        base0 = _orden_preferencia(cands, familia)[0].id if ultimo_uso else None
+        for candidato in _orden_preferencia(cands, familia, ultimo_uso, prop.fecha):
+            just = justificacion
+            if base0 is not None and candidato.id != base0:
+                just += _nota_variedad(candidato, ultimo_uso)
+            if anadir(candidato, "B1", just):
                 anadidos += 1
                 break
 
@@ -355,74 +432,116 @@ def _generar_ab(prop, catalog, material, familia, anadir, usados_principal, usad
         if patron in usados_secundario:
             continue  # regla 1: dos ejercicios no pueden compartir el mismo secundario
         cands = _candidatos(prop, familia, catalog, material, {patron})
-        for candidato in _orden_preferencia(cands, familia):
-            if anadir(candidato, "B2", f"Accesorio/core ({patron}) dosificado"):
+        base0 = _orden_preferencia(cands, familia)[0].id if ultimo_uso and cands else None
+        for candidato in _orden_preferencia(cands, familia, ultimo_uso, prop.fecha):
+            just = f"Accesorio/core ({patron}) dosificado"
+            if base0 is not None and candidato.id != base0:
+                just += _nota_variedad(candidato, ultimo_uso)
+            if anadir(candidato, "B2", just):
                 anadidos2 += 1
                 break
 
     # B3 · Acondicionamiento: solo en familia B y si queda presupuesto de cardio.
     if familia == "B":
         cands = _candidatos(prop, familia, catalog, material, {"acondicionamiento"})
-        for candidato in _orden_preferencia(cands, familia):
-            if anadir(candidato, "B3", "Acondicionamiento específico dentro del presupuesto de cardio"):
+        base0 = _orden_preferencia(cands, familia)[0].id if ultimo_uso and cands else None
+        for candidato in _orden_preferencia(cands, familia, ultimo_uso, prop.fecha):
+            just = "Acondicionamiento específico dentro del presupuesto de cardio"
+            if base0 is not None and candidato.id != base0:
+                just += _nota_variedad(candidato, ultimo_uso)
+            if anadir(candidato, "B3", just):
                 break
 
 
-def _orden_preferencia(candidatos: list[Exercise], familia: str) -> list[Exercise]:
-    """Orden de preferencia dentro de un patrón.
+def _orden_preferencia(
+    candidatos: list[Exercise],
+    familia: str,
+    ultimo_uso: dict[str, datetime] | None = None,
+    fecha: datetime | None = None,
+) -> list[Exercise]:
+    """Orden de selección dentro de un patrón.
 
-    - Familias A/C/D: menor nivel primero (más conservador); a igual nivel,
-      orden de catálogo.
-    - Familia B (día potente): explosivos primero (van primero en B1, docs/06);
-      a igualdad, menor impacto lumbar (conservador con este perfil) y mayor
-      estímulo total; heurística provisional.
+    - Primera clave (regla 10): recencia. Nunca usado primero; luego, más
+      tiempo desde el último uso; usado en las últimas 24 h al final de la
+      cola. Sin historial no cambia nada.
+    - Desempate final: el orden de preferencia de siempre. Familias A/C/D:
+      menor nivel primero (más conservador); a igual nivel, orden de catálogo.
+      Familia B (día potente): explosivos primero; a igualdad, menor impacto
+      lumbar (conservador con este perfil) y mayor estímulo total; heurística
+      provisional. El orden de bloque de B1 (explosivos primero, regla 4) lo
+      aplica `_ordenar_bloques` después de la selección.
     """
+    variedad = bool(ultimo_uso) and fecha is not None
+
+    def clave_var(e: Exercise):
+        return _clave_variedad(e, ultimo_uso, fecha) if variedad else (0, 0.0)
+
     if familia == "B":
         return sorted(
             candidatos,
             key=lambda e: (
+                clave_var(e),
                 not e.explosivo,
                 _RANGO_LUMBAR[e.impacto_lumbar],
                 -sum(PUNTOS_COSTE[c] for c in e.coste_dimensiones.values()),
                 {"base": 0, "intermedio": 1, "avanzado": 2}[e.nivel],
             ),
         )
-    return sorted(candidatos, key=lambda e: {"base": 0, "intermedio": 1, "avanzado": 2}[e.nivel])
+    return sorted(
+        candidatos,
+        key=lambda e: (clave_var(e), {"base": 0, "intermedio": 1, "avanzado": 2}[e.nivel]),
+    )
 
 
-def _generar_c(prop, catalog, material, anadir, notas) -> None:
-    """Familia C: movimiento continuo + B2 ligero, sin B1 (plantilla C)."""
-    cinta = catalog.get("treadmill-walk")
-    if cinta and cinta.disponible_con(material):
-        anadir(cinta, "continuo", "Movimiento continuo de baja intensidad (recuperación activa)")
+def _generar_c(prop, catalog, material, anadir, notas, ultimo_uso) -> None:
+    """Familia C: movimiento continuo + B2 ligero, sin B1 (plantilla C).
+
+    Regla 10: el continuo y el B2 ligero salen de pools del catálogo (patrón
+    `recuperacion` para el continuo; core verde y movilidad para B2),
+    ordenados por variedad."""
+    pool_continuo = [
+        ej for ej in _candidatos(prop, "C", catalog, material) if ej.patron == "recuperacion"
+    ]
+    base_continuo = _orden_pool(pool_continuo, ("treadmill-walk",), {}, prop.fecha)
+    for i, ej in enumerate(_orden_pool(pool_continuo, ("treadmill-walk",), ultimo_uso, prop.fecha)):
+        just = "Movimiento continuo de baja intensidad (recuperación activa)"
+        if ultimo_uso and (i >= len(base_continuo) or ej.id != base_continuo[i].id):
+            just += _nota_variedad(ej, ultimo_uso)
+        if anadir(ej, "continuo", just):
+            break
     else:
         notas.append("Cinta no disponible: movimiento continuo sustituido por movilidad suave.")
+    pool_b2 = [
+        ej
+        for ej in _candidatos(prop, "C", catalog, material)
+        if ej.patron in _C_B2_PATRONES or ej.id in _C_BASE
+    ]
+    base_b2 = _orden_pool(pool_b2, _C_BASE, {}, prop.fecha)
     anadidos = 0
-    for eid in ("dead-bug", "glute-bridge", "plank-front"):
+    for i, ej in enumerate(_orden_pool(pool_b2, _C_BASE, ultimo_uso, prop.fecha)):
         if anadidos >= 2:
             break
-        ej = catalog.get(eid)
-        if ej and not motivos_exclusion(ej, prop, "C") and ej.disponible_con(material):
-            if anadir(ej, "B2", "Core/movilidad verde en dosis baja (plantilla C)"):
-                anadidos += 1
+        just = "Core/movilidad verde en dosis baja (plantilla C)"
+        if ultimo_uso and (i >= len(base_b2) or ej.id != base_b2[i].id):
+            just += _nota_variedad(ej, ultimo_uso)
+        if anadir(ej, "B2", just):
+            anadidos += 1
     notas.append("La sesión debe dejar mejores sensaciones que al comenzar; si no, se recorta (plantilla C).")
 
 
-def _generar_d(prop, catalog, material, anadir, notas, items) -> None:
+def _generar_d(prop, catalog, material, anadir, notas, items, ultimo_uso) -> None:
     """Familia D: B0 + trabajo técnico (escalera, conos, comba técnica).
 
-    La escalera ya suele estar en B0; no se repite ni patrón ni ejercicio
-    (regla 1 de composición)."""
-    ya_usados = {i.exercise_id for i in items}
-    for eid in ("cones-zigzag", "rope-technical", "agility-ladder-basic"):
-        if eid in ya_usados:
-            continue
-        ej = catalog.get(eid)
-        if ej is None or not ej.disponible_con(material):
-            continue
-        if motivos_exclusion(ej, prop, "D"):
-            continue
-        anadir(ej, "B1", "Trabajo técnico y de agilidad (plantilla D)")
+    Regla 10: pool de agilidad/acondicionamiento del catálogo ordenado por
+    variedad. La escalera ya suele estar en B0; no se repite ni patrón ni
+    ejercicio (regla 1 de composición)."""
+    pool = [ej for ej in _candidatos(prop, "D", catalog, material)]
+    base = _orden_pool(pool, _D_BASE, {}, prop.fecha)
+    for i, ej in enumerate(_orden_pool(pool, _D_BASE, ultimo_uso, prop.fecha)):
+        just = "Trabajo técnico y de agilidad (plantilla D)"
+        if ultimo_uso and (i >= len(base) or ej.id != base[i].id):
+            just += _nota_variedad(ej, ultimo_uso)
+        anadir(ej, "B1", just)
 
 
 def _ordenar_bloques(items: list[SessionItem], catalog: Catalog) -> None:
