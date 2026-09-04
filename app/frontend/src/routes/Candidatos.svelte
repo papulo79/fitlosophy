@@ -26,11 +26,43 @@
 
   // Formulario de revisión (etiquetas editables).
   let forma = $state(null);
+  let prescripcionTexto = $state("");
+  let errorPrescripcion = $state("");
   let erroresRevision = $state([]);
   let mensaje = $state("");
   let ocupado = $state(false);
 
-  const EQUIPAMIENTO_ORDEN = ["body weight", "weighted", "kettlebell", "band", "resistance band", "rope"];
+  const EQUIPAMIENTO_ORDEN = ["body weight", "kettlebell", "band", "resistance band", "rope"];
+
+  // Claves de prescripción que entiende el generador (docs/06): rangos [min,
+  // max] crecientes, valores fijos o flags booleanos.
+  const CLAVES_PRESCRIPCION_RANGO = ["series", "repeticiones", "repeticiones_totales", "segundos", "minutos", "pasadas_por_patron", "recorridos", "reserva_repeticiones", "saltos"];
+  const CLAVES_PRESCRIPCION_FLAG = ["por_lado", "evitar_fallo", "detener_si_falla_tecnica", "sin_balanceo"];
+
+  function validarPrescripcion(texto) {
+    let obj;
+    try {
+      obj = JSON.parse(texto);
+    } catch {
+      return "El JSON de la prescripción no es válido.";
+    }
+    if (!obj || typeof obj !== "object" || Array.isArray(obj) || !Object.keys(obj).length) {
+      return "La prescripción debe ser un objeto no vacío (series, repeticiones…).";
+    }
+    for (const [clave, valor] of Object.entries(obj)) {
+      if (CLAVES_PRESCRIPCION_RANGO.includes(clave)) {
+        const ok =
+          typeof valor === "number" ||
+          (Array.isArray(valor) && valor.length === 2 && valor.every((v) => typeof v === "number") && valor[0] <= valor[1]);
+        if (!ok) return `«${clave}» debe ser un número o un rango [min, max] creciente.`;
+      } else if (CLAVES_PRESCRIPCION_FLAG.includes(clave)) {
+        if (typeof valor !== "boolean") return `«${clave}» debe ser true o false.`;
+      } else {
+        return `Clave de prescripción desconocida: «${clave}».`;
+      }
+    }
+    return "";
+  }
 
   function etiquetaEquipment(eq) {
     return EQUIPMENT_CANDIDATOS[eq] || eq;
@@ -88,11 +120,18 @@
         nombre: detalle.nombre_es,
         descripcion: base.descripcion || "",
         patron: base.patron || "",
+        secundarios: [...(base.secundarios || [])],
         nivel: base.nivel || "base",
         lateralidad: base.lateralidad || "bilateral",
         impacto_lumbar: base.impacto_lumbar || "amarillo",
         compatibilidad_bjj: base.compatibilidad_bjj || "si",
+        coste: { ...(base.coste_dimensiones || {}) },
+        objetivosTexto: (base.objetivos || []).join(", "),
+        explosivo: !!base.explosivo,
+        isometrico: !!base.isometrico,
       };
+      prescripcionTexto = JSON.stringify(base.prescripcion || {}, null, 2);
+      errorPrescripcion = "";
     } catch (e) {
       error = mensajeError(e);
     }
@@ -105,7 +144,29 @@
   }
 
   async function guardarEtiquetas() {
-    await api.put(`/api/candidatos/${detalle.id}`, { etiquetas_finales: { ...forma } });
+    errorPrescripcion = validarPrescripcion(prescripcionTexto);
+    if (errorPrescripcion) throw new Error(errorPrescripcion);
+    const objetivos = forma.objetivosTexto
+      .split(",")
+      .map((o) => o.trim())
+      .filter(Boolean);
+    await api.put(`/api/candidatos/${detalle.id}`, {
+      etiquetas_finales: {
+        nombre: forma.nombre,
+        descripcion: forma.descripcion,
+        patron: forma.patron,
+        secundarios: forma.secundarios,
+        nivel: forma.nivel,
+        lateralidad: forma.lateralidad,
+        impacto_lumbar: forma.impacto_lumbar,
+        compatibilidad_bjj: forma.compatibilidad_bjj,
+        coste_dimensiones: forma.coste,
+        objetivos,
+        prescripcion: JSON.parse(prescripcionTexto),
+        ...(forma.explosivo ? { explosivo: true } : {}),
+        ...(forma.isometrico ? { isometrico: true } : {}),
+      },
+    });
   }
 
   async function aceptar() {
@@ -120,7 +181,7 @@
     } catch (e) {
       const d = e?.detail;
       if (d && Array.isArray(d.errores)) erroresRevision = d.errores;
-      else error = mensajeError(e);
+      else if (!errorPrescripcion) error = mensajeError(e);
     } finally {
       ocupado = false;
     }
@@ -297,6 +358,67 @@
             </select>
           </label>
         </div>
+
+        <div>
+          <span class="text-xs text-tenue">Patrones secundarios</span>
+          <div class="mt-1 flex flex-wrap gap-2 text-xs">
+            {#each (valores?.patron || []).filter((p) => p !== forma.patron) as p}
+              <label class="flex items-center gap-1 rounded-full border px-2.5 py-1 {forma.secundarios.includes(p) ? 'border-acento bg-acento/10 text-acento' : 'border-borde text-tenue'}">
+                <input type="checkbox" class="hidden" checked={forma.secundarios.includes(p)}
+                  onchange={() => (forma.secundarios = forma.secundarios.includes(p) ? forma.secundarios.filter((s) => s !== p) : [...forma.secundarios, p])} />
+                {PATRONES[p] || p}
+              </label>
+            {/each}
+          </div>
+        </div>
+
+        <div>
+          <span class="text-xs text-tenue">Coste por dimensión (docs/12): es el modelo de carga que se acepta</span>
+          <div class="mt-1 grid grid-cols-2 gap-1.5 text-xs">
+            {#each valores?.dimensiones || [] as dim}
+              <label class="flex items-center justify-between gap-2 rounded-lg border border-borde bg-fondo px-2 py-1">
+                <span class="text-apagado">{dim}</span>
+                <select
+                  value={forma.coste[dim] || ""}
+                  onchange={(e) => {
+                    const v = e.currentTarget.value;
+                    if (v) forma.coste = { ...forma.coste, [dim]: v };
+                    else {
+                      const { [dim]: _, ...resto } = forma.coste;
+                      forma.coste = resto;
+                    }
+                  }}
+                  class="rounded border border-borde bg-superficie px-1 py-0.5"
+                >
+                  <option value="">—</option>
+                  {#each valores?.nivel_coste || [] as nc}<option value={nc}>{nc}</option>{/each}
+                </select>
+              </label>
+            {/each}
+          </div>
+        </div>
+
+        <label class="block">
+          <span class="text-xs text-tenue">Objetivos (separados por comas; el primero es el principal)</span>
+          <input bind:value={forma.objetivosTexto} class="mt-1 w-full rounded-lg border border-borde bg-fondo p-2 text-texto" />
+        </label>
+
+        <div class="flex gap-4 text-sm">
+          <label class="flex items-center gap-2">
+            <input type="checkbox" bind:checked={forma.explosivo} /> Explosivo
+          </label>
+          <label class="flex items-center gap-2">
+            <input type="checkbox" bind:checked={forma.isometrico} /> Isométrico
+          </label>
+        </div>
+
+        <label class="block">
+          <span class="text-xs text-tenue">Prescripción (JSON: series, repeticiones, segundos… con rangos [min, max] o fijos, y flags booleanos)</span>
+          <textarea bind:value={prescripcionTexto} rows="6" spellcheck="false" class="mt-1 w-full rounded-lg border border-borde bg-fondo p-2 font-mono text-xs text-texto"></textarea>
+        </label>
+        {#if errorPrescripcion}
+          <p class="rounded-lg bg-rojo/10 p-2 text-xs text-rojo">{errorPrescripcion}</p>
+        {/if}
 
         {#if erroresRevision.length}
           <div class="rounded-lg bg-rojo/10 p-2 text-xs text-rojo">

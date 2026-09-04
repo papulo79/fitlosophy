@@ -66,7 +66,6 @@ export const RECUPERACION = {
 
 export const EQUIPMENT_CANDIDATOS = {
   "body weight": "Peso corporal",
-  weighted: "Con lastre (peso corporal)",
   kettlebell: "Kettlebell",
   band: "Gomas",
   "resistance band": "Gomas",

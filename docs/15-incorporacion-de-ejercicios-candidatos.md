@@ -131,7 +131,7 @@ Además del flujo manual anterior (que sigue intacto y es el obligatorio para fu
 
 - Los candidatos importados viven en la tabla `candidates` de la base de datos de la aplicación. Es un **dato global de catálogo** (no es salud ni historial de nadie): no se filtra por usuario, pero cada decisión registra `revisado_por` y `revisado_at`.
 - Estados: `pendiente_revision` → `aceptado` | `descartado`. No son los estados del flujo manual: un candidato importado no pasa por `experimental` porque su prueba controlada, si hace falta, se decide después de aceptarlo.
-- `data/candidatos.yaml` se **regenera por script** (`app/backend/scripts/exportar_candidatos.py`) desde esa tabla, conservando la trazabilidad: `dataset_id`, fuente, estado, decisión y fecha. No se edita a mano para los importados.
+- `data/candidatos.yaml` se **regenera por script** (`app/backend/scripts/exportar_candidatos.py`) desde esa tabla, conservando la trazabilidad: `dataset_id`, fuente, estado, decisión y fecha. No se edita a mano para los importados. La regeneración es una **fusión**: las entradas del flujo manual (sin `dataset_id`) no viven en la BD y el script las conserva tal cual.
 
 ### Importación
 

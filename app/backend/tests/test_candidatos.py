@@ -262,3 +262,46 @@ def test_descartar(client, app, dataset_json):
     assert det["motivo_descarte"] == "duplica al catálogo"
     pendientes = client.get("/api/candidatos", params={"estado": "pendiente_revision"}).json()
     assert all(c["id"] != cid for c in pendientes["candidatos"])
+
+
+def test_weighted_no_se_importa(app, tmp_path):
+    """`weighted` son fondos/dominadas LASTRADAS: sin chaleco ni mancuernas en
+    el perfil no son ejecutables y no se importan (como cable o máquinas)."""
+    assert material_para_equipment("weighted", "weighted dip", set()) is None
+    reg = dict(DATASET[0], id="0009", name="weighted pull-up", equipment="weighted")
+    ruta = tmp_path / "weighted.json"
+    ruta.write_text(json.dumps([reg]), encoding="utf-8")
+    with conectar(app.state.db_path) as conn:
+        res = importar(conn, ruta, videos_dir=tmp_path_sin_gifs(ruta))
+    assert res["importados"] == 0
+    assert res["descartados_material"] == 1
+
+
+def test_exportar_conserva_entradas_manuales(app, dataset_json, tmp_path):
+    """El flujo manual de docs/15 sigue existiendo y sus entradas no viven en
+    la BD: exportar no debe borrarlas (fusión, no reemplazo)."""
+    from exportar_candidatos import exportar
+
+    _importar(app, dataset_json)
+    ruta = tmp_path / "candidatos.yaml"
+    manual = {
+        "id_provisional": "kb-press-suelo",
+        "nombre_es": "Press de suelo con kettlebell",
+        "estado": "pendiente_de_evidencia",
+        "fuente": "vídeo de referencia (manual)",
+    }
+    ruta.write_text(yaml.safe_dump({"version": 1, "candidatos": [manual]}), encoding="utf-8")
+
+    with conectar(app.state.db_path) as conn:
+        res = exportar(conn, ruta)
+    datos = yaml.safe_load(ruta.read_text(encoding="utf-8"))
+    assert res["manuales"] == 1
+    assert res["importados"] == 2
+    assert datos["candidatos"][0] == manual
+    assert sum(1 for c in datos["candidatos"] if c.get("dataset_id")) == 2
+
+    # Reexportar no duplica las manuales.
+    with conectar(app.state.db_path) as conn:
+        exportar(conn, ruta)
+    datos = yaml.safe_load(ruta.read_text(encoding="utf-8"))
+    assert len(datos["candidatos"]) == 3

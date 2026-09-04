@@ -104,7 +104,7 @@ Comandos útiles: `systemctl --user status fitlosophy`, `journalctl --user -u fi
 
 La aplicación está **desplegada y en uso**: un único proceso sirve la API y el frontend compilado tras un túnel de Cloudflare. Los 10 criterios de aceptación de `docs/14` están cubiertos y la suite tiene 138 tests en verde (`cd app/backend && ./.venv/bin/python -m pytest`). Stack: Svelte 5 + Tailwind 4 (frontend responsive), FastAPI + SQLite (backend), systemd + Cloudflare Tunnel (despliegue).
 
-Desde septiembre de 2026 la biblioteca puede crecer por **importación masiva revisada** (`docs/15`): 473 ejercicios de un dataset público viven como candidatos en la aplicación (`#/perfil/candidatos`, filtrados por el material del perfil) y solo entran en `data/ejercicios.yaml` cuando una persona los revisa y acepta desde la interfaz.
+Desde septiembre de 2026 la biblioteca puede crecer por **importación masiva revisada** (`docs/15`): 437 ejercicios de un dataset público viven como candidatos en la aplicación (`#/perfil/candidatos`, filtrados por el material del perfil) y solo entran en `data/ejercicios.yaml` cuando una persona los revisa y acepta desde la interfaz.
 
 Desde el 11 de agosto de 2026 el despliegue es **familiar**: varios atletas, cada uno con su usuario, su perfil y su historial aislado del de los demás (`docs/14`, «Acceso y privacidad»). Las altas se hacen a mano en el servidor; la aplicación no expone ninguna gestión de cuentas.
 

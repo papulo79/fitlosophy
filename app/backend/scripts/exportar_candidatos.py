@@ -2,7 +2,10 @@
 
 El fichero sigue siendo un registro no ejecutable: guarda la trazabilidad de
 los candidatos importados (dataset, estado, decisión, fecha) sin que el motor
-pueda leerlo. Se regenera entero; no se edita a mano para los importados.
+pueda leerlo. Las entradas **importadas** se regeneran desde la BD; las
+entradas del **flujo manual** (sin `dataset_id`: no provienen de un dataset) se
+conservan tal cual, porque no viven en ninguna tabla y borrarlas sería perder
+la investigación.
 
 Uso:
     cd app/backend
@@ -26,8 +29,10 @@ version: 1
 
 # Este fichero no es parte del catálogo ejecutable. El motor y la aplicación
 # solo leen `ejercicios.yaml`; una entrada aquí nunca puede proponerse sola.
-# Regenerado por app/backend/scripts/exportar_candidatos.py desde la tabla
-# `candidates`: no editar a mano las entradas importadas.
+# Las entradas con `dataset_id` provienen de la importación masiva (docs/15) y
+# las regenera app/backend/scripts/exportar_candidatos.py desde la tabla
+# `candidates`: no se editan a mano. Las entradas sin `dataset_id` son del
+# flujo manual y este script las conserva tal cual.
 estados:
   - pendiente_de_evidencia
   - candidato
@@ -38,15 +43,26 @@ estados:
 FUENTE = "exercises-dataset (Gym visual) — https://gymvisual.com/"
 
 
-def exportar(conn, ruta: Path | None = None) -> int:
-    """Escribe `data/candidatos.yaml` desde la BD. Devuelve nº de entradas."""
+def _entradas_manuales(ruta: Path) -> list[dict]:
+    """Entradas del flujo manual en el YAML actual: las que no tienen
+    `dataset_id`, es decir, las que no salieron de una importación."""
+    if not ruta.is_file():
+        return []
+    datos = yaml.safe_load(ruta.read_text(encoding="utf-8")) or {}
+    return [c for c in datos.get("candidatos") or [] if not c.get("dataset_id")]
+
+
+def exportar(conn, ruta: Path | None = None) -> dict:
+    """Escribe `data/candidatos.yaml`: entradas manuales conservadas + filas de
+    la BD. Devuelve contadores."""
     ruta = ruta or DATA_DIR / "candidatos.yaml"
+    manuales = _entradas_manuales(ruta)
     filas = conn.execute(
         "SELECT * FROM candidates ORDER BY estado, id"
     ).fetchall()
-    candidatos = []
+    importados = []
     for f in filas:
-        candidatos.append(
+        importados.append(
             {
                 "id_provisional": cargar_json(f["etiquetas_inferidas"], {}).get("id"),
                 "dataset_id": f["dataset_id"],
@@ -68,9 +84,9 @@ def exportar(conn, ruta: Path | None = None) -> int:
     with ruta.open("w", encoding="utf-8") as fh:
         fh.write(CABECERA)
         yaml.safe_dump(
-            {"candidatos": candidatos}, fh, allow_unicode=True, sort_keys=False, width=100
+            {"candidatos": manuales + importados}, fh, allow_unicode=True, sort_keys=False, width=100
         )
-    return len(candidatos)
+    return {"manuales": len(manuales), "importados": len(importados)}
 
 
 def main() -> int:
@@ -78,10 +94,13 @@ def main() -> int:
 
     conn, _ = abrir_bd()
     try:
-        n = exportar(conn)
+        res = exportar(conn)
     finally:
         conn.close()
-    print(f"data/candidatos.yaml regenerado con {n} candidato(s).")
+    print(
+        f"data/candidatos.yaml regenerado: {res['importados']} importados desde la BD "
+        f"+ {res['manuales']} entradas manuales conservadas."
+    )
     return 0
 
 

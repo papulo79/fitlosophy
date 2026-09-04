@@ -32,18 +32,18 @@ ATRIBUCION_GIF = "© Gym visual — https://gymvisual.com/"
 # `[]` = ejecutable sin material (peso corporal; el tatami cuenta como suelo).
 # Lo que no aparece aquí no es ejecutable con el inventario actual y no se
 # importa: cable, leverage/smith/sled machine, stability ball, bosu, medicine
-# ball, roller, tire, ergómetros…
+# ball, roller, tire, ergómetros… y `weighted`: son fondos, dominadas o
+# hiperextensiones LASTRADAS, y sin chaleco ni mancuernas en el perfil no hay
+# forma de ejecutarlas como tales (importarlas como «sin material» las
+# ofrecería a quien no tiene lastre).
 EQUIPMENT_A_MATERIAL = {
     "body weight": [],
-    # Sin chaleco lastrado en el inventario: se asume la versión con peso
-    # corporal (una dominada lastrada sin lastre es una dominada).
-    "weighted": [],
     "kettlebell": ["kettlebell"],
     "band": ["goma"],
     "resistance band": ["goma"],
     "rope": ["comba"],
-    # Si el perfil tuviera barra, mancuernas o bici estática, se mapearían
-    # aquí; hoy el inventario no los contempla ni el catálogo tiene token.
+    # Si el perfil tuviera barra, mancuernas, chaleco o bici estática, se
+    # mapearían aquí; hoy el inventario no los contempla ni el catálogo tiene token.
 }
 
 # Palabras clave del nombre → material adicional que el dataset no declara.

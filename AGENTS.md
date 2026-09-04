@@ -93,7 +93,7 @@ Nota: `docs/10-roadmap-del-producto.md` define las fases del producto (0–12). 
 `data/candidatos.yaml`:
 
 - Es un registro de investigación, no un segundo catálogo: el motor y la aplicación no pueden leerlo para generar sesiones.
-- Los candidatos de la importación masiva (docs/15) viven en la tabla `candidates` de la BD —dato global de catálogo, sin `user_id`, con `revisado_por`— y este fichero se **regenera** con `scripts/exportar_candidatos.py`; no se edita a mano para ellos. La aceptación desde `#/perfil/candidatos` valida con `fitlosophy_api/validacion.py` (la misma lógica de `scripts/validar_ejercicio.py`) y escribe en `ejercicios.yaml`.
+- Los candidatos de la importación masiva (docs/15) viven en la tabla `candidates` de la BD —dato global de catálogo, sin `user_id`, con `revisado_por`— y este fichero se **regenera por fusión** con `scripts/exportar_candidatos.py` (las entradas manuales, sin `dataset_id`, se conservan); no se edita a mano para ellos. La aceptación desde `#/perfil/candidatos` valida con `fitlosophy_api/validacion.py` (la misma lógica de `scripts/validar_ejercicio.py`) y escribe en `ejercicios.yaml`.
 - Sus estados son `pendiente_de_evidencia`, `candidato`, `experimental` y `descartado`; solo una promoción humana, documentada y validada puede añadir una entrada a `ejercicios.yaml`.
 - Sigue `docs/15`: guarda trazabilidad de fuentes e incertidumbres, pero nunca perfiles, historiales, molestias, credenciales ni transcripciones completas sujetas a derechos.
 
