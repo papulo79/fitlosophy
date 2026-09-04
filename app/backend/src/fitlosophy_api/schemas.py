@@ -116,3 +116,13 @@ class SesionPut(BaseModel):
 
 class PerfilPut(BaseModel):
     data: dict
+
+
+class CandidatoPutIn(BaseModel):
+    """Etiquetas confirmadas/corregidas por el revisor en la UI (docs/15)."""
+
+    etiquetas_finales: dict
+
+
+class DescartarIn(BaseModel):
+    motivo: str | None = None

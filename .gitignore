@@ -28,5 +28,7 @@ copias/
 # Mockups del flujo de brainstorming (locales)
 .superpowers/
 
-# Temporales
+# Datasets de trabajo locales y GIFs de candidatos (atribución Gym visual; no
+# se redistribuyen en el repo).
 temp/
+app/backend/media/candidatos/

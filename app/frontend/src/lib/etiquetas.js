@@ -61,3 +61,61 @@ export const RECUPERACION = {
   amarillo: "Regular",
   rojo: "Mal",
 };
+
+// --- Candidatos importados (docs/15) ------------------------------------------
+
+export const EQUIPMENT_CANDIDATOS = {
+  "body weight": "Peso corporal",
+  kettlebell: "Kettlebell",
+  band: "Gomas",
+  "resistance band": "Gomas",
+  rope: "Comba",
+};
+
+export const GRUPOS_MUSCULARES = {
+  shoulders: "Hombros",
+  forearms: "Antebrazos",
+  biceps: "Bíceps",
+  triceps: "Tríceps",
+  hamstrings: "Isquiotibiales",
+  quadriceps: "Cuádriceps",
+  glutes: "Glúteos",
+  obliques: "Oblicuos",
+  "hip flexors": "Flexores de cadera",
+  chest: "Pecho",
+  trapezius: "Trapecios",
+  traps: "Trapecios",
+  deltoids: "Deltoides",
+  calves: "Gemelos",
+  ankles: "Tobillos",
+  core: "Core",
+  "lower back": "Zona lumbar",
+  lats: "Dorsales",
+  "latissimus dorsi": "Dorsales",
+  abdominals: "Abdominales",
+  "upper back": "Espalda alta",
+  "rotator cuff": "Manguito rotador",
+};
+
+export const PATRONES = {
+  empuje_horizontal: "Empuje horizontal",
+  empuje_vertical: "Empuje vertical",
+  tiron_horizontal: "Tirón horizontal",
+  tiron_vertical: "Tirón vertical",
+  dominante_rodilla: "Dominante de rodilla",
+  dominante_cadera: "Dominante de cadera",
+  core_antiextension: "Core · antiextensión",
+  core_antirotacion: "Core · antirotación",
+  core_lateral: "Core · lateral",
+  core_flexion_cadera: "Core · flexión de cadera",
+  core_rotacion: "Core · rotación",
+  acondicionamiento: "Acondicionamiento",
+  agilidad: "Agilidad",
+  movilidad_cargada: "Movilidad cargada",
+  recuperacion: "Recuperación",
+};
+
+export const IMPACTO_LUMBAR = { verde: "Verde", amarillo: "Amarillo", rojo: "Rojo" };
+export const COMPATIBILIDAD_BJJ = { si: "Compatible", limitada: "Limitada", no: "No compatible" };
+export const NIVELES = { base: "Base", intermedio: "Intermedio", avanzado: "Avanzado" };
+export const LATERALIDAD = { bilateral: "Bilateral", unilateral: "Unilateral" };

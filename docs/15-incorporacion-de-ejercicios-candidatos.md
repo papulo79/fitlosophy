@@ -122,3 +122,30 @@ El repositorio es la fuente de verdad: guarda los guardarraíles, el registro de
 - No se puede estimar conservadoramente el impacto lumbar o el coste relevante.
 - Promete diagnóstico, tratamiento o prevención de lesiones sin base suficiente, o contradice una restricción vigente del sistema.
 - La fuente presenta señales de riesgo que el dossier no puede resolver mediante una regresión o dosis prudente.
+
+## Importación masiva con revisión en la aplicación
+
+Además del flujo manual anterior (que sigue intacto y es el obligatorio para fuentes individuales), existe una vía para importar **colecciones completas de ejercicios** —p. ej. un dataset público— y revisarlos uno a uno desde la propia aplicación. Cambia el soporte, no el criterio: la puerta de evidencia y la revisión humana explícita siguen siendo las mismas.
+
+### Soporte y estados
+
+- Los candidatos importados viven en la tabla `candidates` de la base de datos de la aplicación. Es un **dato global de catálogo** (no es salud ni historial de nadie): no se filtra por usuario, pero cada decisión registra `revisado_por` y `revisado_at`.
+- Estados: `pendiente_revision` → `aceptado` | `descartado`. No son los estados del flujo manual: un candidato importado no pasa por `experimental` porque su prueba controlada, si hace falta, se decide después de aceptarlo.
+- `data/candidatos.yaml` se **regenera por script** (`app/backend/scripts/exportar_candidatos.py`) desde esa tabla, conservando la trazabilidad: `dataset_id`, fuente, estado, decisión y fecha. No se edita a mano para los importados. La regeneración es una **fusión**: las entradas del flujo manual (sin `dataset_id`) no viven en la BD y el script las conserva tal cual.
+
+### Importación
+
+`app/backend/scripts/importar_candidatos.py` lee el dataset, **descarta en origen** lo que no es ejecutable con el material de `data/perfil.yaml` (mapeo equipment → inventario documentado en el propio script), deduplica heurísticamente por nombre contra `data/ejercicios.yaml` (`posible_equivalente`, no bloquea) y pre-rellena las etiquetas por **inferencia conservadora** (tablas documentadas en el script: patrón por zona/grupo/palabras clave; impacto lumbar `amarillo` por defecto, `rojo` ante bisagra cargada o rotación, `verde` solo tumbado sin carga axial). La inferencia nunca es la decisión: es el borrador que la revisión confirma o corrige. La importación es idempotente por `dataset_id`.
+
+### Revisión y aceptación
+
+La revisión humana explícita ocurre en la interfaz (`#/perfil/candidatos`): el revisor ve el GIF de ejecución y las instrucciones, corrige las etiquetas pre-rellenadas y decide.
+
+- **Aceptar** construye la entrada del catálogo con las etiquetas confirmadas, la valida con la misma lógica determinista de `scripts/validar_ejercicio.py` y solo entonces la escribe en `data/ejercicios.yaml`. La aceptación desde la interfaz equivale al `--confirmo-verde`: es una persona la que pulsa el botón viendo la ejecución.
+- **Descartar** exige solo marcar el estado; el motivo es opcional pero recomendado.
+
+Nada de lo importado llega al generador sin pasar por esa aceptación: la tabla `candidates` no la lee el motor.
+
+### Atribución
+
+Los GIFs se copian a `app/backend/media/candidatos/` y se muestran solo en el despliegue familiar privado, con atribución visible «© Gym visual — https://gymvisual.com/». No se redistribuyen fuera del despliegue.

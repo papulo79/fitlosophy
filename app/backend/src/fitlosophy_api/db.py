@@ -156,6 +156,32 @@ CREATE TABLE IF NOT EXISTS {nombre} (
     data TEXT NOT NULL,                -- JSON con la forma de data/perfil.yaml
     updated_at TEXT NOT NULL
 )""",
+    # Candidatos importados de datasets externos (docs/15, importación masiva).
+    # A diferencia del resto es un dato GLOBAL de catálogo —no es salud ni
+    # historial de nadie—: no lleva `user_id`; cada decisión registra quién la
+    # tomó en `revisado_por`.
+    "candidates": """
+CREATE TABLE IF NOT EXISTS {nombre} (
+    id INTEGER PRIMARY KEY,
+    dataset_id TEXT UNIQUE NOT NULL,
+    nombre_en TEXT NOT NULL,
+    nombre_es TEXT NOT NULL,
+    instrucciones_es TEXT,
+    equipment TEXT NOT NULL,
+    body_part TEXT,
+    muscle_group TEXT,
+    secondary_muscles TEXT NOT NULL DEFAULT '[]',  -- JSON lista
+    gif TEXT,                          -- nombre de fichero en media/candidatos/
+    material_fitlosophy TEXT NOT NULL DEFAULT '[]',  -- JSON tokens del catálogo
+    etiquetas_inferidas TEXT NOT NULL, -- JSON: borrador por inferencia
+    etiquetas_finales TEXT,            -- JSON confirmado por el revisor, o NULL
+    posible_equivalente TEXT,          -- id del catálogo estable, o NULL
+    estado TEXT NOT NULL DEFAULT 'pendiente_revision',  -- pendiente_revision|aceptado|descartado
+    revisado_por INTEGER REFERENCES users(id),
+    motivo_descarte TEXT,
+    created_at TEXT NOT NULL,
+    revisado_at TEXT
+)""",
     # Solo intentos de login FALLIDOS: alimentan el freno de fuerza bruta de
     # auth.py. Un login correcto borra los de esa IP y los de ese usuario; los
     # antiguos se purgan.
@@ -180,6 +206,7 @@ CREATE INDEX IF NOT EXISTS idx_proposals_user_fecha ON proposals(user_id, fecha)
 CREATE INDEX IF NOT EXISTS idx_training_sessions_user_fecha ON training_sessions(user_id, fecha);
 CREATE INDEX IF NOT EXISTS idx_bjj_records_user_fecha ON bjj_records(user_id, fecha);
 CREATE INDEX IF NOT EXISTS idx_session_items_session ON session_items(session_id);
+CREATE INDEX IF NOT EXISTS idx_candidates_estado ON candidates(estado);
 """
 
 # Tablas raíz que ganaron `user_id` al pasar a multiusuario.

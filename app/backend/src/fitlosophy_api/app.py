@@ -44,6 +44,11 @@ def create_app(db_path: str | Path | None = None) -> FastAPI:
     # Cada petición abre su propia conexión desde esta ruta (ver `db.db_conn`).
     app.state.db_path = str(ruta)
     app.state.catalog = load_default_catalog()
+    # Fichero del catálogo: donde escribe la aceptación de candidatos (docs/15).
+    # Los tests lo apuntan a una copia temporal.
+    from fitlosophy.catalog import DATA_DIR
+
+    app.state.ejercicios_path = str(DATA_DIR / "ejercicios.yaml")
     app.include_router(router)
 
     # En producción se sirve el frontend compilado si existe (app/frontend/dist).

@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import sqlite3
 from datetime import date, datetime, timedelta
+from pathlib import Path
 
 from fastapi import APIRouter, Depends, HTTPException, Request, Response
 
@@ -30,8 +31,10 @@ from .history import construir_historial, dimensiones_de_molestias
 from .schemas import (
     BjjIn,
     BjjPut,
+    CandidatoPutIn,
     CierreIn,
     CierrePut,
+    DescartarIn,
     EstadoDiarioIn,
     FinalizarIn,
     ItemPatchIn,
@@ -1045,3 +1048,236 @@ def exportar(user=Depends(usuario_actual), conn=Depends(db_conn)):
         "exportado_en": datetime.now().isoformat(timespec="seconds"),
         "datos": volcado,
     }
+
+
+# --- Candidatos importados (docs/15, importación masiva) ------------------------------
+#
+# Dato GLOBAL de catálogo, no de salud: no se filtra por usuario. La decisión
+# (aceptar/descartar) sí registra quién la tomó (`revisado_por`). Un id que no
+# existe responde 404, como el resto de la API.
+
+
+def _candidato(conn, candidato_id: int) -> sqlite3.Row:
+    row = conn.execute("SELECT * FROM candidates WHERE id = ?", (candidato_id,)).fetchone()
+    if row is None:
+        raise HTTPException(status_code=404, detail="Candidato no encontrado")
+    return row
+
+
+def _candidato_json(row: sqlite3.Row, detalle: bool = False) -> dict:
+    salida = {
+        "id": row["id"],
+        "dataset_id": row["dataset_id"],
+        "nombre_en": row["nombre_en"],
+        "nombre_es": row["nombre_es"],
+        "equipment": row["equipment"],
+        "body_part": row["body_part"],
+        "muscle_group": row["muscle_group"],
+        "material_fitlosophy": cargar_json(row["material_fitlosophy"], []),
+        "gif": bool(row["gif"]),
+        "posible_equivalente": row["posible_equivalente"],
+        "estado": row["estado"],
+        "patron_inferido": cargar_json(row["etiquetas_inferidas"], {}).get("patron"),
+    }
+    if detalle:
+        salida.update(
+            {
+                "instrucciones_es": row["instrucciones_es"],
+                "secondary_muscles": cargar_json(row["secondary_muscles"], []),
+                "etiquetas_inferidas": cargar_json(row["etiquetas_inferidas"], {}),
+                "etiquetas_finales": cargar_json(row["etiquetas_finales"], None),
+                "revisado_por": row["revisado_por"],
+                "revisado_at": row["revisado_at"],
+                "motivo_descarte": row["motivo_descarte"],
+                "created_at": row["created_at"],
+            }
+        )
+    return salida
+
+
+@router.get("/api/candidatos")
+def listar_candidatos(
+    estado: str | None = None,
+    equipment: str | None = None,
+    grupo: str | None = None,
+    user=Depends(usuario_actual),
+    conn=Depends(db_conn),
+):
+    filas = conn.execute("SELECT * FROM candidates ORDER BY id").fetchall()
+    if estado:
+        filas = [f for f in filas if f["estado"] == estado]
+    # Los contadores describen el conjunto filtrado por estado: sirven para
+    # construir la navegación por material y grupo sin otra petición.
+    cont_equipment: dict[str, int] = {}
+    cont_grupo: dict[str, int] = {}
+    for f in filas:
+        cont_equipment[f["equipment"]] = cont_equipment.get(f["equipment"], 0) + 1
+        cont_grupo[f["muscle_group"] or ""] = cont_grupo.get(f["muscle_group"] or "", 0) + 1
+    if equipment:
+        filas = [f for f in filas if f["equipment"] == equipment]
+    if grupo:
+        filas = [f for f in filas if (f["muscle_group"] or "") == grupo]
+    return {
+        "candidatos": [_candidato_json(f) for f in filas],
+        "contadores": {"equipment": cont_equipment, "muscle_group": cont_grupo},
+    }
+
+
+@router.get("/api/candidatos/{candidato_id}")
+def detalle_candidato(candidato_id: int, request: Request, user=Depends(usuario_actual), conn=Depends(db_conn)):
+    row = _candidato(conn, candidato_id)
+    salida = _candidato_json(row, detalle=True)
+    # Dominios válidos para el formulario de revisión (sección `valores`).
+    salida["valores"] = get_catalog(request).valores
+    return salida
+
+
+@router.get("/api/candidatos/{candidato_id}/gif")
+def gif_candidato(candidato_id: int, user=Depends(usuario_actual), conn=Depends(db_conn)):
+    from fastapi.responses import FileResponse
+
+    from .candidatos import ATRIBUCION_GIF, MEDIA_CANDIDATOS
+
+    row = _candidato(conn, candidato_id)
+    if not row["gif"]:
+        raise HTTPException(status_code=404, detail="El candidato no tiene GIF")
+    ruta = MEDIA_CANDIDATOS / row["gif"]
+    if not ruta.is_file():
+        raise HTTPException(status_code=404, detail="GIF no encontrado en el servidor")
+    return FileResponse(
+        ruta,
+        media_type="image/gif",
+        headers={"X-Atribucion": ATRIBUCION_GIF, "Cache-Control": "private, max-age=86400"},
+    )
+
+
+# Claves que el revisor puede confirmar/corregir desde la UI.
+CLAVES_ETIQUETAS = {
+    "id",
+    "nombre",
+    "descripcion",
+    "patron",
+    "secundarios",
+    "nivel",
+    "lateralidad",
+    "impacto_lumbar",
+    "compatibilidad_bjj",
+    "coste_dimensiones",
+    "objetivos",
+    "prescripcion",
+    "isometrico",
+    "explosivo",
+}
+
+
+def _validar_etiquetas(etiquetas: dict, valores: dict) -> list[str]:
+    """Dominios cerrados contra la sección `valores` del catálogo (docs/15)."""
+    errores: list[str] = []
+    desconocidas = sorted(set(etiquetas) - CLAVES_ETIQUETAS)
+    if desconocidas:
+        errores.append(f"Claves no admitidas: {', '.join(desconocidas)}")
+    for campo, dominio in (
+        ("patron", "patron"),
+        ("nivel", "nivel"),
+        ("lateralidad", "lateralidad"),
+        ("impacto_lumbar", "impacto_lumbar"),
+        ("compatibilidad_bjj", "compatibilidad_bjj"),
+    ):
+        if campo in etiquetas and etiquetas[campo] not in valores.get(dominio, []):
+            errores.append(f"«{campo}: {etiquetas[campo]}» fuera del dominio")
+    for sec in etiquetas.get("secundarios") or []:
+        if sec not in valores.get("patron", []):
+            errores.append(f"Patrón secundario desconocido: «{sec}»")
+    costes = etiquetas.get("coste_dimensiones")
+    if costes is not None:
+        if not isinstance(costes, dict) or not costes:
+            errores.append("«coste_dimensiones» debe ser un mapa dimensión → nivel no vacío")
+        else:
+            for dim, nivel in costes.items():
+                if dim not in valores.get("dimensiones", []):
+                    errores.append(f"Dimensión desconocida: «{dim}»")
+                if nivel not in valores.get("nivel_coste", []):
+                    errores.append(f"Nivel de coste inválido para «{dim}»: «{nivel}»")
+    return errores
+
+
+@router.put("/api/candidatos/{candidato_id}")
+def guardar_etiquetas(candidato_id: int, datos: CandidatoPutIn, request: Request, user=Depends(usuario_actual), conn=Depends(db_conn)):
+    row = _candidato(conn, candidato_id)
+    if row["estado"] != "pendiente_revision":
+        raise HTTPException(status_code=409, detail="El candidato ya está revisado")
+    valores = get_catalog(request).valores
+    errores = _validar_etiquetas(datos.etiquetas_finales, valores)
+    if errores:
+        raise HTTPException(status_code=422, detail={"detalle": "Etiquetas fuera de dominio", "errores": errores})
+    conn.execute(
+        "UPDATE candidates SET etiquetas_finales = ? WHERE id = ?",
+        (volcar_json(datos.etiquetas_finales), candidato_id),
+    )
+    conn.commit()
+    row = _candidato(conn, candidato_id)
+    return _candidato_json(row, detalle=True)
+
+
+@router.post("/api/candidatos/{candidato_id}/aceptar")
+def aceptar_candidato(candidato_id: int, request: Request, user=Depends(usuario_actual), conn=Depends(db_conn)):
+    """Pasa el candidato a `data/ejercicios.yaml` (la revisión humana de docs/15).
+
+    La validación es la misma puerta determinista de `scripts/validar_ejercicio.py`;
+    aceptar desde la interfaz equivale a `--confirmo-verde`: es una persona la
+    que confirma viendo la ejecución.
+    """
+    from fitlosophy.catalog import Catalog, load_default_perfil
+
+    from .candidatos import construir_entrada, render_entrada_yaml
+    from .validacion import validar
+
+    row = _candidato(conn, candidato_id)
+    if row["estado"] != "pendiente_revision":
+        raise HTTPException(status_code=409, detail="El candidato ya está revisado")
+
+    # Las finales corrigen el borrador inferido; lo no editado se conserva.
+    etiquetas = {
+        **cargar_json(row["etiquetas_inferidas"], {}),
+        **(cargar_json(row["etiquetas_finales"], None) or {}),
+    }
+    candidato = {
+        "nombre_en": row["nombre_en"],
+        "nombre_es": row["nombre_es"],
+        "material_fitlosophy": cargar_json(row["material_fitlosophy"], []),
+    }
+
+    ruta_yaml = Path(request.app.state.ejercicios_path)
+    catalogo = Catalog.load(ruta_yaml)
+    entrada = construir_entrada(candidato, etiquetas, {e.id for e in catalogo})
+    inf = validar(entrada, catalogo, load_default_perfil(), permitir_verde=True)
+    if inf.errores:
+        raise HTTPException(
+            status_code=422,
+            detail={"detalle": "La entrada no supera la validación del catálogo", "errores": inf.errores},
+        )
+
+    with ruta_yaml.open("a", encoding="utf-8") as fh:
+        fh.write(render_entrada_yaml(entrada))
+    conn.execute(
+        "UPDATE candidates SET estado = 'aceptado', revisado_por = ?, revisado_at = ? WHERE id = ?",
+        (user["id"], datetime.now().isoformat(timespec="seconds"), candidato_id),
+    )
+    conn.commit()
+    # El ejercicio nuevo existe desde ya: el catálogo en memoria se recarga
+    # para que la siguiente aceptación valide contra él.
+    request.app.state.catalog = Catalog.load(ruta_yaml)
+    return {"detalle": "Candidato aceptado y añadido al catálogo", "exercise_id": entrada["id"], "avisos": inf.avisos}
+
+
+@router.post("/api/candidatos/{candidato_id}/descartar")
+def descartar_candidato(candidato_id: int, datos: DescartarIn, user=Depends(usuario_actual), conn=Depends(db_conn)):
+    row = _candidato(conn, candidato_id)
+    if row["estado"] != "pendiente_revision":
+        raise HTTPException(status_code=409, detail="El candidato ya está revisado")
+    conn.execute(
+        "UPDATE candidates SET estado = 'descartado', motivo_descarte = ?, revisado_por = ?, revisado_at = ? WHERE id = ?",
+        (datos.motivo, user["id"], datetime.now().isoformat(timespec="seconds"), candidato_id),
+    )
+    conn.commit()
+    return {"detalle": "Candidato descartado"}
