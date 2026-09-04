@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.27.1 - Variedad: la recencia pasa a ser el primer criterio
+
+El simulacro de 12 días mostró que la regla 10 como último desempate casi nunca actuaba (el orden de preferencia estricto raramente empata: `pushup-classic` salió 8 de 12 días y los días B eran idénticos entre sí).
+
+- `docs/06`, regla 10 reescrita: la recencia es el **primer criterio de selección** entre los candidatos que superan los filtros duros (D3-D5, plantilla, material, presupuesto y regla 1); un ejercicio usado en las últimas 24 h solo se elige si no hay alternativa en el patrón. A igualdad de recencia desempata el orden de preferencia de siempre. El orden de B1 (explosivos primero, regla 4) no cambia: es de ordenación de bloque, no de selección.
+- `fitlosophy/generator.py`: `_clave_variedad` penaliza los usos de las últimas 24 h (final de la cola) y `_orden_preferencia` la aplica como primera clave, con las claves clásicas como desempate. Sin historial el comportamiento es idéntico.
+- `tests/test_variedad.py`: tres casos nuevos — la recencia gana al nivel en familia A, gana a la explosividad en selección en familia B (con `_ordenar_bloques` intacto) y el uso de hoy solo se elige sin alternativa.
+- Simulacro de 12 días: ejercicios distintos 16 → 18, frecuencia máxima 8× (`pushup-classic`) → 7×, y los días B ya no salen idénticos entre sí.
+
 ## 0.27.0 - Regla de variedad en el generador (anti-monotonía)
 
 - `docs/06`: nueva regla 10 de composición. El generador recibe el historial y, a igualdad de criterio de preferencia, elige el ejercicio con más días desde su último uso (nunca usado = máxima prioridad). La variedad es solo un desempate tras D3-D5, plantilla y material: no relaja ninguna regla de seguridad. B0, C y D dejan de ser listas fijas y pasan a ser pools por patrón/función ordenados con la misma regla. Sin historial, el orden es idéntico al anterior.

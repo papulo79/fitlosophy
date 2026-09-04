@@ -42,11 +42,15 @@ _D_BASE = ("cones-zigzag", "rope-technical", "agility-ladder-basic")
 
 
 def _clave_variedad(ejercicio: Exercise, ultimo_uso: dict[str, datetime], fecha: datetime):
-    """Regla 10: nunca usado primero; luego, más tiempo desde el último uso."""
+    """Regla 10: nunca usado primero; luego, más tiempo desde el último uso;
+    usado en las últimas 24 h al final de la cola (solo si no hay alternativa)."""
     uso = ultimo_uso.get(ejercicio.id)
     if uso is None:
         return (0, 0.0)
-    return (1, -(fecha - uso).total_seconds())
+    segundos = (fecha - uso).total_seconds()
+    if segundos < 24 * 3600:
+        return (2, segundos)
+    return (1, -segundos)
 
 
 def _nota_variedad(ejercicio: Exercise, ultimo_uso: dict[str, datetime]) -> str:
@@ -452,15 +456,17 @@ def _orden_preferencia(
     ultimo_uso: dict[str, datetime] | None = None,
     fecha: datetime | None = None,
 ) -> list[Exercise]:
-    """Orden de preferencia dentro de un patrón.
+    """Orden de selección dentro de un patrón.
 
-    - Familias A/C/D: menor nivel primero (más conservador); a igual nivel,
-      orden de catálogo.
-    - Familia B (día potente): explosivos primero (van primero en B1, docs/06);
-      a igualdad, menor impacto lumbar (conservador con este perfil) y mayor
-      estímulo total; heurística provisional.
-    - Última clave (regla 10): a igualdad de lo anterior, el ejercicio con más
-      tiempo sin usarse; nunca usado primero. Sin historial no cambia nada.
+    - Primera clave (regla 10): recencia. Nunca usado primero; luego, más
+      tiempo desde el último uso; usado en las últimas 24 h al final de la
+      cola. Sin historial no cambia nada.
+    - Desempate final: el orden de preferencia de siempre. Familias A/C/D:
+      menor nivel primero (más conservador); a igual nivel, orden de catálogo.
+      Familia B (día potente): explosivos primero; a igualdad, menor impacto
+      lumbar (conservador con este perfil) y mayor estímulo total; heurística
+      provisional. El orden de bloque de B1 (explosivos primero, regla 4) lo
+      aplica `_ordenar_bloques` después de la selección.
     """
     variedad = bool(ultimo_uso) and fecha is not None
 
@@ -471,16 +477,16 @@ def _orden_preferencia(
         return sorted(
             candidatos,
             key=lambda e: (
+                clave_var(e),
                 not e.explosivo,
                 _RANGO_LUMBAR[e.impacto_lumbar],
                 -sum(PUNTOS_COSTE[c] for c in e.coste_dimensiones.values()),
                 {"base": 0, "intermedio": 1, "avanzado": 2}[e.nivel],
-                clave_var(e),
             ),
         )
     return sorted(
         candidatos,
-        key=lambda e: ({"base": 0, "intermedio": 1, "avanzado": 2}[e.nivel], clave_var(e)),
+        key=lambda e: (clave_var(e), {"base": 0, "intermedio": 1, "avanzado": 2}[e.nivel]),
     )
 
 
