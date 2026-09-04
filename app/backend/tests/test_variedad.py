@@ -186,3 +186,63 @@ def test_usado_hoy_solo_si_no_hay_alternativa(catalog, perfil):
     sesion_c = generate(prop_c, _estado(), catalog, perfil.material, historial_c)
     assert "treadmill-walk" in [i.exercise_id for i in sesion_c.items]
     assert sesion_c.valida, sesion_c.violaciones
+
+
+# --- Correcciones de la revisión del PR 3 ----------------------------------------
+
+
+def test_grupo_24h_prefiere_el_menos_reciente(catalog):
+    """Si todos los candidatos de un patrón se usaron en las últimas 24 h,
+    se elige el menos reciente, no el más reciente."""
+    from fitlosophy.generator import _clave_variedad
+
+    ultimo = {
+        "a": AHORA - timedelta(hours=3),
+        "b": AHORA - timedelta(hours=23),
+    }
+    ej_a = next(e for e in catalog if e.id == "pushup-classic")
+    ej_b = next(e for e in catalog if e.id == "pushup-feet-elevated")
+    clave_a = _clave_variedad(ej_a, {"pushup-classic": ultimo["a"]}, AHORA)
+    clave_b = _clave_variedad(ej_b, {"pushup-feet-elevated": ultimo["b"]}, AHORA)
+    assert clave_b < clave_a  # b (23 h) va antes que a (3 h)
+
+
+def test_b0_sin_historial_conserva_el_fallback_clasico(catalog, perfil):
+    """Sin escalera disponible y sin historial, B0 sigue siendo
+    dead-bug + glute-bridge, como antes de la regla 10."""
+    estado = DailyState(
+        fecha=AHORA,
+        recuperacion="verde",
+        dolor=0,
+        bjj_disponible="no",
+        material_disponible=frozenset(perfil.material - {"escalera_agilidad"}),
+    )
+    prop = decide(estado, [], catalog)
+    sesion = generate(prop, estado, catalog, perfil.material)
+    b0 = [i.exercise_id for i in sesion.items_bloque("B0")]
+    assert "glute-bridge" in b0
+
+
+def test_c_b2_no_incluye_patrones_de_estimulo(catalog, perfil):
+    """El B2 de familia C se limita a core verde y movilidad: squat-libre
+    (dominante_rodilla) nunca entra aunque sea el menos usado."""
+    prop = _prop("C", [])
+    historial = [
+        PerformedSession(
+            AHORA - timedelta(days=1),
+            [PerformedExercise(eid) for eid in ("dead-bug", "glute-bridge", "plank-front")],
+        )
+    ]
+    for historial_actual in ([], historial):
+        sesion = generate(prop, _estado(), catalog, perfil.material, historial_actual)
+        b2 = [i.exercise_id for i in sesion.items_bloque("B2")]
+        assert "squat-libre" not in b2
+        for eid in b2:
+            assert catalog[eid].patron in {
+                "core_antiextension",
+                "core_antirotacion",
+                "core_lateral",
+                "movilidad_cargada",
+                "dominante_cadera",  # glute-bridge, excepción de la lista base
+            }
+        assert sesion.valida, sesion.violaciones

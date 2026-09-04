@@ -38,6 +38,9 @@ _MACRO_GRUPOS = [
 _B0_BASE = ("dead-bug", "agility-ladder-basic", "glute-bridge")
 _B0_PATRONES = {"core_antiextension", "core_antirotacion", "core_lateral", "movilidad_cargada", "agilidad"}
 _C_BASE = ("dead-bug", "glute-bridge", "plank-front")
+# B2 de la plantilla C: core verde y movilidad en dosis baja (docs/06), no
+# cualquier patrón admitido en la familia.
+_C_B2_PATRONES = {"core_antiextension", "core_antirotacion", "core_lateral", "movilidad_cargada"}
 _D_BASE = ("cones-zigzag", "rope-technical", "agility-ladder-basic")
 
 
@@ -49,7 +52,7 @@ def _clave_variedad(ejercicio: Exercise, ultimo_uso: dict[str, datetime], fecha:
         return (0, 0.0)
     segundos = (fecha - uso).total_seconds()
     if segundos < 24 * 3600:
-        return (2, segundos)
+        return (2, -segundos)
     return (1, -segundos)
 
 
@@ -263,7 +266,7 @@ def _b0(
     pool = [
         ej
         for ej in catalog
-        if ej.patron in _B0_PATRONES
+        if (ej.patron in _B0_PATRONES or ej.id in _B0_BASE)
         and ej.impacto_lumbar == "verde"
         and all(c == "bajo" for c in ej.coste_dimensiones.values())
         and ej.disponible_con(material)
@@ -494,7 +497,7 @@ def _generar_c(prop, catalog, material, anadir, notas, ultimo_uso) -> None:
     """Familia C: movimiento continuo + B2 ligero, sin B1 (plantilla C).
 
     Regla 10: el continuo y el B2 ligero salen de pools del catálogo (patrón
-    `recuperacion` para el continuo; el resto de candidatos C para B2),
+    `recuperacion` para el continuo; core verde y movilidad para B2),
     ordenados por variedad."""
     pool_continuo = [
         ej for ej in _candidatos(prop, "C", catalog, material) if ej.patron == "recuperacion"
@@ -509,7 +512,9 @@ def _generar_c(prop, catalog, material, anadir, notas, ultimo_uso) -> None:
     else:
         notas.append("Cinta no disponible: movimiento continuo sustituido por movilidad suave.")
     pool_b2 = [
-        ej for ej in _candidatos(prop, "C", catalog, material) if ej.patron != "recuperacion"
+        ej
+        for ej in _candidatos(prop, "C", catalog, material)
+        if ej.patron in _C_B2_PATRONES or ej.id in _C_BASE
     ]
     base_b2 = _orden_pool(pool_b2, _C_BASE, {}, prop.fecha)
     anadidos = 0
