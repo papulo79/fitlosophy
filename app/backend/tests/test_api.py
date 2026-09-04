@@ -1014,7 +1014,10 @@ def test_la_reserva_solo_donde_significa_algo(client):
     assert por_id["pushup-feet-elevated"]["reserva"]
 
     assert por_id["plank-front"]["reserva"] == ""           # isométrico, en segundos
-    assert por_id["side-plank"]["reserva"] == ""
+    # El slot de core lateral lo gana el ejercicio menos usado del catálogo
+    # (regla 10): cualquiera de los dos es isométrico en segundos, sin reserva.
+    lateral = next(i for i in propuesta["items"] if i["exercise_id"] in ("side-plank", "side-plank-hip-adduction"))
+    assert lateral["reserva"] == ""
     assert por_id["rope-technical"]["reserva"] == ""        # saltos
     assert por_id["agility-ladder-basic"]["reserva"] == ""  # pasadas, y además B0
 
