@@ -537,13 +537,14 @@ exercises:
       por_lado: true
 
   - id: side-plank-hip-adduction
-    nombre: side plank hip adduction
-    descripcion: Comienza tumbado de lado con las piernas extendidas y apiladas una sobre la otra. Apóyate
-      sobre el antebrazo, manteniendo el codo directamente debajo del hombro.
+    nombre: Plancha lateral con elevación de pierna
+    descripcion: En plancha lateral sobre el antebrazo, cuerpo en línea recta, eleva y baja
+      la pierna superior de forma controlada durante todo el intervalo, sin rotar la cadera.
+      Baja las caderas al suelo si la línea del cuerpo se rompe.
     patron: core_lateral
     material: []
     nivel: base
-    lateralidad: bilateral
+    lateralidad: unilateral
     coste_dimensiones:
       core: medio
     impacto_lumbar: verde
@@ -557,6 +558,7 @@ exercises:
       segundos:
       - 20
       - 45
+      por_lado: true
       evitar_fallo: true
     sin_material: true
     isometrico: true
