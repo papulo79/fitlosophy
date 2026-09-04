@@ -535,3 +535,28 @@ exercises:
       series: [3, 4]
       repeticiones: [8, 12]
       por_lado: true
+
+  - id: side-plank-hip-adduction
+    nombre: side plank hip adduction
+    descripcion: Comienza tumbado de lado con las piernas extendidas y apiladas una sobre la otra. Apóyate
+      sobre el antebrazo, manteniendo el codo directamente debajo del hombro.
+    patron: core_lateral
+    material: []
+    nivel: base
+    lateralidad: bilateral
+    coste_dimensiones:
+      core: medio
+    impacto_lumbar: verde
+    compatibilidad_bjj: si
+    objetivos:
+    - estabilidad_lateral
+    prescripcion:
+      series:
+      - 2
+      - 4
+      segundos:
+      - 20
+      - 45
+      evitar_fallo: true
+    sin_material: true
+    isometrico: true

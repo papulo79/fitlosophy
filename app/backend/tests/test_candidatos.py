@@ -305,3 +305,24 @@ def test_exportar_conserva_entradas_manuales(app, dataset_json, tmp_path):
         exportar(conn, ruta)
     datos = yaml.safe_load(ruta.read_text(encoding="utf-8"))
     assert len(datos["candidatos"]) == 3
+
+
+def test_gif_se_sirve_con_atribucion_latin1(client, app, dataset_json, tmp_path, monkeypatch):
+    """Regresión: la cabecera de atribución debe ser ASCII puro (una raya
+    larga o la © provocaban errores de codificación y un 500 al servir)."""
+    _importar(app, dataset_json)
+    gif = tmp_path / "media_cand"
+    gif.mkdir()
+    (gif / "0001-abc123.gif").write_bytes(b"GIF89a")
+    monkeypatch.setattr("fitlosophy_api.candidatos.MEDIA_CANDIDATOS", gif)
+    with conectar(app.state.db_path) as conn:
+        conn.execute("UPDATE candidates SET gif=? WHERE dataset_id='0001'", ("0001-abc123.gif",))
+        conn.commit()
+
+    cid = next(c["id"] for c in client.get("/api/candidatos").json()["candidatos"] if c["dataset_id"] == "0001")
+    r = client.get(f"/api/candidatos/{cid}/gif")
+    assert r.status_code == 200
+    assert r.headers["content-type"] == "image/gif"
+    atribucion = r.headers["x-atribucion"]
+    atribucion.encode("latin-1")
+    assert "Gym visual" in atribucion

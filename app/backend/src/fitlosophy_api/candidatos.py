@@ -24,7 +24,8 @@ REPO_ROOT = Path(__file__).resolve().parents[4]
 DATA_DIR = REPO_ROOT / "data"
 MEDIA_CANDIDATOS = Path(__file__).resolve().parents[2] / "media" / "candidatos"
 
-ATRIBUCION_GIF = "© Gym visual — https://gymvisual.com/"
+# Cabecera HTTP: solo ASCII (ni © ni raya larga); el texto visible bonito vive en la UI.
+ATRIBUCION_GIF = "(C) Gym visual - https://gymvisual.com/"
 
 # --- Material -----------------------------------------------------------------
 #
