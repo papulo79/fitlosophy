@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.28.1 - Primeros 18 candidatos aceptados y endurecimiento del generador
+
+- 18 ejercicios del dataset revisados y aceptados desde la app pasan a `data/ejercicios.yaml` (variantes de flexión, saltos, core lateral...).
+- La ampliación destapó dos huecos del generador que la validación final detectaba pero la selección no evitaba: `anadir()` ahora rechaza patrón principal repetido (regla 1) y combinaciones de impacto lumbar rojo con otro rojo o con amarillo (regla 3/D4) **durante** la selección, no solo al validar.
+- Tests que asumían ejercicios concretos (`pushup-classic`, `pushup-feet-elevated`, `side-plank`, `rope-technical`) reescritos para no depender de qué candidato gana la regla 10.
+
 ## 0.28.0 - Importación masiva de candidatos con revisión en la aplicación
 
 - Nueva vía en `docs/15`: una colección externa de ejercicios se importa como candidatos revisables desde la app. El flujo manual queda intacto; la aceptación humana en la interfaz es la revisión explícita y es la única que escribe en `data/ejercicios.yaml`.

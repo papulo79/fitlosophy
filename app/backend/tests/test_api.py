@@ -342,8 +342,11 @@ def test_sustitucion_invalida_rechazada_con_motivo(client):
     motivos = r.json()["detail"]["motivos"]
     assert any("lumbar" in m for m in motivos)
 
-    # Dominada por flexión: patrón distinto (regla 1).
-    indice_empuje = next(n for n, i in enumerate(items) if i["exercise_id"].startswith("pushup") or i["exercise_id"] == "pike-pushup")
+    # Dominada por otro ejercicio de B1: patrón distinto (regla 1).
+    indice_empuje = next(
+        n for n, i in enumerate(items)
+        if i["bloque"] == "B1" and i["exercise_id"] != "kb-swing-two-hand"
+    )
     r = client.post(
         f"/api/propuestas/{propuesta['id']}/sustituir",
         json={"item_indice": indice_empuje, "exercise_id": "pullup-strict"},
@@ -1011,16 +1014,18 @@ def test_la_reserva_solo_donde_significa_algo(client):
     por_id = {i["exercise_id"]: i for i in propuesta["items"]}
 
     assert por_id["kb-swing-two-hand"]["reserva"]           # series × repeticiones
-    assert por_id["pushup-feet-elevated"]["reserva"]
+    # El empuje lo decide la regla 10; cualquier variante en repeticiones la lleva.
+    empujes = [i for i in propuesta["items"] if "×" in i["dosis"] and " s" not in i["dosis"] and "por lado" not in i["dosis"]]
+    assert any(i["reserva"] for i in empujes)
 
     assert por_id["plank-front"]["reserva"] == ""           # isométrico, en segundos
     # El slot de core lateral lo gana el ejercicio menos usado del catálogo
     # (regla 10): cualquiera de los dos es isométrico en segundos, sin reserva.
     lateral = next(i for i in propuesta["items"] if i["exercise_id"] in ("side-plank", "side-plank-hip-adduction"))
     assert lateral["reserva"] == ""
-    assert por_id["rope-technical"]["reserva"] == ""        # saltos
-    assert por_id["agility-ladder-basic"]["reserva"] == ""  # pasadas, y además B0
+    for i in propuesta["items"]:
+        if "saltos" in i["dosis"] or "pasadas" in i["dosis"] or i["bloque"] == "B0":
+            assert i["reserva"] == ""                       # saltos / pasadas / B0
 
-    # La escalera y la comba se leen como coordinación, no como «control».
+    # La escalera se lee como coordinación, no como «control».
     assert por_id["agility-ladder-basic"]["intencion"] == "coordinacion"
-    assert por_id["rope-technical"]["intencion"] == "coordinacion"

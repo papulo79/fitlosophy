@@ -564,5 +564,6 @@ def test_modo_sin_material_patron_pendiente(catalog, perfil):
     texto = " ".join(sesion.notas)
     assert "tiron_horizontal" in texto and "pendiente" in texto
     assert "tiron_vertical" in texto
-    # Aun así sale una sesión completa sin material.
-    assert any(i.exercise_id == "pushup-classic" for i in sesion.items)
+    # Aun así sale una sesión completa sin material: algún empuje horizontal
+    # sin material entra en B1 (cuál concreto lo decide la regla 10).
+    assert any(catalog[i.exercise_id].patron == "empuje_horizontal" for i in sesion.items)

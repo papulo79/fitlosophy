@@ -562,3 +562,492 @@ exercises:
       evitar_fallo: true
     sin_material: true
     isometrico: true
+
+  - id: kettlebell-alternating-press
+    nombre: kettlebell alternating press
+    descripcion: Ponte de pie con los pies separados a la altura de los hombros, sosteniendo una pesa rusa
+      en cada mano a la altura de los hombros. Empuja una pesa rusa por encima de la cabeza, extendiendo el
+      brazo por completo.
+    patron: empuje_vertical
+    material:
+    - kettlebell
+    nivel: base
+    lateralidad: unilateral
+    coste_dimensiones:
+      empuje: medio
+      core: bajo
+    impacto_lumbar: amarillo
+    compatibilidad_bjj: limitada
+    objetivos:
+    - fuerza_resistencia
+    prescripcion:
+      series:
+      - 3
+      - 4
+      repeticiones:
+      - 8
+      - 12
+      reserva_repeticiones:
+      - 2
+      - 3
+      evitar_fallo: true
+      por_lado: true
+    isometrico: true
+
+  - id: clap-push-up
+    nombre: clap push up
+    descripcion: Comienza en posición de plancha alta con las manos un poco más separadas que el ancho de
+      los hombros. Baja el cuerpo hacia el suelo flexionando los codos, manteniendo el core activado.
+    patron: empuje_horizontal
+    material: []
+    nivel: base
+    lateralidad: bilateral
+    coste_dimensiones:
+      empuje: medio
+      core: bajo
+    impacto_lumbar: amarillo
+    compatibilidad_bjj: si
+    objetivos:
+    - fuerza_resistencia
+    prescripcion:
+      series:
+      - 3
+      - 4
+      repeticiones:
+      - 8
+      - 12
+      reserva_repeticiones:
+      - 2
+      - 3
+      evitar_fallo: true
+    sin_material: true
+    explosivo: true
+
+  - id: clock-push-up
+    nombre: clock push-up
+    descripcion: Comienza en una posición de plancha alta con las manos justo debajo de los hombros y el cuerpo
+      en línea recta. Baja el cuerpo hacia el suelo flexionando los codos, manteniéndolos cerca de los costados.
+    patron: empuje_horizontal
+    material: []
+    nivel: base
+    lateralidad: bilateral
+    coste_dimensiones:
+      empuje: medio
+      core: bajo
+    impacto_lumbar: amarillo
+    compatibilidad_bjj: si
+    objetivos:
+    - fuerza_resistencia
+    prescripcion:
+      series:
+      - 3
+      - 4
+      repeticiones:
+      - 8
+      - 12
+      reserva_repeticiones:
+      - 2
+      - 3
+      evitar_fallo: true
+    sin_material: true
+    isometrico: true
+
+  - id: incline-push-up-on-box
+    nombre: incline push-up (on box)
+    descripcion: Coloca las manos en el borde de una caja o una superficie elevada, ligeramente más separadas
+      que la altura de los hombros. Extiende las piernas detrás de ti, apoyándote en la punta de los pies,
+      formando una línea recta desde la cabeza hasta los talones.
+    patron: empuje_horizontal
+    material: []
+    nivel: base
+    lateralidad: bilateral
+    coste_dimensiones:
+      empuje: medio
+      core: bajo
+    impacto_lumbar: amarillo
+    compatibilidad_bjj: si
+    objetivos:
+    - fuerza_resistencia
+    prescripcion:
+      series:
+      - 3
+      - 4
+      repeticiones:
+      - 8
+      - 12
+      reserva_repeticiones:
+      - 2
+      - 3
+      evitar_fallo: true
+    sin_material: true
+
+  - id: modified-push-up-to-lower-arms
+    nombre: modified push up to lower arms
+    descripcion: Comienza en posición de flexión con las manos directamente debajo de los hombros y el cuerpo
+      en línea recta. Baja el cuerpo hacia el suelo flexionando los codos, manteniéndolos cerca de tu costado.
+    patron: empuje_horizontal
+    material: []
+    nivel: base
+    lateralidad: bilateral
+    coste_dimensiones:
+      empuje: medio
+      core: bajo
+      impacto_articular: bajo
+    impacto_lumbar: amarillo
+    compatibilidad_bjj: si
+    objetivos:
+    - fuerza_resistencia
+    prescripcion:
+      series:
+      - 3
+      - 4
+      repeticiones:
+      - 8
+      - 12
+      reserva_repeticiones:
+      - 2
+      - 3
+      evitar_fallo: true
+    sin_material: true
+
+  - id: 3-4-sit-up
+    nombre: 3/4 sit-up
+    descripcion: Túmbate sobre tu espalda con las rodillas flexionadas y los pies apoyados en el suelo. Coloca
+      las manos detrás de la cabeza con los codos apuntando hacia afuera.
+    patron: core_flexion_cadera
+    material: []
+    nivel: base
+    lateralidad: bilateral
+    coste_dimensiones:
+      core: medio
+      lumbar: bajo
+    impacto_lumbar: verde
+    compatibilidad_bjj: si
+    objetivos:
+    - core
+    prescripcion:
+      series:
+      - 3
+      - 4
+      repeticiones:
+      - 8
+      - 12
+      reserva_repeticiones:
+      - 2
+      - 3
+      evitar_fallo: true
+    sin_material: true
+
+  - id: archer-push-up
+    nombre: archer push up
+    descripcion: Comienza en posición de flexión de brazos con las manos un poco más separadas que el ancho
+      de los hombros. Extiende un brazo hacia el lado, paralelo al suelo.
+    patron: empuje_horizontal
+    material: []
+    nivel: base
+    lateralidad: bilateral
+    coste_dimensiones:
+      empuje: medio
+      core: bajo
+    impacto_lumbar: amarillo
+    compatibilidad_bjj: si
+    objetivos:
+    - fuerza_resistencia
+    prescripcion:
+      series:
+      - 3
+      - 4
+      repeticiones:
+      - 8
+      - 12
+      reserva_repeticiones:
+      - 2
+      - 3
+      evitar_fallo: true
+    sin_material: true
+
+  - id: back-and-forth-step
+    nombre: back and forth step
+    descripcion: Ponte de pie con los pies separados a la altura de los hombros. Da un paso adelante con el
+      pie derecho, flexionando la rodilla y bajando el cuerpo hacia una posición de zancada.
+    patron: acondicionamiento
+    material: []
+    nivel: base
+    lateralidad: bilateral
+    coste_dimensiones:
+      cardio: medio
+      impacto_articular: bajo
+    impacto_lumbar: amarillo
+    compatibilidad_bjj: si
+    objetivos:
+    - acondicionamiento
+    prescripcion:
+      series:
+      - 3
+      - 4
+      repeticiones:
+      - 8
+      - 12
+      reserva_repeticiones:
+      - 2
+      - 3
+      evitar_fallo: true
+    sin_material: true
+    explosivo: true
+
+  - id: backward-jump
+    nombre: backward jump
+    descripcion: Ponte de pie con los pies separados a la altura de los hombros. Flexiona ligeramente las
+      rodillas y salta hacia atrás, impulsándote con ambos pies.
+    patron: acondicionamiento
+    material: []
+    nivel: base
+    lateralidad: bilateral
+    coste_dimensiones:
+      cardio: medio
+      impacto_articular: bajo
+    impacto_lumbar: amarillo
+    compatibilidad_bjj: si
+    objetivos:
+    - acondicionamiento
+    prescripcion:
+      series:
+      - 3
+      - 4
+      repeticiones:
+      - 8
+      - 12
+      reserva_repeticiones:
+      - 2
+      - 3
+      evitar_fallo: true
+    sin_material: true
+
+  - id: biceps-pull-up
+    nombre: biceps pull-up
+    descripcion: Cuélgate de una barra de dominadas con las palmas mirando hacia afuera y las manos separadas
+      a la altura de los hombros. Activa el core y tira de tu cuerpo hacia arriba flexionando los codos, llevando
+      el pecho hacia la barra.
+    patron: tiron_vertical
+    material:
+    - barra_dominadas
+    nivel: base
+    lateralidad: bilateral
+    coste_dimensiones:
+      tiron: medio
+      agarre: medio
+    impacto_lumbar: amarillo
+    compatibilidad_bjj: limitada
+    objetivos:
+    - fuerza_resistencia
+    prescripcion:
+      series:
+      - 3
+      - 4
+      repeticiones:
+      - 8
+      - 12
+      reserva_repeticiones:
+      - 2
+      - 3
+      evitar_fallo: true
+
+  - id: arm-slingers-hanging-bent-knee-legs
+    nombre: arm slingers hanging bent knee legs
+    descripcion: Cuélgate de una barra de dominadas con los brazos completamente extendidos y las rodillas
+      flexionadas formando un ángulo de 90 grados. Activa el core y levanta las rodillas hacia el pecho, acercándolas
+      lo más posible a los codos.
+    patron: core_antiextension
+    material: []
+    nivel: base
+    lateralidad: bilateral
+    coste_dimensiones:
+      core: medio
+      lumbar: bajo
+    impacto_lumbar: amarillo
+    compatibilidad_bjj: limitada
+    objetivos:
+    - estabilidad_lumbopelvica
+    prescripcion:
+      series:
+      - 3
+      - 4
+      repeticiones:
+      - 8
+      - 12
+      reserva_repeticiones:
+      - 2
+      - 3
+      evitar_fallo: true
+    sin_material: true
+
+  - id: body-up
+    nombre: body-up
+    descripcion: Comienza colocando las manos sobre una superficie elevada, como un banco o unas barras paralelas,
+      con las palmas hacia abajo y los dedos apuntando hacia adelante. Extiende las piernas frente a ti, manteniendo
+      los talones en el suelo y el cuerpo recto.
+    patron: empuje_horizontal
+    material: []
+    nivel: base
+    lateralidad: bilateral
+    coste_dimensiones:
+      empuje: medio
+      core: bajo
+    impacto_lumbar: amarillo
+    compatibilidad_bjj: si
+    objetivos:
+    - fuerza_resistencia
+    prescripcion:
+      series:
+      - 3
+      - 4
+      repeticiones:
+      - 8
+      - 12
+      reserva_repeticiones:
+      - 2
+      - 3
+      evitar_fallo: true
+    sin_material: true
+
+  - id: burpee
+    nombre: burpee
+    descripcion: Comienza de pie con los pies separados a la altura de los hombros. Baja el cuerpo hacia una
+      posición de sentadilla flexionando las rodillas y colocando las manos en el suelo frente a ti.
+    patron: acondicionamiento
+    material: []
+    nivel: base
+    lateralidad: bilateral
+    coste_dimensiones:
+      cardio: medio
+      impacto_articular: bajo
+    impacto_lumbar: amarillo
+    compatibilidad_bjj: si
+    objetivos:
+    - acondicionamiento
+    prescripcion:
+      series:
+      - 3
+      - 4
+      repeticiones:
+      - 8
+      - 12
+      reserva_repeticiones:
+      - 2
+      - 3
+      evitar_fallo: true
+    sin_material: true
+
+  - id: bodyweight-drop-jump-squat
+    nombre: bodyweight drop jump squat
+    descripcion: Ponte de pie con los pies separados a la altura de los hombros. Baja el cuerpo hacia una
+      posición de sentadilla flexionando las rodillas y empujando las caderas hacia atrás.
+    patron: dominante_rodilla
+    material: []
+    nivel: base
+    lateralidad: bilateral
+    coste_dimensiones:
+      rodilla_piernas: medio
+      core: bajo
+    impacto_lumbar: amarillo
+    compatibilidad_bjj: si
+    objetivos:
+    - fuerza_resistencia
+    prescripcion:
+      series:
+      - 3
+      - 4
+      repeticiones:
+      - 8
+      - 12
+      reserva_repeticiones:
+      - 2
+      - 3
+      evitar_fallo: true
+    sin_material: true
+
+  - id: semi-squat-jump-male
+    nombre: semi squat jump (male)
+    descripcion: Ponte de pie con los pies separados a la altura de los hombros. Flexiona las rodillas y baja
+      el cuerpo hacia una posición de sentadilla.
+    patron: dominante_rodilla
+    material: []
+    nivel: base
+    lateralidad: bilateral
+    coste_dimensiones:
+      cardio: medio
+      impacto_articular: bajo
+    impacto_lumbar: amarillo
+    compatibilidad_bjj: si
+    objetivos:
+    - fuerza_resistencia
+    prescripcion:
+      series:
+      - 3
+      - 4
+      repeticiones:
+      - 8
+      - 12
+      reserva_repeticiones:
+      - 2
+      - 3
+      evitar_fallo: true
+    sin_material: true
+
+  - id: lunge-with-twist
+    nombre: lunge with twist
+    descripcion: Comienza de pie con los pies separados a la altura de los hombros. Da un paso adelante con
+      el pie derecho, bajando el cuerpo hasta una posición de zancada. Detén el ejercicio si aparece molestia
+      lumbar.
+    patron: dominante_rodilla
+    material: []
+    nivel: base
+    lateralidad: unilateral
+    coste_dimensiones:
+      rodilla_piernas: medio
+      core: bajo
+    impacto_lumbar: rojo
+    compatibilidad_bjj: si
+    objetivos:
+    - fuerza_resistencia
+    prescripcion:
+      series:
+      - 3
+      - 4
+      repeticiones:
+      - 8
+      - 12
+      reserva_repeticiones:
+      - 2
+      - 3
+      evitar_fallo: true
+      por_lado: true
+    sin_material: true
+
+  - id: forward-jump
+    nombre: forward jump
+    descripcion: Ponte de pie con los pies separados a la altura de los hombros. Flexiona las rodillas y baja
+      el cuerpo hacia una posición de sentadilla.
+    patron: acondicionamiento
+    material: []
+    nivel: base
+    lateralidad: bilateral
+    coste_dimensiones:
+      cardio: medio
+      impacto_articular: bajo
+    impacto_lumbar: amarillo
+    compatibilidad_bjj: si
+    objetivos:
+    - acondicionamiento
+    prescripcion:
+      series:
+      - 3
+      - 4
+      repeticiones:
+      - 8
+      - 12
+      reserva_repeticiones:
+      - 2
+      - 3
+      evitar_fallo: true
+    sin_material: true

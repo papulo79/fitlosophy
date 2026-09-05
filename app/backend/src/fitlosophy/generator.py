@@ -316,11 +316,19 @@ def generate(
     usados_principal: set[str] = set()
     usados_secundario: set[str] = set()
     usados_ids: set[str] = set()
+    lumbares: set[str] = set()
 
     def anadir(ej: Exercise, bloque: str, justificacion: str) -> bool:
         # Regla 1 de composición: patrón principal único y secundarios no
         # compartidos entre ejercicios de la sesión (B0/B4 no cuentan).
         if ej.id in usados_ids or usados_secundario & set(ej.secundarios):
+            return False
+        if ej.patron in usados_principal:
+            return False
+        # Regla 3 / D4: un rojo no convive con otro rojo ni con amarillos.
+        if ej.impacto_lumbar == "rojo" and lumbares & {"rojo", "amarillo"}:
+            return False
+        if ej.impacto_lumbar == "amarillo" and "rojo" in lumbares:
             return False
         pts = puntos_propuesta(ej, familia, _es_dosis_minima(familia))
         if not _encaja(pts, totales, prop.presupuestos):
@@ -338,6 +346,7 @@ def generate(
         usados_principal.add(ej.patron)
         usados_secundario.update(ej.secundarios)
         usados_ids.add(ej.id)
+        lumbares.add(ej.impacto_lumbar)
         return True
 
     items.extend(_b0(catalog, material, ultimo_uso, prop.fecha))
