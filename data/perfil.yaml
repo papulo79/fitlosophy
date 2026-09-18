@@ -58,7 +58,7 @@ material:
   kettlebells_kg: [8, 12, 16]
   comba: true
   caja: true
-  gomas: true
+  gomas: false
   conos: true
   escalera_agilidad: true
   cinta_velocidad_max_kmh: 12
