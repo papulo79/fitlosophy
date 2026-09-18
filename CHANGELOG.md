@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.29.0 - Cuatro ejercicios manuales contra la monotonía
+
+El análisis del histórico real (18 sesiones cerradas, 24 ejercicios distintos) mostró repetición alta por tres causas: la regla de variedad solo existe desde el 3-sep, los pools de B0/B2/B3 tiran de patrones con 1-5 ejercicios, y la goma nunca se declara disponible en el estado diario (dejando fuera `pallof-press`, el único `core_antirotacion`).
+
+- Cuatro ejercicios nuevos por el flujo manual de `docs/15` (dossier en `data/candidatos.yaml` y promoción validada con `validar_ejercicio.py`): **box-jump** (acondicionamiento, petición del atleta), **cones-shuttle** (agilidad: aceleración-frenada lineal, distinta del zigzag), **bird-dog** (segundo `core_antirotacion` y el primero sin material) y **copenhagen-short** (tercer `core_lateral`, primero con aductores).
+- `agility-ladder-lateral` se descartó antes de escribirlo: `agility-ladder-basic` ya incluye entradas laterales y carioca entre sus patrones — variante cosmética, criterio de descarte de `docs/15`.
+- `bird-dog` entra además en el pool de B0 (coste bajo, lumbar verde), que pasa de 6 a 7 elegibles.
+- Catálogo: 48 → 52 ejercicios. Suite en verde (151 tests).
+
 ## 0.28.1 - Primeros 18 candidatos aceptados y endurecimiento del generador
 
 - 18 ejercicios del dataset revisados y aceptados desde la app pasan a `data/ejercicios.yaml` (variantes de flexión, saltos, core lateral...).

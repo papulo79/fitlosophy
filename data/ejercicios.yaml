@@ -1051,3 +1051,172 @@ exercises:
       - 3
       evitar_fallo: true
     sin_material: true
+
+  - id: kettlebell-alternating-hang-clean
+    nombre: kettlebell alternating hang clean
+    descripcion: Ponte de pie con los pies separados a la altura de los hombros, sosteniendo una pesa rusa
+      en cada mano con agarre prono. Flexiona ligeramente las rodillas e inclínate hacia adelante desde las
+      caderas, manteniendo la espalda recta y el pecho elevado. Detén el ejercicio si aparece molestia lumbar.
+    patron: dominante_cadera
+    material:
+    - kettlebell
+    nivel: base
+    lateralidad: unilateral
+    coste_dimensiones:
+      bisagra: medio
+      lumbar: medio
+      agarre: bajo
+    impacto_lumbar: rojo
+    compatibilidad_bjj: limitada
+    objetivos:
+    - fuerza
+    prescripcion:
+      series:
+      - 3
+      - 4
+      repeticiones:
+      - 8
+      - 12
+      reserva_repeticiones:
+      - 2
+      - 3
+      evitar_fallo: true
+      por_lado: true
+
+  - id: kettlebell-arnold-press
+    nombre: kettlebell arnold press
+    descripcion: Ponte de pie con los pies separados a la altura de los hombros, sosteniendo una pesa rusa
+      en cada mano a la altura de los hombros con las palmas hacia ti. Activa el core y empuja las pesas rusas
+      por encima de la cabeza, girando las palmas hacia adelante mientras extiendes los brazos.
+    patron: empuje_vertical
+    material:
+    - kettlebell
+    nivel: base
+    lateralidad: bilateral
+    coste_dimensiones:
+      empuje: medio
+      core: bajo
+    impacto_lumbar: amarillo
+    compatibilidad_bjj: limitada
+    objetivos:
+    - fuerza_resistencia
+    prescripcion:
+      series:
+      - 3
+      - 4
+      repeticiones:
+      - 8
+      - 12
+      reserva_repeticiones:
+      - 2
+      - 3
+      evitar_fallo: true
+  - id: box-jump
+    nombre: Salto al cajón
+    descripcion: De pie frente al cajón, balanceo de brazos y cuarto de sentadilla;
+      salta con ambos pies y aterriza suave sobre el cajón con las rodillas alineadas.
+      Baja siempre andando, nunca saltando hacia atrás. Detén la serie si el aterrizaje
+      se vuelve ruidoso, las rodillas colapsan hacia dentro o notas molestia lumbar.
+    patron: acondicionamiento
+    material:
+    - caja
+    nivel: intermedio
+    lateralidad: bilateral
+    explosivo: true
+    coste_dimensiones:
+      cardio: medio
+      impacto_articular: medio
+      rodilla_piernas: bajo
+    impacto_lumbar: amarillo
+    compatibilidad_bjj: si
+    objetivos:
+    - potencia
+    - acondicionamiento
+    prescripcion:
+      series:
+      - 3
+      - 5
+      repeticiones:
+      - 3
+      - 5
+      evitar_fallo: true
+      detener_si_falla_tecnica: true
+  - id: cones-shuttle
+    nombre: Shuttle entre conos
+    descripcion: Dos conos separados 5-10 m. Sprinta de uno a otro, frena bajando el
+      centro de gravedad, toca la línea y gira para volver. Cada ida y vuelta cuenta
+      como un recorrido. Detente si frenas con la pierna rígida o aparece molestia en
+      la rodilla o la zona lumbar.
+    patron: agilidad
+    material:
+    - conos
+    nivel: intermedio
+    lateralidad: bilateral
+    explosivo: true
+    coste_dimensiones:
+      cardio: medio
+      impacto_articular: medio
+      rodilla_piernas: bajo
+    impacto_lumbar: amarillo
+    compatibilidad_bjj: si
+    objetivos:
+    - aceleracion
+    - cambio_direccion
+    prescripcion:
+      recorridos:
+      - 4
+      - 8
+  - id: bird-dog
+    nombre: Bird dog
+    descripcion: En cuadrupedia, extiende a la vez el brazo y la pierna contraria hasta
+      la línea del cuerpo, mantén un instante y vuelve con control. Si la pelvis rota
+      o la zona lumbar se arquea, reduce el recorrido o vuelve a apoyar la mano.
+    patron: core_antirotacion
+    material:
+    - tatami
+    nivel: base
+    lateralidad: unilateral
+    coste_dimensiones:
+      core: bajo
+    impacto_lumbar: verde
+    compatibilidad_bjj: si
+    objetivos:
+    - estabilidad_lumbopelvica
+    - antirotacion
+    prescripcion:
+      series:
+      - 2
+      - 3
+      repeticiones:
+      - 6
+      - 10
+      por_lado: true
+      evitar_fallo: true
+  - id: copenhagen-short
+    nombre: Plancha Copenhagen corta
+    descripcion: En plancha lateral sobre el antebrazo, apoya la cara interna de la
+      rodilla de la pierna superior sobre el cajón y eleva la cadera hasta alinear el
+      cuerpo. Mantén sin dejar caer la cadera; baja al suelo si la línea se rompe o
+      notas molestia en la cara interna del muslo.
+    patron: core_lateral
+    material:
+    - caja
+    nivel: intermedio
+    lateralidad: unilateral
+    isometrico: true
+    coste_dimensiones:
+      core: medio
+    impacto_lumbar: verde
+    compatibilidad_bjj: si
+    objetivos:
+    - estabilidad_lateral
+    - fuerza
+    prescripcion:
+      series:
+      - 2
+      - 3
+      segundos:
+      - 15
+      - 30
+      por_lado: true
+      evitar_fallo: true

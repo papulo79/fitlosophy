@@ -17831,3 +17831,181 @@ candidatos:
       evitar_fallo: true
     descripcion: Extiende los brazos rectos frente a ti. Cierra ambas manos en un puño.
     isometrico: false
+- id: box-jump
+  nombre: Salto al cajón
+  aliases: [box jump]
+  estado: candidato
+  fuentes:
+    - tipo: peticion_directa
+      referencia: conversación con el atleta (2026-09-18)
+      fecha_consulta: 2026-09-18
+      fragmento: «Hecho de menos no tener ejercicios de salto en el cajón de vez en cuando para variar.»
+  deduplicacion:
+    resultado: no_equivalente
+    equivalentes_catalogo: [forward-jump, backward-jump]
+    justificacion: Los saltos del catálogo son en el suelo; el salto al cajón añade
+      objetivo de altura y aterrizaje elevado controlado, con bajada andando.
+  dossier:
+    ejecucion: De pie frente al cajón, balanceo de brazos y cuarto de sentadilla; salta
+      con ambos pies y aterriza suave sobre el cajón con las rodillas alineadas. Baja
+      andando, nunca saltando hacia atrás.
+    limite_seguridad: Detener si el aterrizaje se vuelve ruidoso o las rodillas colapsan
+      hacia dentro; bajar siempre andando para proteger el tendón de Aquiles y la lumbar.
+    aporta: Pliometría baja-moderada con el material ya disponible; variedad en
+      acondicionamiento sin impacto repetido.
+    catalogacion_provisional:
+      patron: acondicionamiento
+      material: [caja]
+      nivel: intermedio
+      lateralidad: bilateral
+      coste_dimensiones: {cardio: medio, impacto_articular: medio, rodilla_piernas: bajo}
+      impacto_lumbar: amarillo
+      compatibilidad_bjj: si
+      objetivos: [potencia, acondicionamiento]
+      prescripcion: {series: [3, 5], repeticiones: [3, 5], evitar_fallo: true, detener_si_falla_tecnica: true}
+    evidencia:
+      ejecucion: confirmado_por_fuente
+      limite_seguridad: confirmado_por_fuente
+      impacto_lumbar: inferido_conservadoramente
+      coste_dimensiones: inferido_conservadoramente
+      prescripcion: inferido_conservadoramente
+  decision:
+    propuesta: candidato
+    motivo: Ejercicio estándar de pliometría; dosis y etiquetas catalogadas de forma conservadora.
+    autor: analista
+    fecha: 2026-09-18
+- id: cones-shuttle
+  nombre: Shuttle entre conos
+  aliases: [shuttle run, sprint de ida y vuelta]
+  estado: candidato
+  fuentes:
+    - tipo: inferencia_del_analista
+      referencia: análisis de cobertura del catálogo (2026-09-18)
+      fecha_consulta: 2026-09-18
+      fragmento: El patrón agilidad solo tiene 2 ejercicios estables; se busca una
+        variante de aceleración-frenada distinta del zigzag continuo.
+  deduplicacion:
+    resultado: no_equivalente
+    equivalentes_catalogo: [cones-zigzag]
+    justificacion: El zigzag encadena cambios de dirección laterales; el shuttle es
+      aceleración lineal, frenada y giro de 180°, estímulo distinto.
+  dossier:
+    ejecucion: Dos conos separados 5-10 m. Sprinta de uno a otro, frena bajando el
+      centro de gravedad, toca la línea y gira para volver. Cada ida y vuelta cuenta
+      como un recorrido.
+    limite_seguridad: Detener si la frenada se hace con la pierna rígida o aparece
+      molestia en rodilla o lumbar; superficie sin deslizar.
+    aporta: Tercer ejercicio de agilidad; aceleración y frenada lineal, gesto clave
+      del desplazamiento en pie en BJJ.
+    catalogacion_provisional:
+      patron: agilidad
+      material: [conos]
+      nivel: intermedio
+      lateralidad: bilateral
+      coste_dimensiones: {cardio: medio, impacto_articular: medio, rodilla_piernas: bajo}
+      impacto_lumbar: amarillo
+      compatibilidad_bjj: si
+      objetivos: [aceleracion, cambio_direccion]
+      prescripcion: {recorridos: [4, 8]}
+    evidencia:
+      ejecucion: confirmado_por_fuente
+      limite_seguridad: inferido_conservadoramente
+      impacto_lumbar: inferido_conservadoramente
+      coste_dimensiones: inferido_conservadoramente
+      prescripcion: inferido_conservadoramente
+  decision:
+    propuesta: candidato
+    motivo: Misma familia y etiquetas que cones-zigzag, ya estable; mecánica distinta.
+    autor: analista
+    fecha: 2026-09-18
+- id: bird-dog
+  nombre: Bird dog
+  aliases: [perro de caza, cuadrupedia con extensión cruzada]
+  estado: candidato
+  fuentes:
+    - tipo: inferencia_del_analista
+      referencia: análisis de cobertura del catálogo (2026-09-18)
+      fecha_consulta: 2026-09-18
+      fragmento: core_antirotacion depende de un único ejercicio (pallof-press) que
+        además requiere goma; se busca una opción sin material.
+  deduplicacion:
+    resultado: no_equivalente
+    equivalentes_catalogo: [dead-bug]
+    justificacion: El dead bug es antiextensión tumbado; el bird dog es antirotación
+      en cuadrupedia con apoyo cruzado, función distinta.
+  dossier:
+    ejecucion: En cuadrupedia, extiende a la vez el brazo y la pierna contraria hasta
+      la línea del cuerpo, sin dejar que la pelvis rote ni la espalda se arquee.
+      Mantén un instante y vuelve con control.
+    limite_seguridad: Si la pelvis rota o la zona lumbar se arquea, reduce el recorrido
+      o vuelve a apoyar la mano; nunca compensar arqueando la espalda.
+    aporta: Segundo ejercicio de core_antirotacion y el primero sin material; apto
+      para B0 por coste bajo y lumbar verde.
+    catalogacion_provisional:
+      patron: core_antirotacion
+      material: [tatami]
+      nivel: base
+      lateralidad: unilateral
+      coste_dimensiones: {core: bajo}
+      impacto_lumbar: verde
+      compatibilidad_bjj: si
+      objetivos: [estabilidad_lumbopelvica, antirotacion]
+      prescripcion: {series: [2, 3], repeticiones: [6, 10], por_lado: true, evitar_fallo: true}
+    evidencia:
+      ejecucion: confirmado_por_fuente
+      limite_seguridad: confirmado_por_fuente
+      impacto_lumbar: inferido_conservadoramente
+      coste_dimensiones: inferido_conservadoramente
+      prescripcion: inferido_conservadoramente
+  decision:
+    propuesta: candidato
+    motivo: Clásico de estabilidad lumbopélvica (repertorio McGill), conservador para
+      este perfil.
+    autor: analista
+    fecha: 2026-09-18
+- id: copenhagen-short
+  nombre: Plancha Copenhagen corta
+  aliases: [copenhagen plank corto]
+  estado: candidato
+  fuentes:
+    - tipo: inferencia_del_analista
+      referencia: análisis de cobertura del catálogo (2026-09-18)
+      fecha_consulta: 2026-09-18
+      fragmento: core_lateral solo tiene 2 ejercicios estables, ambos sin material;
+        se busca una progresión con la caja que además cargue aductores.
+  deduplicacion:
+    resultado: no_equivalente
+    equivalentes_catalogo: [side-plank, side-plank-hip-adduction]
+    justificacion: Las planchas laterales estables no cargan aductores contra
+      gravedad; la Copenhagen sostiene el cuerpo desde la pierna superior apoyada
+      en la caja, estímulo de aductores distinto y relevante para la guardia.
+  dossier:
+    ejecucion: En posición de plancha lateral sobre el antebrazo, apoya la cara
+      interna de la rodilla de la pierna superior sobre el cajón y eleva la cadera
+      hasta alinear el cuerpo. Mantén la posición sin dejar caer la cadera.
+    limite_seguridad: Baja la cadera al suelo si la línea del cuerpo se rompe o
+      aparece molestia en la cara interna del muslo; no forzar el rango.
+    aporta: Tercer ejercicio de core_lateral y primero con carga de aductores;
+      progresión natural de la plancha lateral.
+    catalogacion_provisional:
+      patron: core_lateral
+      material: [caja]
+      nivel: intermedio
+      lateralidad: unilateral
+      coste_dimensiones: {core: medio}
+      impacto_lumbar: verde
+      compatibilidad_bjj: si
+      objetivos: [estabilidad_lateral, fuerza]
+      prescripcion: {series: [2, 3], segundos: [15, 30], por_lado: true, evitar_fallo: true}
+    evidencia:
+      ejecucion: confirmado_por_fuente
+      limite_seguridad: confirmado_por_fuente
+      impacto_lumbar: inferido_conservadoramente
+      coste_dimensiones: inferido_conservadoramente
+      prescripcion: inferido_conservadoramente
+  decision:
+    propuesta: candidato
+    motivo: Versión corta (apoyo en rodilla), la regresión estándar de la Copenhagen,
+      prudente para este perfil.
+    autor: analista
+    fecha: 2026-09-18
