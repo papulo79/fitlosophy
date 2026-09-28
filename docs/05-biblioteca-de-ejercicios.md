@@ -60,7 +60,7 @@ Cada ejercicio define:
 - Impacto lumbar estimado.
 - Compatibilidad con BJJ posterior.
 - Progresiones, regresiones y sustitutos (referencias a otros `id` del catálogo).
-- Rango orientativo de series y repeticiones.
+- Rango orientativo de series y repeticiones (obligatorio: sin él no hay dosis que mostrar y el motor no programa el ejercicio, ver `docs/06`).
 - Descripción de ejecución y, cuando la dosis lo exige, la lista de patrones a recorrer (ver la sección siguiente).
 
 ## Ejecución

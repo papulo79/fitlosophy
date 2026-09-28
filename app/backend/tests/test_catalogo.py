@@ -7,6 +7,7 @@ el YAML a ojo con 28 ejercicios y creciendo: aquí quedan como pruebas.
 import pytest
 
 from fitlosophy.catalog import load_default_catalog
+from fitlosophy.generator import dosis_prescrita
 
 
 @pytest.fixture(scope="module")
@@ -85,3 +86,26 @@ def test_los_valores_de_los_ejercicios_estan_en_su_dominio(catalogo):
         for dim, nivel in e.coste_dimensiones.items():
             assert dim in val["dimensiones"], f"{e.id}: {dim}"
             assert nivel in val["nivel_coste"], f"{e.id}: {dim}={nivel}"
+
+
+def test_todo_ejercicio_declara_su_rango_de_dosis(catalogo):
+    """docs/05 y docs/06: la dosis sale de `prescripcion`, y sin rango el motor
+    no puede dosificar. `kb-swing-one-hand` llegó a una sesión de B1 sin series
+    ni repeticiones: la tarjeta mostraba el texto de relleno de `_dosis`
+    («dosis mínima»), que parece una instrucción y no lo es.
+
+    `russian-twist` es la única entrada sin dosis, y el motor ya no la programa:
+    rojo, `opcional` y solo alcanzable como sustituto manual del pallof press.
+    """
+    sin_dosis = {e.id for e in catalogo if not e.prescripcion}
+    assert sin_dosis == {"russian-twist"}, sorted(sin_dosis)
+
+
+def test_el_swing_a_una_mano_se_dosifica_por_lado(catalogo):
+    """Es unilateral y explosivo: la dosis lo dice «por lado» y lleva el corte
+    por técnica que su descripción declara en palabras (docs/05, criterio 1)."""
+    ej = catalogo["kb-swing-one-hand"]
+    assert ej.prescripcion["por_lado"] is True
+    assert ej.prescripcion["detener_si_falla_tecnica"] is True
+    assert dosis_prescrita(ej, "A") == "4×6 por lado"
+    assert dosis_prescrita(ej, "B") == "5×7 por lado"

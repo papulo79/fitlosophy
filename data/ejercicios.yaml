@@ -292,7 +292,7 @@ exercises:
   - id: kb-swing-one-hand
     nombre: Swing a una mano
     descripcion: >-
-      Swing sujetando con una sola mano, lo que añade una fuerte demanda de agarre y de resistencia a la rotación. Impacto lumbar alto: fuera de días amarillos o rojos y de las vísperas de BJJ.
+      Swing sujetando con una sola mano, lo que añade una fuerte demanda de agarre y de resistencia a la rotación. Impacto lumbar alto: fuera de días amarillos o rojos y de las vísperas de BJJ, y corta la serie en cuanto la espalda o la cadera pierdan el patrón.
     patron: dominante_cadera
     secundarios: [core_antirotacion]
     material: [kettlebell]
@@ -304,6 +304,11 @@ exercises:
     compatibilidad_bjj: "no"
     objetivos: [potencia, agarre, antirotacion]
     regresiones: [kb-swing-two-hand]
+    prescripcion:
+      series: [4, 6]
+      repeticiones: [6, 8]
+      por_lado: true
+      detener_si_falla_tecnica: true
 
   - id: windmill
     nombre: Windmill con kettlebell

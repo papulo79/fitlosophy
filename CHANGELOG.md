@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.29.1 - El swing a una mano recupera su dosis
+
+- `kb-swing-one-hand` no declaraba `prescripcion`, pero nada impedía programarlo: la regla de variedad lo eligió para B1 en un día verde sin BJJ y la tarjeta llegó a la pantalla con «dosis mínima», el texto de relleno de `_dosis`, sin series, sin repeticiones y sin la línea de reserva (la reserva solo se muestra en ejercicios dosificados en repeticiones). Ahora declara `series [4,6] × repeticiones [6,8]` por lado y `detener_si_falla_tecnica: true`, en el extremo conservador de su regresión a dos manos y por debajo de las 4×12 por lado que `docs/00` registra en el último episodio lumbar. En familia B se muestra «5×7 por lado» y en familia A «4×6 por lado».
+- `_candidatos` descarta los candidatos con `prescripcion` vacía: sin rango no hay cifra que mostrar ni series que recortar por la regla 7, así que ningún ejercicio vuelve a programarse sin dosis. Queda fuera de la generación `russian-twist`, la otra entrada sin prescripción (rojo, `opcional`, alcanzable solo como sustituto manual del pallof press).
+- `docs/05` marca el rango de dosis como obligatorio y `docs/06` documenta el descarte; dos tests de catálogo nuevos (el swing a una mano dosifica por lado, y la única entrada sin dosis es una excepción declarada).
+
 ## 0.29.0 - Cuatro ejercicios manuales contra la monotonía
 
 El análisis del histórico real (18 sesiones cerradas, 24 ejercicios distintos) mostró repetición alta por tres causas: la regla de variedad solo existe desde el 3-sep, los pools de B0/B2/B3 tiran de patrones con 1-5 ejercicios, y la goma nunca se declara disponible en el estado diario (dejando fuera `pallof-press`, el único `core_antirotacion`).

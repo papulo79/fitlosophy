@@ -152,6 +152,11 @@ def _candidatos(
             continue
         if ej.patron not in permitidos:
             continue
+        if not ej.prescripcion:
+            # docs/06: la dosis sale de `prescripcion`. Sin rango no hay cifra que
+            # mostrar ni series que recortar (regla 7), así que el ejercicio no se
+            # programa: `_dosis` solo podría devolver su texto de relleno.
+            continue
         if not ej.disponible_con(material):
             continue
         if motivos_exclusion(ej, prop, familia):

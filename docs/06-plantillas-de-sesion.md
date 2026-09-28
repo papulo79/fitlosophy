@@ -72,6 +72,7 @@ Se usan los rangos de `prescripcion` del catálogo:
 | D | según técnica | según técnica | sin estímulo |
 
 - Los flags del catálogo se respetan siempre: `evitar_fallo`, `detener_si_falla_tecnica`, `sin_balanceo`.
+- Un ejercicio sin rango de dosis en el catálogo no se programa: el motor descarta los candidatos con `prescripcion` vacía, porque no habría cifra que mostrar ni series que recortar por la regla 7.
 - Dosis en el extremo bajo del rango (familias A y C): los puntos del ejercicio se reducen a la mitad en las dimensiones donde su coste es `bajo`. Las dimensiones con coste medio o alto computan íntegras.
 - Descansos provisionales: fuerza 2-3 min; accesorio y core 60-90 s; acondicionamiento por densidad, sin recuperación completa.
 - La progresión entre semanas sigue `docs/07`: una sola variable a la vez, y solo si todas las series se completaron en el extremo alto con el RPE previsto o menor.
