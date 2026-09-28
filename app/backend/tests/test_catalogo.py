@@ -90,15 +90,21 @@ def test_los_valores_de_los_ejercicios_estan_en_su_dominio(catalogo):
 
 def test_todo_ejercicio_declara_su_rango_de_dosis(catalogo):
     """docs/05 y docs/06: la dosis sale de `prescripcion`, y sin rango el motor
-    no puede dosificar. `kb-swing-one-hand` llegó a una sesión de B1 sin series
-    ni repeticiones: la tarjeta mostraba el texto de relleno de `_dosis`
-    («dosis mínima»), que parece una instrucción y no lo es.
+    no puede dosificar: no hay cifra que mostrar ni series que recortar por la
+    regla 7. `kb-swing-one-hand` llegó a una sesión de B1 sin series ni
+    repeticiones porque se declaró sin `prescripcion`."""
+    sin_dosis = sorted(e.id for e in catalogo if not e.prescripcion)
+    assert sin_dosis == []
 
-    `russian-twist` es la única entrada sin dosis, y el motor ya no la programa:
-    rojo, `opcional` y solo alcanzable como sustituto manual del pallof press.
-    """
-    sin_dosis = {e.id for e in catalogo if not e.prescripcion}
-    assert sin_dosis == {"russian-twist"}, sorted(sin_dosis)
+
+def test_ninguna_dosis_cae_en_el_texto_de_relleno(catalogo):
+    """El relleno de `_dosis` («dosis mínima») no puede alcanzar a ningún
+    ejercicio en ninguna familia: es lo que hacía pasar por instrucción una
+    tarjeta sin dosis. Un `prescripcion` con solo flags y sin cifras también
+    cae ahí, así que esto vigila las dos formas de olvidarse."""
+    for e in catalogo:
+        for familia in ("A", "B", "C", "D"):
+            assert dosis_prescrita(e, familia) != "dosis mínima", (e.id, familia)
 
 
 def test_el_swing_a_una_mano_se_dosifica_por_lado(catalogo):

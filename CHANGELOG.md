@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.29.2 - El russian twist también declara su dosis
+
+- `russian-twist`, la última entrada del catálogo sin `prescripcion`, declara ahora `series [3,4] × repeticiones [8,10]`: por debajo de las 5×12 con 16 kg que `docs/00` registra en el último episodio lumbar y en la línea de `hanging-knee-raise` (mismo coste de core, 3-5 series). Con esto ningún ejercicio cae ya en el texto de relleno de `_dosis`.
+- Al tener dosis vuelve al pool de candidatos del motor (ya lo estaba antes del guardián de 0.29.1): sigue siendo `impacto_lumbar: rojo`, así que D3/D4/D5 y el límite de un solo estímulo lumbar rojo por día lo mantienen fuera de los días de BJJ y de sus vísperas. Conserva `opcional` y el pallof press como sustituto.
+- El test de catálogo pasa a exigir que no quede ninguna entrada sin `prescripcion`, y uno nuevo recorre las cuatro familias y falla si alguna dosis cae en «dosis mínima» (también cubre un `prescripcion` con flags y sin cifras).
+
 ## 0.29.1 - El swing a una mano recupera su dosis
 
 - `kb-swing-one-hand` no declaraba `prescripcion`, pero nada impedía programarlo: la regla de variedad lo eligió para B1 en un día verde sin BJJ y la tarjeta llegó a la pantalla con «dosis mínima», el texto de relleno de `_dosis`, sin series, sin repeticiones y sin la línea de reserva (la reserva solo se muestra en ejercicios dosificados en repeticiones). Ahora declara `series [4,6] × repeticiones [6,8]` por lado y `detener_si_falla_tecnica: true`, en el extremo conservador de su regresión a dos manos y por debajo de las 4×12 por lado que `docs/00` registra en el último episodio lumbar. En familia B se muestra «5×7 por lado» y en familia A «4×6 por lado».

@@ -434,6 +434,9 @@ exercises:
     objetivos: [rotacion]
     sustitutos: [pallof-press]
     opcional: true
+    prescripcion:
+      series: [3, 4]
+      repeticiones: [8, 10]
 
   - id: rope-technical
     nombre: Comba técnica
