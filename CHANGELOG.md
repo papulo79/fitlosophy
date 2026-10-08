@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.30.0 - Export del historial de entrenamiento
+
+- Nuevo `scripts/exportar_historial.py`: vuelca el historial de **un** atleta (recibe el nombre de usuario y filtra por `user_id`; nunca la tabla entera, criterio 10 de `docs/14`) a `temp/historico/`, ruta ignorada por git porque un export de la BD es dato de salud. Escribe tres ficheros regenerables: `ejercicios.csv` (una fila por ejercicio, con el contexto del día y de la sesión repetido), `sesiones.csv` (una fila por sesión, con los puntos previstos y reales sumados por dimensión) y `historico.md` (lo mismo que el primero, legible).
+- Pensado para analizar adherencia, volumen por dimensión, dosis real frente a prevista, peso usado y estado del día. El export deja ver los huecos: hoy el peso está anotado en 16 de 166 ejercicios completados y `bjj_records` está vacía, así que el BJJ solo consta por el estado diario.
+
 ## 0.29.2 - El russian twist también declara su dosis
 
 - `russian-twist`, la última entrada del catálogo sin `prescripcion`, declara ahora `series [3,4] × repeticiones [8,10]`: por debajo de las 5×12 con 16 kg que `docs/00` registra en el último episodio lumbar y en la línea de `hanging-knee-raise` (mismo coste de core, 3-5 series). Con esto ningún ejercicio cae ya en el texto de relleno de `_dosis`.

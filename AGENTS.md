@@ -41,7 +41,7 @@ fitlosophy/
 │   ├── backend/             # Motor (paquete fitlosophy) + API (fitlosophy_api) + tests pytest
 │   │   ├── src/fitlosophy/  # catalog, models, load, engine, generator
 │   │   ├── src/fitlosophy_api/  # FastAPI + SQLite: auth, usuarios, config, static, rutas, persistencia
-│   │   ├── scripts/         # init_db.py, crear_usuario.py, listar_usuarios.py, cambiar_password.py, validar_ejercicio.py, importar_candidatos.py, exportar_candidatos.py
+│   │   ├── scripts/         # init_db.py, crear_usuario.py, listar_usuarios.py, cambiar_password.py, validar_ejercicio.py, importar_candidatos.py, exportar_candidatos.py, exportar_historial.py
 │   │   ├── media/candidatos/    # GIFs de los candidatos importados (atribución Gym visual; no se versiona)
 │   │   ├── .env.example         # Plantilla de configuración (el .env real no se versiona)
 │   │   ├── README.md            # Instalación, configuración, usuarios, arranque, caché y tests
