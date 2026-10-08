@@ -18,6 +18,7 @@ Tres ficheros, todos regenerables:
 Uso:
     cd app/backend
     ./.venv/bin/python scripts/exportar_historial.py --usuario paulo
+    ./.venv/bin/python scripts/exportar_historial.py --usuario paulo --solo-cerradas
     ./.venv/bin/python scripts/exportar_historial.py --usuario paulo --salida /tmp/analisis
 """
 
@@ -51,7 +52,7 @@ SELECT ts.id, ts.fecha, ts.familia, ts.estado, ts.rpe_real, ts.finalizada_at,
   LEFT JOIN proposals p ON p.id = ts.proposal_id
   LEFT JOIN daily_states ds ON ds.id = p.daily_state_id
   LEFT JOIN session_closures sc ON sc.session_id = ts.id
- WHERE ts.user_id = ?
+ WHERE ts.user_id = ?{filtro}
  ORDER BY ts.fecha, ts.id
 """
 
@@ -59,7 +60,7 @@ ITEMS_SQL = """
 SELECT si.*
   FROM session_items si
   JOIN training_sessions ts ON ts.id = si.session_id
- WHERE ts.user_id = ?
+ WHERE ts.user_id = ?{filtro}
  ORDER BY si.session_id, si.id
 """
 
@@ -216,16 +217,28 @@ def _escribir_csv(ruta: Path, filas: list[dict]) -> None:
         escritor.writerows(filas)
 
 
-def _markdown(usuario: str, sesiones, por_sesion: dict) -> str:
+def _markdown(usuario: str, sesiones, por_sesion: dict, catalog) -> str:
+    """Listado legible, con nombres de ejercicio en español.
+
+    Marcar el check sin abrir el modal significa «se hizo tal cual» (docs/14),
+    así que la dosis del día *es* lo realizado: la columna «Desviación» solo
+    lleva algo cuando se registró una modificación, una sustitución o un ítem
+    que quedó sin hacer.
+    """
+    total_items = sum(len(por_sesion.get(s["id"], [])) for s in sesiones)
     lineas = [
         f"# Histórico de entrenamientos — {usuario}",
         "",
         f"Exportado el {datetime.now():%Y-%m-%d %H:%M}. "
-        f"{len(sesiones)} sesiones registradas.",
+        f"{len(sesiones)} sesiones, {total_items} ejercicios.",
+        "",
+        "La «dosis del día» equivale a lo realizado: marcar el check sin "
+        "desviación significa «tal cual» (docs/14). «Modificado» y "
+        "«sustituido» aparecen solo cuando se registraron como tales.",
         "",
     ]
     for s in sesiones:
-        items = por_sesion[s["id"]]
+        items = por_sesion.get(s["id"], [])
         fecha = s["fecha"][:10]
         dia = DIAS[datetime.strptime(fecha, "%Y-%m-%d").weekday()]
         lineas += [
@@ -235,20 +248,34 @@ def _markdown(usuario: str, sesiones, por_sesion: dict) -> str:
             f"{s['dolor'] if s['dolor'] is not None else '—'} · "
             f"BJJ: {s['bjj_disponible'] or '—'}"
             + (f" ({s['tipo_bjj']})" if s["tipo_bjj"] else ""),
-            f"- RPE real: {s['rpe_real'] if s['rpe_real'] is not None else '—'} · "
+            f"- RPE: {s['rpe_real'] if s['rpe_real'] is not None else '—'} · "
             f"sensación: {s['sensacion'] or '—'} · "
             f"molestias: {_lista(s['molestias']) or 'ninguna'} · "
-            f"duración estimada: {s['duracion_estimada_min'] or '—'} min",
+            f"{len(items)} ejercicios · duración estimada: "
+            f"{s['duracion_estimada_min'] or '—'} min",
             "",
-            "| Bloque | Ejercicio | Dosis prevista | Estado | Dosis real | Peso (kg) |",
-            "|---|---|---|---|---|---|",
+            "| Bloque | Ejercicio | Dosis del día | Peso (kg) | Desviación |",
+            "|---|---|---|---|---|",
         ]
         for it in items:
-            real = it["exercise_id_real"]
-            nombre = it["exercise_id"] + (f" → {real}" if real else "")
+            ej = catalog.get(it["exercise_id"])
+            real_ej = catalog.get(it["exercise_id_real"]) if it["exercise_id_real"] else None
+            nombre = ej.nombre if ej else it["exercise_id"]
+            if real_ej is not None:
+                nombre += f" → {real_ej.nombre}"
+            if it["estado"] == "pendiente":
+                desviacion = "no realizado"
+            elif it["estado"] == "sustituido" and real_ej is not None:
+                desviacion = f"sustituido por {real_ej.nombre}"
+            elif _real(it):
+                desviacion = f"modificado: {_real(it)}"
+            else:
+                desviacion = "—"
+            if it["motivo"]:
+                desviacion += f" ({it['motivo']})"
+            peso = it["carga_kg_real"] if it["carga_kg_real"] is not None else "—"
             lineas.append(
-                f"| {it['bloque']} | {nombre} | {it['dosis']} | {it['estado']} | "
-                f"{_real(it) or '—'} | {it['carga_kg_real'] if it['carga_kg_real'] is not None else '—'} |"
+                f"| {it['bloque']} | {nombre} | {it['dosis']} | {peso} | {desviacion} |"
             )
         lineas.append("")
     return "\n".join(lineas)
@@ -258,6 +285,11 @@ def main() -> int:
     parser = argparse.ArgumentParser(description="Exporta el historial de un usuario a CSV/Markdown.")
     parser.add_argument("--usuario", required=True, help="nombre de usuario (`username`)")
     parser.add_argument("--salida", type=Path, default=SALIDA_POR_DEFECTO, help="directorio de salida")
+    parser.add_argument(
+        "--solo-cerradas",
+        action="store_true",
+        help="exporta solo las sesiones cerradas (deja fuera las canceladas)",
+    )
     args = parser.parse_args()
 
     conn, ruta_bd = abrir_bd()
@@ -265,8 +297,9 @@ def main() -> int:
     catalog = load_default_catalog()
     dimensiones = list(catalog.valores["dimensiones"])
 
-    sesiones = conn.execute(SESIONES_SQL, (user_id,)).fetchall()
-    items = conn.execute(ITEMS_SQL, (user_id,)).fetchall()
+    filtro = " AND ts.estado = 'cerrada'" if args.solo_cerradas else ""
+    sesiones = conn.execute(SESIONES_SQL.format(filtro=filtro), (user_id,)).fetchall()
+    items = conn.execute(ITEMS_SQL.format(filtro=filtro), (user_id,)).fetchall()
     if not sesiones:
         print(f"El usuario «{args.usuario}» no tiene ninguna sesión registrada en {ruta_bd}.")
         return 0
@@ -284,12 +317,13 @@ def main() -> int:
     _escribir_csv(args.salida / "sesiones.csv", filas_sesion)
     _escribir_csv(args.salida / "ejercicios.csv", filas_ejercicios)
     (args.salida / "historico.md").write_text(
-        _markdown(args.usuario, sesiones, por_sesion), encoding="utf-8"
+        _markdown(args.usuario, sesiones, por_sesion, catalog), encoding="utf-8"
     )
 
     cerradas = sum(1 for s in sesiones if s["estado"] == "cerrada")
     completados = sum(1 for f in filas_ejercicios if f["estado_item"] == "completado")
-    print(f"Exportado el historial de «{args.usuario}» desde {ruta_bd}:")
+    alcance = "solo sesiones cerradas" if args.solo_cerradas else "todas las sesiones"
+    print(f"Exportado el historial de «{args.usuario}» desde {ruta_bd} ({alcance}):")
     print(f"  {len(sesiones)} sesiones ({cerradas} cerradas), {len(filas_ejercicios)} ejercicios ({completados} completados)")
     print(f"  {sesiones[0]['fecha'][:10]} → {sesiones[-1]['fecha'][:10]}")
     for nombre in ("sesiones.csv", "ejercicios.csv", "historico.md"):

@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.30.1 - El export puede ceñirse a las sesiones cerradas
+
+- `scripts/exportar_historial.py` acepta `--solo-cerradas`, que deja fuera las canceladas (25 de las 31 sesiones del historial actual de Pablo). El listado `historico.md` pasa a mostrar los nombres de ejercicio en español, la dosis del día, el peso y una columna de desviación («modificado», «sustituido», «no realizado»), y su encabezado recuerda que la dosis del día equivale a lo realizado: marcar el check sin desviación significa «tal cual» (docs/14).
+
 ## 0.30.0 - Export del historial de entrenamiento
 
 - Nuevo `scripts/exportar_historial.py`: vuelca el historial de **un** atleta (recibe el nombre de usuario y filtra por `user_id`; nunca la tabla entera, criterio 10 de `docs/14`) a `temp/historico/`, ruta ignorada por git porque un export de la BD es dato de salud. Escribe tres ficheros regenerables: `ejercicios.csv` (una fila por ejercicio, con el contexto del día y de la sesión repetido), `sesiones.csv` (una fila por sesión, con los puntos previstos y reales sumados por dimensión) y `historico.md` (lo mismo que el primero, legible).
