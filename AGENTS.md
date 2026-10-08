@@ -45,8 +45,8 @@ fitlosophy/
 │   │   ├── media/candidatos/    # GIFs de los candidatos importados (atribución Gym visual; no se versiona)
 │   │   ├── .env.example         # Plantilla de configuración (el .env real no se versiona)
 │   │   ├── README.md            # Instalación, configuración, usuarios, arranque, caché y tests
-│   │   └── tests/           # test_load.py, test_cases.py (docs/13), test_api.py, test_multiusuario.py, test_catalogo.py, test_config.py, test_static.py, test_candidatos.py
-│   └── frontend/            # MVP: Svelte 5 + Tailwind 4 + Vite (7 pantallas + login)
+│   │   └── tests/           # test_load.py, test_cases.py (docs/13), test_api.py, test_multiusuario.py, test_catalogo.py, test_config.py, test_static.py, test_candidatos.py, test_bienestar.py, test_actividades.py
+│   └── frontend/            # MVP: Svelte 5 + Tailwind 4 + Vite (8 pantallas + login)
 │       └── src/             # App.svelte (router hash), routes/ (pantallas), lib/ (api, stores, etiquetas)
 └── data/
     ├── perfil.yaml           # Datos del atleta: medidas, objetivos, BJJ, fuerza, movilidad, material, consideraciones
@@ -103,7 +103,7 @@ Nota: `docs/10-roadmap-del-producto.md` define las fases del producto (0–12). 
 - **Configuración del despliegue**: siempre por variable de entorno con respaldo en `app/backend/.env` (precedencia entorno > `.env` > valor por defecto). Toda clave nueva se documenta en `.env.example`; el `.env` real nunca se versiona. Los tests no leen el `.env` local (`tests/conftest.py`), así que un test no debe depender de él.
 - Identificadores en inglés; los valores de dominio se escriben exactamente como en los YAML (`dominante_cadera`, `verde`, `tiron_horizontal`...). Los textos al usuario (explicaciones) se generan en español.
 - Las reglas del motor se citan por su código (D1-D6, C1-C6, P1-P3) en la explicación, igual que en `docs/03`.
-- **Multiusuario (criterio 10 de `docs/14`)**: el despliegue es familiar y todo dato pertenece a un usuario. Cualquier consulta nueva sobre `daily_states`, `proposals`, `training_sessions`, `bjj_records` o `profiles` **debe filtrar por `user_id`**; las de `session_items` y `session_closures`, por su sesión. Un endpoint que reciba un id en la ruta pasa por los helpers `_sesion_propia`, `_propuesta_propia` o `_bjj_propio` de `routes.py`, que responden **404 y no 403**: un 403 confirmaría que ese identificador es de alguien. El núcleo `fitlosophy/` no sabe de usuarios y así debe seguir: recibe historial y material por parámetro.
+- **Multiusuario (criterio 10 de `docs/14`)**: el despliegue es familiar y todo dato pertenece a un usuario. Cualquier consulta nueva sobre `daily_states`, `proposals`, `training_sessions`, `bjj_records`, `morning_checkins`, `external_activities` o `profiles` **debe filtrar por `user_id`**; las de `session_items` y `session_closures`, por su sesión. Un endpoint que reciba un id en la ruta pasa por los helpers `_sesion_propia`, `_propuesta_propia` o `_bjj_propio` de `routes.py`, que responden **404 y no 403**: un 403 confirmaría que ese identificador es de alguien. El núcleo `fitlosophy/` no sabe de usuarios y así debe seguir: recibe historial y material por parámetro.
 - El alta de usuarios es **solo por línea de órdenes** (`scripts/`). No añadas endpoints de registro, gestión de cuentas ni administración: la ausencia de esa superficie es una decisión de seguridad, no un olvido.
 
 ### Consistencia entre documentos

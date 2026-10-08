@@ -3,6 +3,7 @@
   import Icon from "./lib/Icon.svelte";
   import Login from "./routes/Login.svelte";
   import EstadoDiario from "./routes/EstadoDiario.svelte";
+  import Bienestar from "./routes/Bienestar.svelte";
   import Propuesta from "./routes/Propuesta.svelte";
   import Ejecucion from "./routes/Ejecucion.svelte";
   import Cierre from "./routes/Cierre.svelte";
@@ -17,6 +18,7 @@
   const componentes = {
     "/login": Login,
     "/estado": EstadoDiario,
+    "/bienestar": Bienestar,
     "/propuesta": Propuesta,
     "/ejecucion": Ejecucion,
     "/cierre": Cierre,

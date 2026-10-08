@@ -3,6 +3,7 @@
 
   const DESTINOS = [
     { ruta: "/estado", icono: "hoy", etiqueta: "Hoy" },
+    { ruta: "/bienestar", icono: "recuperacion", etiqueta: "Bienestar" },
     { ruta: "/historial", icono: "historial", etiqueta: "Historial" },
     { ruta: "/perfil", icono: "perfil", etiqueta: "Perfil" },
   ];

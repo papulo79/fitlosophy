@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.32.0 - Registro de actividad externa
+
+- Nuevo registro de **actividad externa** (docs/morning_state/especificacion_actividad_externa.md) desde Historial: sesiones deportivas hechas fuera del generador (BJJ, grappling u otra con nombre), con fecha, duración, RPE 1-10, combates y observaciones opcionales. Se pueden consultar, corregir y eliminar (con confirmación), y varias el mismo día.
+- Aparecen en la lista y en el detalle del historial con la etiqueta «Actividad externa» y su **carga orientativa en UA** (duración × RPE, calculada al leer: no se guarda).
+- **Unificación con el registro de BJJ**: desaparece el botón «+ BJJ»; si la actividad es BJJ o grappling, además del registro informativo se crea y mantiene un `bjj_records` enlazado (clasificación desde el RPE: técnico hasta 4, normal hasta 7, duro a partir de 8; intensidad = RPE; fatiga de agarre opcional) para que el motor siga recibiendo la carga real. Ese registro enlazado se muestra una sola vez (como actividad externa) y se borra con ella; los BJJ antiguos sin enlace siguen viéndose y corrigiéndose como antes.
+- Backend: tabla `external_activities` (con `user_id`), columna `bjj_records.external_activity_id` (migración automática), endpoints `POST/PUT/DELETE /api/actividades` e inclusión en `/api/historial`, `/api/historial/{fecha}` y `/api/export`. Tests nuevos en `tests/test_actividades.py`.
+
+## 0.31.0 - Estado diario de bienestar
+
+- Nuevo apartado **Bienestar** en la barra inferior (entre Hoy e Historial), con la especificación de `docs/morning_state/especificacion_estado_diario.md`: registro matutino de una sola pantalla con seis indicadores opcionales (sueño, recuperación, molestias 0-10 con localización multiselección, energía, claridad mental y estrés previsto) y observaciones para circunstancias excepcionales. Un registro por fecha, editable en días anteriores, con vista de los últimos 7 días y tendencias de 7/14/30 días por indicador (sin índice global; los días sin registro no cuentan como 0).
+- Backend: tabla `morning_checkins` (con `user_id`, un registro por usuario y fecha) y endpoints `PUT/GET /api/bienestar/{fecha}` y `GET /api/bienestar?dias=N`; el export de datos lo incluye. Es **informativo**: no alimenta el motor de decisión ni toca `daily_states` (que sigue siendo el cuestionario de la sesión de «Hoy»).
+- Tests nuevos en `tests/test_bienestar.py` (registros parciales, upsert por fecha, días sin registro, rangos, aislamiento entre usuarios y export).
+
 ## 0.30.1 - El export puede ceñirse a las sesiones cerradas
 
 - `scripts/exportar_historial.py` acepta `--solo-cerradas`, que deja fuera las canceladas (25 de las 31 sesiones del historial actual de Pablo). El listado `historico.md` pasa a mostrar los nombres de ejercicio en español, la dosis del día, el peso y una columna de desviación («modificado», «sustituido», «no realizado»), y su encabezado recuerda que la dosis del día equivale a lo realizado: marcar el check sin desviación significa «tal cual» (docs/14).
