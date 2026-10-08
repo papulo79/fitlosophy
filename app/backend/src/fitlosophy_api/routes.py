@@ -29,6 +29,8 @@ from .auth import LoginIn, login, logout, usuario_actual
 from .db import cargar_json, db_conn, volcar_json
 from .history import construir_historial, dimensiones_de_molestias
 from .schemas import (
+    ActividadIn,
+    BienestarIn,
     BjjIn,
     BjjPut,
     CandidatoPutIn,
@@ -126,6 +128,15 @@ def _bjj_propio(conn, registro_id: int, user_id: int) -> sqlite3.Row:
     ).fetchone()
     if row is None:
         raise HTTPException(status_code=404, detail="Registro de BJJ no encontrado")
+    return row
+
+
+def _actividad_propia(conn, actividad_id: int, user_id: int) -> sqlite3.Row:
+    row = conn.execute(
+        "SELECT * FROM external_activities WHERE id = ? AND user_id = ?", (actividad_id, user_id)
+    ).fetchone()
+    if row is None:
+        raise HTTPException(status_code=404, detail="Actividad no encontrada")
     return row
 
 
@@ -809,13 +820,18 @@ def historial_lista(request: Request, dias: int = 30, user=Depends(usuario_actua
         ).fetchall()
         bjjs = conn.execute(
             "SELECT id, clasificacion, duracion_minutos FROM bjj_records "
-            "WHERE user_id = ? AND substr(fecha, 1, 10) = ?",
+            "WHERE user_id = ? AND substr(fecha, 1, 10) = ? AND external_activity_id IS NULL",
             (user_id, fecha),
         ).fetchall()
         estado = conn.execute(
             "SELECT id FROM daily_states WHERE user_id = ? AND substr(fecha, 1, 10) = ?",
             (user_id, fecha),
         ).fetchone()
+        actividades = conn.execute(
+            "SELECT id, tipo, nombre, duracion_minutos, rpe FROM external_activities "
+            "WHERE user_id = ? AND fecha = ? ORDER BY id",
+            (user_id, fecha),
+        ).fetchall()
 
         tipos: list[str] = []
         for s in sesiones:
@@ -824,7 +840,9 @@ def historial_lista(request: Request, dias: int = 30, user=Depends(usuario_actua
                 tipos.append(tipo)
         if bjjs:
             tipos.append("bjj")
-        if not sesiones and not bjjs:
+        if actividades:
+            tipos.append("externa")
+        if not sesiones and not bjjs and not actividades:
             tipos.append("descanso" if estado else "sin_registro")
 
         salida.append(
@@ -833,6 +851,7 @@ def historial_lista(request: Request, dias: int = 30, user=Depends(usuario_actua
                 "tipos": tipos,
                 "sesiones": [dict(s) for s in sesiones],
                 "bjj": [dict(b) for b in bjjs],
+                "actividades": [dict(a) for a in actividades],
                 "estado_diario": estado is not None,
             }
         )
@@ -865,7 +884,12 @@ def historial_detalle(fecha: str, request: Request, user=Depends(usuario_actual)
         (user_id, fecha),
     ).fetchall()
     bjjs = conn.execute(
-        "SELECT * FROM bjj_records WHERE user_id = ? AND substr(fecha, 1, 10) = ? ORDER BY id",
+        "SELECT * FROM bjj_records WHERE user_id = ? AND substr(fecha, 1, 10) = ? "
+        "AND external_activity_id IS NULL ORDER BY id",
+        (user_id, fecha),
+    ).fetchall()
+    actividades = conn.execute(
+        "SELECT * FROM external_activities WHERE user_id = ? AND fecha = ? ORDER BY id",
         (user_id, fecha),
     ).fetchall()
 
@@ -903,6 +927,7 @@ def historial_detalle(fecha: str, request: Request, user=Depends(usuario_actual)
             }
             for b in bjjs
         ],
+        "actividades": [_actividad_json(conn, a) for a in actividades],
     }
 
 
@@ -943,6 +968,148 @@ def corregir_bjj(registro_id: int, datos: BjjPut, user=Depends(usuario_actual), 
             conn.execute(f"UPDATE bjj_records SET {campo} = ? WHERE id = ?", (valor, registro_id))
     conn.commit()
     return {"id": registro_id, "detalle": "Registro corregido"}
+
+
+# --- Actividad externa (docs/morning_state/especificacion_actividad_externa.md) ---------
+#
+# Deporte hecho fuera del generador (BJJ, grappling u otra). La actividad es
+# informativa, pero si es BJJ o grappling también crea/mantiene un registro
+# enlazado en `bjj_records` para que el motor siga recibiendo la carga real
+# (docs/12); ese registro enlazado no se muestra ni se edita por separado.
+# La carga orientativa (UA = minutos × RPE) se calcula al leer, no se guarda.
+
+
+def _clasificacion_desde_rpe(rpe: int) -> str:
+    """Clasificación de la sesión de contacto a partir del RPE global."""
+    if rpe <= 4:
+        return "tecnico"
+    if rpe <= 7:
+        return "normal"
+    return "duro"
+
+
+def _sincronizar_bjj(conn, user_id: int, actividad_id: int, datos: ActividadIn) -> None:
+    """Mantiene el `bjj_records` enlazado a una actividad de contacto.
+
+    Crea el registro si la actividad es bjj/grappling y no lo tiene, lo
+    actualiza si lo tiene, y lo borra si la actividad deja de serlo.
+    """
+    enlazado = conn.execute(
+        "SELECT id FROM bjj_records WHERE external_activity_id = ? AND user_id = ?",
+        (actividad_id, user_id),
+    ).fetchone()
+    es_contacto = datos.tipo in ("bjj", "grappling")
+    if enlazado and not es_contacto:
+        conn.execute(
+            "DELETE FROM bjj_records WHERE id = ? AND user_id = ?", (enlazado["id"], user_id)
+        )
+        return
+    if not es_contacto:
+        return
+    campos = (
+        datos.fecha.isoformat() + "T12:00:00",
+        _clasificacion_desde_rpe(datos.rpe),
+        datos.duracion_minutos,
+        int(datos.fatiga_agarre),
+        datos.rpe,
+        datos.observaciones,
+    )
+    if enlazado:
+        conn.execute(
+            "UPDATE bjj_records SET fecha = ?, clasificacion = ?, duracion_minutos = ?, "
+            "fatiga_agarre = ?, intensidad_percibida = ?, notas = ? WHERE id = ? AND user_id = ?",
+            (*campos, enlazado["id"], user_id),
+        )
+    else:
+        conn.execute(
+            """INSERT INTO bjj_records
+               (user_id, fecha, clasificacion, duracion_minutos, fatiga_agarre,
+                intensidad_percibida, notas, estimado, external_activity_id, created_at)
+               VALUES (?, ?, ?, ?, ?, ?, ?, 0, ?, ?)""",
+            (user_id, *campos, actividad_id, datetime.now().isoformat(timespec="seconds")),
+        )
+
+
+def _actividad_json(conn, row: sqlite3.Row) -> dict:
+    enlazado = conn.execute(
+        "SELECT fatiga_agarre FROM bjj_records WHERE external_activity_id = ? AND user_id = ?",
+        (row["id"], row["user_id"]),
+    ).fetchone()
+    return {
+        "id": row["id"],
+        "fecha": row["fecha"],
+        "tipo": row["tipo"],
+        "nombre": row["nombre"],
+        "duracion_minutos": row["duracion_minutos"],
+        "rpe": row["rpe"],
+        "carga_ua": row["duracion_minutos"] * row["rpe"],
+        "combates": row["combates"],
+        "observaciones": row["observaciones"],
+        "fatiga_agarre": bool(enlazado["fatiga_agarre"]) if enlazado else False,
+        "updated_at": row["updated_at"],
+    }
+
+
+@router.post("/api/actividades", status_code=201)
+def registrar_actividad(datos: ActividadIn, user=Depends(usuario_actual), conn=Depends(db_conn)):
+    ahora = datetime.now().isoformat(timespec="seconds")
+    cur = conn.execute(
+        """INSERT INTO external_activities
+           (user_id, fecha, tipo, nombre, duracion_minutos, rpe, combates, observaciones,
+            created_at, updated_at)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+        (
+            user["id"],
+            datos.fecha.isoformat(),
+            datos.tipo,
+            datos.nombre.strip() if datos.nombre else None,
+            datos.duracion_minutos,
+            datos.rpe,
+            datos.combates,
+            datos.observaciones,
+            ahora,
+            ahora,
+        ),
+    )
+    _sincronizar_bjj(conn, user["id"], int(cur.lastrowid), datos)
+    conn.commit()
+    return {"id": int(cur.lastrowid)}
+
+
+@router.put("/api/actividades/{actividad_id}")
+def corregir_actividad(actividad_id: int, datos: ActividadIn, user=Depends(usuario_actual), conn=Depends(db_conn)):
+    _actividad_propia(conn, actividad_id, user["id"])
+    conn.execute(
+        """UPDATE external_activities SET fecha = ?, tipo = ?, nombre = ?, duracion_minutos = ?,
+           rpe = ?, combates = ?, observaciones = ?, updated_at = ? WHERE id = ?""",
+        (
+            datos.fecha.isoformat(),
+            datos.tipo,
+            datos.nombre.strip() if datos.nombre else None,
+            datos.duracion_minutos,
+            datos.rpe,
+            datos.combates,
+            datos.observaciones,
+            datetime.now().isoformat(timespec="seconds"),
+            actividad_id,
+        ),
+    )
+    _sincronizar_bjj(conn, user["id"], actividad_id, datos)
+    conn.commit()
+    return {"id": actividad_id, "detalle": "Actividad corregida"}
+
+
+@router.delete("/api/actividades/{actividad_id}")
+def eliminar_actividad(actividad_id: int, user=Depends(usuario_actual), conn=Depends(db_conn)):
+    _actividad_propia(conn, actividad_id, user["id"])
+    # El registro de BJJ enlazado se va con su actividad.
+    conn.execute(
+        "DELETE FROM bjj_records WHERE external_activity_id = ? AND user_id = ?",
+        (actividad_id, user["id"]),
+    )
+    conn.execute("DELETE FROM external_activities WHERE id = ?", (actividad_id,))
+    conn.commit()
+    return {"detalle": "Actividad eliminada"}
 
 
 @router.put("/api/sesiones/{sesion_id}")
@@ -1005,6 +1172,107 @@ def actualizar_perfil(datos: PerfilPut, user=Depends(usuario_actual), conn=Depen
     return {"detalle": "Perfil actualizado"}
 
 
+# --- Bienestar matutino (docs/morning_state) --------------------------------------------
+#
+# Registro informativo de una sola vez por la mañana: no alimenta el motor de
+# decisión ni toca `daily_states`. Un registro por usuario y fecha (upsert).
+
+
+def _fecha_valida(fecha: str) -> date:
+    try:
+        d = date.fromisoformat(fecha)
+    except ValueError:
+        raise HTTPException(status_code=422, detail="Fecha inválida (formato YYYY-MM-DD)")
+    if d > date.today():
+        # El registro es matutino y evalúa cómo amaneces: un día futuro aún no
+        # se puede valorar.
+        raise HTTPException(status_code=422, detail="No se puede registrar un día futuro")
+    return d
+
+
+def _checkin_json(row: sqlite3.Row) -> dict:
+    return {
+        "fecha": row["fecha"],
+        "calidad_sueno": row["calidad_sueno"],
+        "recuperacion_fisica": row["recuperacion_fisica"],
+        "molestias_fisicas": row["molestias_fisicas"],
+        "zonas_molestias": cargar_json(row["zonas_molestias"], []),
+        "energia_fisica": row["energia_fisica"],
+        "claridad_mental": row["claridad_mental"],
+        "estres_previsto": row["estres_previsto"],
+        "observaciones": row["observaciones"],
+        "updated_at": row["updated_at"],
+    }
+
+
+@router.put("/api/bienestar/{fecha}")
+def guardar_bienestar(fecha: str, datos: BienestarIn, user=Depends(usuario_actual), conn=Depends(db_conn)):
+    d = _fecha_valida(fecha)
+    ahora = datetime.now().isoformat(timespec="seconds")
+    conn.execute(
+        """INSERT INTO morning_checkins
+           (user_id, fecha, calidad_sueno, recuperacion_fisica, molestias_fisicas,
+            zonas_molestias, energia_fisica, claridad_mental, estres_previsto,
+            observaciones, created_at, updated_at)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+           ON CONFLICT(user_id, fecha) DO UPDATE SET
+             calidad_sueno = excluded.calidad_sueno,
+             recuperacion_fisica = excluded.recuperacion_fisica,
+             molestias_fisicas = excluded.molestias_fisicas,
+             zonas_molestias = excluded.zonas_molestias,
+             energia_fisica = excluded.energia_fisica,
+             claridad_mental = excluded.claridad_mental,
+             estres_previsto = excluded.estres_previsto,
+             observaciones = excluded.observaciones,
+             updated_at = excluded.updated_at""",
+        (
+            user["id"],
+            d.isoformat(),
+            datos.calidad_sueno,
+            datos.recuperacion_fisica,
+            datos.molestias_fisicas,
+            volcar_json(datos.zonas_molestias),
+            datos.energia_fisica,
+            datos.claridad_mental,
+            datos.estres_previsto,
+            datos.observaciones,
+            ahora,
+            ahora,
+        ),
+    )
+    conn.commit()
+    return {"detalle": "Estado diario guardado"}
+
+
+@router.get("/api/bienestar/{fecha}")
+def obtener_bienestar(fecha: str, user=Depends(usuario_actual), conn=Depends(db_conn)):
+    d = _fecha_valida(fecha)
+    row = conn.execute(
+        "SELECT * FROM morning_checkins WHERE user_id = ? AND fecha = ?",
+        (user["id"], d.isoformat()),
+    ).fetchone()
+    # Un día sin registro no es un error ni un 0: se distingue expresamente.
+    return {"fecha": d.isoformat(), "registro": _checkin_json(row) if row else None}
+
+
+@router.get("/api/bienestar")
+def listar_bienestar(dias: int = 30, user=Depends(usuario_actual), conn=Depends(db_conn)):
+    """Últimos `dias` días, hoy incluido, con `registro: null` en los sin registrar."""
+    dias = max(1, min(dias, 90))
+    hoy = date.today()
+    filas = conn.execute(
+        "SELECT * FROM morning_checkins WHERE user_id = ? AND fecha >= ? AND fecha <= ?",
+        (user["id"], (hoy - timedelta(days=dias - 1)).isoformat(), hoy.isoformat()),
+    ).fetchall()
+    por_fecha = {f["fecha"]: _checkin_json(f) for f in filas}
+    return {
+        "dias": [
+            {"fecha": (hoy - timedelta(days=i)).isoformat(), "registro": por_fecha.get((hoy - timedelta(days=i)).isoformat())}
+            for i in range(dias)
+        ]
+    }
+
+
 # --- Catálogo de ejercicios (selector de sustituciones) ------------------------------------------
 
 
@@ -1032,6 +1300,8 @@ def exportar(user=Depends(usuario_actual), conn=Depends(db_conn)):
         "session_items": "session_id IN (SELECT id FROM training_sessions WHERE user_id = ?)",
         "session_closures": "session_id IN (SELECT id FROM training_sessions WHERE user_id = ?)",
         "bjj_records": "user_id = ?",
+        "morning_checkins": "user_id = ?",
+        "external_activities": "user_id = ?",
         "profiles": "user_id = ?",
     }
     volcado = {

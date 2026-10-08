@@ -10,6 +10,7 @@
     fisica: "Física",
     recuperacion: "Recuperación",
     bjj: "BJJ",
+    externa: "Externa",
     descanso: "Descanso",
     sin_registro: "Sin registro",
   };
@@ -17,6 +18,7 @@
     fisica: "fisica",
     recuperacion: "recuperacion",
     bjj: "bjj",
+    externa: "fisica",
     descanso: "descanso",
     sin_registro: "sin_registro",
   };
@@ -35,6 +37,24 @@
   let editandoBjj = $state(null); // id del registro en edición
   let bjj = $state({ clasificacion: "normal", duracion: "", fecha: "", fatiga_agarre: false, intensidad: "", notas: "" });
   let errorBjj = $state("");
+
+  // --- Formulario de actividad externa (docs/morning_state) ---
+  const TIPOS_ACTIVIDAD = { bjj: "BJJ", grappling: "Grappling", otra: "Otra" };
+  const nombreActividad = (a) => (a.tipo === "otra" ? a.nombre || "Otra" : TIPOS_ACTIVIDAD[a.tipo] || a.tipo);
+  const fechaLocal = (d) =>
+    `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  const HOY_LOCAL = fechaLocal(new Date()); // tope del selector de fecha: no se planifica a futuro
+  let mostrarFormActividad = $state(false);
+  let editandoActividad = $state(null); // id del registro en edición
+  let actividad = $state({ fecha: "", tipo: "bjj", nombre: "", duracion: "", rpe: "", combates: "", observaciones: "", fatiga_agarre: false });
+  let errorActividad = $state("");
+  let eliminandoActividad = $state(null); // id pendiente de confirmar el borrado
+  // Carga orientativa en unidades arbitrarias (minutos × RPE), vista en vivo.
+  let cargaUa = $derived(
+    Number(actividad.duracion) > 0 && Number(actividad.rpe) >= 1
+      ? Number(actividad.duracion) * Number(actividad.rpe)
+      : null
+  );
 
   // --- Corrección de RPE de una sesión ---
   let editandoRpe = $state(null); // id de sesión
@@ -87,6 +107,84 @@
     }
     errorBjj = "";
     mostrarFormBjj = true;
+  }
+
+  async function recargar() {
+    // Recargar lo visible tras un alta, una corrección o un borrado.
+    if (parametro) detalle = await api.get(`/api/historial/${parametro}`);
+    else dias = (await api.get("/api/historial?dias=30")).dias;
+  }
+
+  function abrirFormActividad(registro = null) {
+    if (registro) {
+      editandoActividad = registro.id;
+      actividad = {
+        fecha: registro.fecha,
+        tipo: registro.tipo,
+        nombre: registro.nombre || "",
+        duracion: String(registro.duracion_minutos),
+        rpe: String(registro.rpe),
+        combates: registro.combates != null ? String(registro.combates) : "",
+        observaciones: registro.observaciones || "",
+        fatiga_agarre: Boolean(registro.fatiga_agarre),
+      };
+    } else {
+      editandoActividad = null;
+      actividad = { fecha: parametro || HOY_LOCAL, tipo: "bjj", nombre: "", duracion: "", rpe: "", combates: "", observaciones: "", fatiga_agarre: false };
+    }
+    errorActividad = "";
+    mostrarFormActividad = true;
+  }
+
+  async function guardarActividad() {
+    errorActividad = "";
+    if (!actividad.fecha) {
+      errorActividad = "La fecha es obligatoria.";
+      return;
+    }
+    if (!actividad.duracion || Number(actividad.duracion) <= 0) {
+      errorActividad = "La duración debe ser un número entero mayor que cero.";
+      return;
+    }
+    if (!actividad.rpe || Number(actividad.rpe) < 1 || Number(actividad.rpe) > 10) {
+      errorActividad = "El RPE va de 1 a 10.";
+      return;
+    }
+    if (actividad.tipo === "otra" && !actividad.nombre.trim()) {
+      errorActividad = "Con «Otra» hay que indicar el nombre de la actividad.";
+      return;
+    }
+    const cuerpo = {
+      fecha: actividad.fecha,
+      tipo: actividad.tipo,
+      nombre: actividad.tipo === "otra" ? actividad.nombre.trim() : null,
+      duracion_minutos: Number(actividad.duracion),
+      rpe: Number(actividad.rpe),
+      combates: actividad.combates !== "" ? Number(actividad.combates) : null,
+      observaciones: actividad.observaciones.trim() || null,
+      fatiga_agarre: actividad.tipo === "otra" ? false : actividad.fatiga_agarre,
+    };
+    try {
+      if (editandoActividad) {
+        await api.put(`/api/actividades/${editandoActividad}`, cuerpo);
+      } else {
+        await api.post("/api/actividades", cuerpo);
+      }
+      mostrarFormActividad = false;
+      await recargar();
+    } catch (e) {
+      errorActividad = mensajeError(e);
+    }
+  }
+
+  async function eliminarActividad(id) {
+    try {
+      await api.del(`/api/actividades/${id}`);
+      eliminandoActividad = null;
+      await recargar();
+    } catch (e) {
+      errorDetalle = mensajeError(e);
+    }
   }
 
   async function guardarBjj() {
@@ -220,9 +318,11 @@
   <div class="space-y-4">
     <div class="flex items-center justify-between">
       <h2 class="font-display text-2xl font-bold tracking-wide">HISTORIAL (30 DÍAS)</h2>
-      <button onclick={() => abrirFormBjj()} class="flex min-h-11 items-center gap-1.5 rounded-xl border border-borde bg-superficie px-3 py-2 text-sm font-semibold text-apagado">
-        <Icon nombre="plus" tam={14} /> BJJ
-      </button>
+      <div class="flex gap-2">
+        <button onclick={() => abrirFormActividad()} class="flex min-h-11 items-center gap-1.5 rounded-xl border border-borde bg-superficie px-3 py-2 text-sm font-semibold text-apagado">
+          <Icon nombre="plus" tam={14} /> Actividad externa
+        </button>
+      </div>
     </div>
 
     {#if errorLista}
@@ -249,11 +349,13 @@
               {/each}
             </div>
           </div>
-          {#if dia.sesiones.length || dia.bjj.length}
+          {#if dia.sesiones.length || dia.bjj.length || dia.actividades?.length}
             <p class="mt-1 text-sm text-apagado">
               {#each dia.sesiones as s, i}{i > 0 ? " · " : ""}Sesión {s.familia} ({ESTADOS_SESION[s.estado] || s.estado}){/each}
               {#if dia.sesiones.length && dia.bjj.length} · {/if}
               {#each dia.bjj as b, i}{i > 0 ? " · " : ""}BJJ {b.clasificacion} {b.duracion_minutos} min{/each}
+              {#if (dia.sesiones.length || dia.bjj.length) && dia.actividades?.length} · {/if}
+              {#each dia.actividades || [] as a, i}{i > 0 ? " · " : ""}{nombreActividad(a)} {a.duracion_minutos} min · RPE {a.rpe}{/each}
             </p>
           {/if}
         </a>
@@ -265,8 +367,8 @@
     <div class="flex items-center justify-between">
       <h2 class="font-display text-2xl font-bold tracking-wide">{parametro}</h2>
       <div class="flex gap-2">
-        <button onclick={() => abrirFormBjj()} class="flex min-h-11 items-center gap-1.5 rounded-xl border border-borde bg-superficie px-3 py-2 text-sm font-semibold text-apagado">
-          <Icon nombre="plus" tam={14} /> BJJ
+        <button onclick={() => abrirFormActividad()} class="flex min-h-11 items-center gap-1.5 rounded-xl border border-borde bg-superficie px-3 py-2 text-sm font-semibold text-apagado">
+          <Icon nombre="plus" tam={14} /> Actividad
         </button>
         <a href="#/historial" class="flex min-h-11 items-center gap-1.5 rounded-xl border border-borde bg-superficie px-3 py-2 text-sm font-semibold text-apagado">
           <Icon nombre="atras" tam={14} /> Volver
@@ -403,7 +505,37 @@
         </section>
       {/each}
 
-      {#if !detalle.estados_diarios.length && !detalle.sesiones.length && !detalle.bjj.length}
+      {#each detalle.actividades || [] as a}
+        <section class="rounded-xl border border-borde bg-superficie p-4 text-sm">
+          <div class="flex items-center justify-between">
+            <h3 class="flex items-center gap-2 font-bold text-texto">
+              <Icon nombre="fisica" tam={16} /> {nombreActividad(a)} · {a.duracion_minutos} min · RPE {a.rpe}
+            </h3>
+            <span class="rounded-full bg-acento/15 px-2 py-0.5 text-xs font-medium text-acento">Actividad externa</span>
+          </div>
+          <p class="mt-1 text-apagado">
+            Carga orientativa: {a.carga_ua} UA
+            {#if a.combates != null}· {a.combates} combates{/if}
+            {#if a.observaciones}· {a.observaciones}{/if}
+          </p>
+          <div class="mt-2 flex items-center gap-3">
+            <button onclick={() => abrirFormActividad(a)} class="flex items-center gap-1 text-sm font-medium text-acento">
+              <Icon nombre="corregir" tam={13} /> Corregir
+            </button>
+            {#if eliminandoActividad === a.id}
+              <span class="text-sm text-rojo">¿Eliminar?</span>
+              <button onclick={() => eliminarActividad(a.id)} class="text-sm font-semibold text-rojo">Sí, eliminar</button>
+              <button onclick={() => (eliminandoActividad = null)} class="text-sm text-tenue">No</button>
+            {:else}
+              <button onclick={() => (eliminandoActividad = a.id)} class="flex items-center gap-1 text-sm font-medium text-rojo">
+                <Icon nombre="cerrar" tam={13} /> Eliminar
+              </button>
+            {/if}
+          </div>
+        </section>
+      {/each}
+
+      {#if !detalle.estados_diarios.length && !detalle.sesiones.length && !detalle.bjj.length && !(detalle.actividades || []).length}
         <p class="text-sm text-tenue">Sin registros este día.</p>
       {/if}
     {:else if !errorDetalle}
@@ -504,6 +636,69 @@
       <div class="mt-4 flex gap-2">
         <button onclick={() => (mostrarFormBjj = false)} class="flex-1 rounded-xl border border-borde py-3 font-medium text-apagado">Cancelar</button>
         <button onclick={guardarBjj} class="flex-1 rounded-xl bg-acento py-3 font-semibold text-fondo">Guardar</button>
+      </div>
+    </div>
+  </div>
+{/if}
+
+{#if mostrarFormActividad}
+  <div class="fixed inset-0 z-20 flex items-end justify-center bg-black/60" role="dialog">
+    <div class="max-h-[85vh] w-full max-w-xl overflow-y-auto rounded-t-2xl bg-superficie p-5">
+      <h3 class="mb-3 text-lg font-bold text-texto">
+        {editandoActividad ? "Corregir actividad externa" : "Registrar actividad externa"}
+      </h3>
+      <div class="space-y-3">
+        <div>
+          <p class="mb-1 text-xs font-semibold uppercase tracking-wider text-tenue">Actividad</p>
+          <Opciones
+            bind:valor={actividad.tipo}
+            opciones={[
+              { valor: "bjj", etiqueta: "BJJ" },
+              { valor: "grappling", etiqueta: "Grappling" },
+              { valor: "otra", etiqueta: "Otra" },
+            ]}
+          />
+        </div>
+        {#if actividad.tipo === "otra"}
+          <input bind:value={actividad.nombre} type="text" placeholder="Nombre de la actividad (obligatorio)" class="w-full rounded-xl border border-borde bg-fondo px-3 py-3 text-texto placeholder:text-tenue" />
+        {/if}
+        <div>
+          <p class="mb-1 text-xs font-semibold uppercase tracking-wider text-tenue">Fecha</p>
+          <input bind:value={actividad.fecha} type="date" max={HOY_LOCAL} class="w-full rounded-xl border border-borde bg-fondo px-3 py-3 text-texto" />
+        </div>
+        <div class="grid grid-cols-2 gap-2">
+          <input bind:value={actividad.duracion} type="number" min="1" step="1" placeholder="Duración (minutos)" class="rounded-xl border border-borde bg-fondo px-3 py-3 text-texto placeholder:text-tenue" />
+          <input bind:value={actividad.rpe} type="number" min="1" max="10" step="1" placeholder="RPE (1-10)" class="rounded-xl border border-borde bg-fondo px-3 py-3 text-texto placeholder:text-tenue" />
+        </div>
+        <p class="text-xs text-tenue">
+          RPE: 1–2 muy suave · 3–4 suave · 5–6 moderado · 7–8 intenso · 9 muy intenso · 10 máximo.
+          Valora el esfuerzo global de la sesión, no solo su parte más intensa; regístralo preferentemente poco después de terminar.
+        </p>
+        {#if cargaUa != null}
+          <p class="rounded-lg bg-fondo px-3 py-2 text-sm text-apagado">
+            Carga orientativa: <span class="font-semibold text-texto">{cargaUa} UA</span> (duración × RPE)
+          </p>
+        {/if}
+        {#if actividad.tipo !== "otra"}
+          <label class="flex items-center gap-2 text-sm text-texto">
+            <input type="checkbox" bind:checked={actividad.fatiga_agarre} class="h-5 w-5 accent-[#c8f04a]" />
+            Fatiga de agarre
+          </label>
+          <p class="text-xs text-tenue">
+            BJJ y grappling también cuentan para la carga que ve el generador (técnico hasta RPE 4, normal hasta 7, duro a partir de 8).
+          </p>
+        {/if}
+        <input bind:value={actividad.combates} type="number" min="0" step="1" placeholder="Número de combates (opcional)" class="w-full rounded-xl border border-borde bg-fondo px-3 py-3 text-texto placeholder:text-tenue" />
+        <input bind:value={actividad.observaciones} type="text" placeholder="Observaciones (opcional, ej. mucho trabajo de suelo)" class="w-full rounded-xl border border-borde bg-fondo px-3 py-3 text-texto placeholder:text-tenue" />
+      </div>
+      {#if errorActividad}
+        <p class="mt-3 flex items-center gap-2 rounded-lg bg-rojo/10 p-3 text-sm text-rojo">
+          <Icon nombre="aviso" tam={16} /> {errorActividad}
+        </p>
+      {/if}
+      <div class="mt-4 flex gap-2">
+        <button onclick={() => (mostrarFormActividad = false)} class="flex-1 rounded-xl border border-borde py-3 font-medium text-apagado">Cancelar</button>
+        <button onclick={guardarActividad} class="flex-1 rounded-xl bg-acento py-3 font-semibold text-fondo">Guardar</button>
       </div>
     </div>
   </div>

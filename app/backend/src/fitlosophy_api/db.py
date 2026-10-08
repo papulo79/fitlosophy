@@ -147,6 +147,9 @@ CREATE TABLE IF NOT EXISTS {nombre} (
     intensidad_percibida INTEGER,
     notas TEXT,
     estimado INTEGER NOT NULL DEFAULT 0,
+    -- Registro creado desde una actividad externa (docs/morning_state): se
+    -- muestra y se edita a través de ella, no por separado.
+    external_activity_id INTEGER REFERENCES external_activities(id),
     created_at TEXT NOT NULL
 )""",
     # Un perfil por usuario (antes era una fila única con CHECK (id = 1)).
@@ -182,6 +185,43 @@ CREATE TABLE IF NOT EXISTS {nombre} (
     created_at TEXT NOT NULL,
     revisado_at TEXT
 )""",
+    # Registro matutino de bienestar (docs/morning_state): informativo, no
+    # alimenta el motor de decisión. Un registro por usuario y fecha; todos los
+    # indicadores son anulables porque se permiten registros parciales.
+    "morning_checkins": """
+CREATE TABLE IF NOT EXISTS {nombre} (
+    id INTEGER PRIMARY KEY,
+    user_id INTEGER NOT NULL REFERENCES users(id),
+    fecha TEXT NOT NULL,               -- YYYY-MM-DD
+    calidad_sueno INTEGER,             -- 1-5
+    recuperacion_fisica INTEGER,       -- 1-5
+    molestias_fisicas INTEGER,         -- 0-10
+    zonas_molestias TEXT NOT NULL DEFAULT '[]',  -- JSON lista
+    energia_fisica INTEGER,            -- 1-5
+    claridad_mental INTEGER,           -- 1-5
+    estres_previsto INTEGER,           -- 1-5 (alto = más exigencia, no mejor estado)
+    observaciones TEXT,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL,
+    UNIQUE (user_id, fecha)
+)""",
+    # Actividad externa (docs/morning_state/especificacion_actividad_externa.md):
+    # deporte hecho fuera del generador —BJJ, grappling u otra—. Informativo:
+    # no alimenta el motor ni sustituye a `bjj_records` (que sí estima carga).
+    "external_activities": """
+CREATE TABLE IF NOT EXISTS {nombre} (
+    id INTEGER PRIMARY KEY,
+    user_id INTEGER NOT NULL REFERENCES users(id),
+    fecha TEXT NOT NULL,               -- YYYY-MM-DD
+    tipo TEXT NOT NULL,                -- bjj | grappling | otra
+    nombre TEXT,                       -- obligatorio si tipo = 'otra'
+    duracion_minutos INTEGER NOT NULL,
+    rpe INTEGER NOT NULL,              -- 1-10, esfuerzo global de la sesión
+    combates INTEGER,                  -- NULL = no informado (distinto de 0)
+    observaciones TEXT,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL
+)""",
     # Solo intentos de login FALLIDOS: alimentan el freno de fuerza bruta de
     # auth.py. Un login correcto borra los de esa IP y los de ese usuario; los
     # antiguos se purgan.
@@ -205,6 +245,8 @@ CREATE INDEX IF NOT EXISTS idx_daily_states_user_fecha ON daily_states(user_id, 
 CREATE INDEX IF NOT EXISTS idx_proposals_user_fecha ON proposals(user_id, fecha);
 CREATE INDEX IF NOT EXISTS idx_training_sessions_user_fecha ON training_sessions(user_id, fecha);
 CREATE INDEX IF NOT EXISTS idx_bjj_records_user_fecha ON bjj_records(user_id, fecha);
+CREATE INDEX IF NOT EXISTS idx_morning_checkins_user_fecha ON morning_checkins(user_id, fecha);
+CREATE INDEX IF NOT EXISTS idx_external_activities_user_fecha ON external_activities(user_id, fecha);
 CREATE INDEX IF NOT EXISTS idx_session_items_session ON session_items(session_id);
 CREATE INDEX IF NOT EXISTS idx_candidates_estado ON candidates(estado);
 """
@@ -289,6 +331,22 @@ def _migrar_estado_propuestas(conn: sqlite3.Connection) -> None:
         "UPDATE proposals SET estado = 'descartada' WHERE estado = 'vigente' AND id NOT IN ("
         "  SELECT MAX(id) FROM proposals WHERE estado = 'vigente' GROUP BY date(fecha)"
         ")"
+    )
+    conn.commit()
+
+
+def _migrar_bjj_externa(conn: sqlite3.Connection) -> None:
+    """Columna `external_activity_id` en `bjj_records` (actividad externa unificada).
+
+    Es anulable y la tabla referenciada ya existe (se crea con el esquema), así
+    que basta un `ALTER TABLE`: no hay nada que reconstruir.
+    """
+    if not _existe(conn, "bjj_records"):
+        return
+    if "external_activity_id" in _columnas(conn, "bjj_records"):
+        return
+    conn.execute(
+        "ALTER TABLE bjj_records ADD COLUMN external_activity_id INTEGER REFERENCES external_activities(id)"
     )
     conn.commit()
 
@@ -382,6 +440,7 @@ def crear_esquema(conn: sqlite3.Connection) -> None:
     conn.commit()
     _migrar_estado_propuestas(conn)
     _migrar_multiusuario(conn)
+    _migrar_bjj_externa(conn)
     conn.executescript(INDICES)
     conn.commit()
 

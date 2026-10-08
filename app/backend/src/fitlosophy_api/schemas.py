@@ -5,7 +5,7 @@ Valores de dominio en español, exactamente como en los documentos.
 
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import date, datetime
 from typing import Literal
 
 from pydantic import BaseModel, Field, model_validator
@@ -116,6 +116,68 @@ class SesionPut(BaseModel):
 
 class PerfilPut(BaseModel):
     data: dict
+
+
+ZonaMolestia = Literal[
+    "lumbar", "cervical", "hombros", "brazos_manos", "cadera", "rodillas", "piernas_pies", "otras"
+]
+
+
+class BienestarIn(BaseModel):
+    """Registro matutino de bienestar (docs/morning_state).
+
+    Todo opcional: se guardan registros parciales. Uno por usuario y fecha;
+    es informativo y no modifica la planificación.
+    """
+
+    calidad_sueno: int | None = Field(default=None, ge=1, le=5)
+    recuperacion_fisica: int | None = Field(default=None, ge=1, le=5)
+    molestias_fisicas: int | None = Field(default=None, ge=0, le=10)
+    zonas_molestias: list[ZonaMolestia] = []
+    energia_fisica: int | None = Field(default=None, ge=1, le=5)
+    claridad_mental: int | None = Field(default=None, ge=1, le=5)
+    estres_previsto: int | None = Field(default=None, ge=1, le=5)
+    observaciones: str | None = None
+
+    @model_validator(mode="after")
+    def zonas_solo_con_molestias(self):
+        # La localización solo tiene sentido si hay molestias declaradas.
+        if not self.molestias_fisicas:
+            self.zonas_molestias = []
+        return self
+
+
+class ActividadIn(BaseModel):
+    """Actividad externa (docs/morning_state/especificacion_actividad_externa.md).
+
+    `combates` vacío queda no informado (NULL), que no es lo mismo que 0.
+    BJJ y grappling mantienen además un `bjj_records` enlazado que alimenta el
+    motor (excepción documentada en la especificación, §1).
+    """
+
+    fecha: date
+    tipo: Literal["bjj", "grappling", "otra"]
+    duracion_minutos: int = Field(gt=0)
+    rpe: int = Field(ge=1, le=10)
+    nombre: str | None = None
+    combates: int | None = Field(default=None, ge=0)
+    observaciones: str | None = None
+    # Solo para bjj/grappling: se propaga al registro que alimenta el motor
+    # (bjj_records), que es la única parte del alta que no es informativa.
+    fatiga_agarre: bool = False
+
+    @model_validator(mode="after")
+    def nombre_si_otra(self):
+        if self.tipo == "otra" and not (self.nombre and self.nombre.strip()):
+            raise ValueError("Con tipo «otra» hay que indicar el nombre de la actividad")
+        return self
+
+    @model_validator(mode="after")
+    def nada_de_futuro(self):
+        # Registra lo ya hecho; planificar actividades futuras está fuera de alcance.
+        if self.fecha > date.today():
+            raise ValueError("No se puede registrar una actividad en una fecha futura")
+        return self
 
 
 class CandidatoPutIn(BaseModel):
