@@ -145,6 +145,11 @@ def test_export_incluye_actividades(client):
     assert datos["external_activities"][0]["tipo"] == "bjj"
 
 
+def test_fecha_futura_rechazada(client):
+    futuro = (date.today() + timedelta(days=1)).isoformat()
+    assert client.post("/api/actividades", json={**EJEMPLO, "fecha": futuro}).status_code == 422
+
+
 def test_sin_autenticacion(app):
     with TestClient(app) as c:
         assert c.post("/api/actividades", json=EJEMPLO).status_code == 401

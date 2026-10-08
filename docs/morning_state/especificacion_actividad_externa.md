@@ -13,6 +13,8 @@ Esta funcionalidad será **independiente de «Estado diario»**: el Estado diari
 
 En esta versión los registros serán informativos: **no modificarán automáticamente** las sesiones propuestas por el generador.
 
+**Excepción documentada (decisión del atleta, v1.0):** las actividades de tipo **BJJ** o **Grappling** se unifican con el registro manual de BJJ ya existente —no tiene sentido anotar la misma clase dos veces—. Al guardarlas se crea y se mantiene un registro enlazado en el historial de BJJ que **sí alimenta la estimación de carga del motor** (docs/12), con la clasificación derivada del RPE (1–4 técnico, 5–7 normal, 8–10 duro), la intensidad igual al RPE y la fatiga de agarre opcional. Ese registro enlazado se muestra una sola vez (como actividad externa) y desaparece si la actividad se elimina o deja de ser de contacto. Las actividades de tipo **Otra** siguen siendo puramente informativas.
+
 ## 2. Ubicación y acceso
 
 - Incorporar la acción **«Registrar actividad externa»** en el apartado **Historial de entrenamientos**.
@@ -70,7 +72,7 @@ Para facilitar análisis posteriores, calcular una **carga interna orientativa**
 - Expresar el resultado en **unidades arbitrarias (UA)**, sin presentarlo como calorías ni como una medida fisiológica exacta.
 - Ejemplo: **BJJ · 60 min · RPE 7 → 420 UA**.
 - Cuando se muestren agregados diarios o semanales, distinguir las actividades externas y los entrenamientos generados. Solo sumar cargas de sesiones que dispongan de datos comparables; no convertir duraciones estimadas en duraciones reales.
-- La carga calculada no genera ajustes automáticos en esta versión.
+- La carga calculada no genera ajustes automáticos en esta versión (véase la excepción de BJJ/grappling en §1).
 
 ## 6. Fuera de alcance (v1.0)
 
@@ -78,7 +80,7 @@ Para facilitar análisis posteriores, calcular una **carga interna orientativa**
 - Frecuencia cardíaca, GPS, calorías o integración con relojes.
 - Cronómetro o registro en tiempo real.
 - Cuestionarios de recuperación o sueño (pertenecen a **Estado diario**).
-- Modificación automática del generador según la actividad externa.
+- Modificación automática del generador según la actividad externa (salvo la carga de contacto enlazada de la excepción documentada en §1).
 - Planificación de actividades externas futuras.
 
 ## 7. Requisitos funcionales
@@ -93,8 +95,8 @@ Para facilitar análisis posteriores, calcular una **carga interna orientativa**
 | AE-06 | Consultar, editar y eliminar registros | Alta |
 | AE-07 | Permitir varios registros en un mismo día | Alta |
 | AE-08 | Calcular y mostrar carga orientativa en UA | Media |
-| AE-09 | Mantener el registro independiente de Estado diario y del generador | Alta |
-| AE-10 | No alterar automáticamente los entrenamientos en v1.0 | Alta |
+| AE-09 | Mantener el registro independiente de Estado diario y del generador (salvo el enlace de BJJ/grappling de la excepción documentada en §1) | Alta |
+| AE-10 | No alterar automáticamente los entrenamientos en v1.0 más allá de la carga de contacto enlazada | Alta |
 
 ## 8. Criterios de aceptación
 

@@ -41,6 +41,9 @@
   // --- Formulario de actividad externa (docs/morning_state) ---
   const TIPOS_ACTIVIDAD = { bjj: "BJJ", grappling: "Grappling", otra: "Otra" };
   const nombreActividad = (a) => (a.tipo === "otra" ? a.nombre || "Otra" : TIPOS_ACTIVIDAD[a.tipo] || a.tipo);
+  const fechaLocal = (d) =>
+    `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  const HOY_LOCAL = fechaLocal(new Date()); // tope del selector de fecha: no se planifica a futuro
   let mostrarFormActividad = $state(false);
   let editandoActividad = $state(null); // id del registro en edición
   let actividad = $state({ fecha: "", tipo: "bjj", nombre: "", duracion: "", rpe: "", combates: "", observaciones: "", fatiga_agarre: false });
@@ -127,9 +130,7 @@
       };
     } else {
       editandoActividad = null;
-      const hoy = new Date();
-      const iso = `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, "0")}-${String(hoy.getDate()).padStart(2, "0")}`;
-      actividad = { fecha: parametro || iso, tipo: "bjj", nombre: "", duracion: "", rpe: "", combates: "", observaciones: "", fatiga_agarre: false };
+      actividad = { fecha: parametro || HOY_LOCAL, tipo: "bjj", nombre: "", duracion: "", rpe: "", combates: "", observaciones: "", fatiga_agarre: false };
     }
     errorActividad = "";
     mostrarFormActividad = true;
@@ -663,7 +664,7 @@
         {/if}
         <div>
           <p class="mb-1 text-xs font-semibold uppercase tracking-wider text-tenue">Fecha</p>
-          <input bind:value={actividad.fecha} type="date" class="w-full rounded-xl border border-borde bg-fondo px-3 py-3 text-texto" />
+          <input bind:value={actividad.fecha} type="date" max={HOY_LOCAL} class="w-full rounded-xl border border-borde bg-fondo px-3 py-3 text-texto" />
         </div>
         <div class="grid grid-cols-2 gap-2">
           <input bind:value={actividad.duracion} type="number" min="1" step="1" placeholder="Duración (minutos)" class="rounded-xl border border-borde bg-fondo px-3 py-3 text-texto placeholder:text-tenue" />

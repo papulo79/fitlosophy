@@ -995,11 +995,14 @@ def _sincronizar_bjj(conn, user_id: int, actividad_id: int, datos: ActividadIn) 
     actualiza si lo tiene, y lo borra si la actividad deja de serlo.
     """
     enlazado = conn.execute(
-        "SELECT id FROM bjj_records WHERE external_activity_id = ?", (actividad_id,)
+        "SELECT id FROM bjj_records WHERE external_activity_id = ? AND user_id = ?",
+        (actividad_id, user_id),
     ).fetchone()
     es_contacto = datos.tipo in ("bjj", "grappling")
     if enlazado and not es_contacto:
-        conn.execute("DELETE FROM bjj_records WHERE id = ?", (enlazado["id"],))
+        conn.execute(
+            "DELETE FROM bjj_records WHERE id = ? AND user_id = ?", (enlazado["id"], user_id)
+        )
         return
     if not es_contacto:
         return
@@ -1014,8 +1017,8 @@ def _sincronizar_bjj(conn, user_id: int, actividad_id: int, datos: ActividadIn) 
     if enlazado:
         conn.execute(
             "UPDATE bjj_records SET fecha = ?, clasificacion = ?, duracion_minutos = ?, "
-            "fatiga_agarre = ?, intensidad_percibida = ?, notas = ? WHERE id = ?",
-            (*campos, enlazado["id"]),
+            "fatiga_agarre = ?, intensidad_percibida = ?, notas = ? WHERE id = ? AND user_id = ?",
+            (*campos, enlazado["id"], user_id),
         )
     else:
         conn.execute(
@@ -1029,7 +1032,8 @@ def _sincronizar_bjj(conn, user_id: int, actividad_id: int, datos: ActividadIn) 
 
 def _actividad_json(conn, row: sqlite3.Row) -> dict:
     enlazado = conn.execute(
-        "SELECT fatiga_agarre FROM bjj_records WHERE external_activity_id = ?", (row["id"],)
+        "SELECT fatiga_agarre FROM bjj_records WHERE external_activity_id = ? AND user_id = ?",
+        (row["id"], row["user_id"]),
     ).fetchone()
     return {
         "id": row["id"],
@@ -1099,7 +1103,10 @@ def corregir_actividad(actividad_id: int, datos: ActividadIn, user=Depends(usuar
 def eliminar_actividad(actividad_id: int, user=Depends(usuario_actual), conn=Depends(db_conn)):
     _actividad_propia(conn, actividad_id, user["id"])
     # El registro de BJJ enlazado se va con su actividad.
-    conn.execute("DELETE FROM bjj_records WHERE external_activity_id = ?", (actividad_id,))
+    conn.execute(
+        "DELETE FROM bjj_records WHERE external_activity_id = ? AND user_id = ?",
+        (actividad_id, user["id"]),
+    )
     conn.execute("DELETE FROM external_activities WHERE id = ?", (actividad_id,))
     conn.commit()
     return {"detalle": "Actividad eliminada"}

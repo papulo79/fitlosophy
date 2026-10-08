@@ -6,6 +6,7 @@
 - Aparecen en la lista y en el detalle del historial con la etiqueta «Actividad externa» y su **carga orientativa en UA** (duración × RPE, calculada al leer: no se guarda).
 - **Unificación con el registro de BJJ**: desaparece el botón «+ BJJ»; si la actividad es BJJ o grappling, además del registro informativo se crea y mantiene un `bjj_records` enlazado (clasificación desde el RPE: técnico hasta 4, normal hasta 7, duro a partir de 8; intensidad = RPE; fatiga de agarre opcional) para que el motor siga recibiendo la carga real. Ese registro enlazado se muestra una sola vez (como actividad externa) y se borra con ella; los BJJ antiguos sin enlace siguen viéndose y corrigiéndose como antes.
 - Backend: tabla `external_activities` (con `user_id`), columna `bjj_records.external_activity_id` (migración automática), endpoints `POST/PUT/DELETE /api/actividades` e inclusión en `/api/historial`, `/api/historial/{fecha}` y `/api/export`. Tests nuevos en `tests/test_actividades.py`.
+- Revisión del PR: la especificación se enmienda para documentar la excepción de BJJ/grappling (§1, AE-09/AE-10), las consultas del registro enlazado filtran por `user_id` como manda la regla multiusuario y se rechazan fechas futuras (la planificación está fuera de alcance).
 
 ## 0.31.0 - Estado diario de bienestar
 

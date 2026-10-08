@@ -150,8 +150,9 @@ class BienestarIn(BaseModel):
 class ActividadIn(BaseModel):
     """Actividad externa (docs/morning_state/especificacion_actividad_externa.md).
 
-    Informativa: no alimenta el motor. `combates` vacío queda no informado
-    (NULL), que no es lo mismo que 0.
+    `combates` vacío queda no informado (NULL), que no es lo mismo que 0.
+    BJJ y grappling mantienen además un `bjj_records` enlazado que alimenta el
+    motor (excepción documentada en la especificación, §1).
     """
 
     fecha: date
@@ -169,6 +170,13 @@ class ActividadIn(BaseModel):
     def nombre_si_otra(self):
         if self.tipo == "otra" and not (self.nombre and self.nombre.strip()):
             raise ValueError("Con tipo «otra» hay que indicar el nombre de la actividad")
+        return self
+
+    @model_validator(mode="after")
+    def nada_de_futuro(self):
+        # Registra lo ya hecho; planificar actividades futuras está fuera de alcance.
+        if self.fecha > date.today():
+            raise ValueError("No se puede registrar una actividad en una fecha futura")
         return self
 
 
