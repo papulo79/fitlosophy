@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.33.0 - El export del historial cubre todas las entidades
+
+- `scripts/exportar_historial.py` deja de exportar solo sesiones: añade `actividades.csv` (una fila por actividad externa, con su carga en UA y los datos del registro de BJJ enlazado), `bienestar.csv` (los seis indicadores de cada revisión matutina, con la celda vacía cuando no se valoró) y `bjj.csv` (una fila por registro de BJJ, con `origen`: manual o desde actividad externa).
+- `historico.md` pasa a ser un **diario por días**: cada fecha reúne el bienestar de la mañana, las actividades externas, los registros manuales de BJJ y las sesiones del generador con su tabla de ejercicios, más un resumen de cobertura (días con algún registro y días vacíos). Así aparecen también los días sin sesión generada, que antes no salían en ninguna parte del export.
+- `--solo-cerradas` sigue filtrando solo las sesiones; actividades, bienestar y BJJ se exportan completos, y así queda dicho en la ayuda y en la cabecera del script. Con los datos actuales: 34 sesiones, 6 actividades (1.740 UA), 5 registros de BJJ y 9 revisiones.
+
 ## 0.32.0 - Registro de actividad externa
 
 - Nuevo registro de **actividad externa** (docs/morning_state/especificacion_actividad_externa.md) desde Historial: sesiones deportivas hechas fuera del generador (BJJ, grappling u otra con nombre), con fecha, duración, RPE 1-10, combates y observaciones opcionales. Se pueden consultar, corregir y eliminar (con confirmación), y varias el mismo día.
