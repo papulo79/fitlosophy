@@ -6,6 +6,7 @@
   import Plegable from "../lib/Plegable.svelte";
   import Intencion from "../lib/Intencion.svelte";
   import AccionesEjercicio from "../lib/AccionesEjercicio.svelte";
+  import WodCabecera from "../lib/WodCabecera.svelte";
 
   let propuesta = $derived(flujo.propuesta);
   let grupos = $derived(agruparPorBloque(propuesta?.items));
@@ -129,6 +130,9 @@
     {#each grupos as grupo}
       <section>
         <h3 class="mb-2 text-xs font-bold uppercase tracking-wider text-tenue">{BLOQUES[grupo.bloque] || grupo.bloque}</h3>
+        {#if grupo.bloque === "B3" && propuesta.wod}
+          <WodCabecera wod={propuesta.wod} />
+        {/if}
         <div class="space-y-2">
           {#each grupo.items as item}
             {@const idx = propuesta.items.indexOf(item)}

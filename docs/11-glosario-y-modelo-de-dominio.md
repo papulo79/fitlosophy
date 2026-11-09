@@ -49,6 +49,7 @@ El sistema distingue además entre dato conocido, estimado y desconocido, y act�
 - **Sustituto**: ejercicio que puede reemplazar a otro cumpliendo el mismo objetivo y patrón dentro de una sesión, sin invalidarla.
 - **Variable derivada**: dato inferido por el motor a partir del historial y la biblioteca (carga activa por dimensión, tiempo desde el último estímulo de un patrón, necesidad de descarga).
 - **Variante**: forma concreta de ejecutar un ejercicio (a una mano, con pausa, asistida). Un ejercicio puede tener varias variantes con distinto coste y nivel.
+- **WOD** (*workout of the day*): bloque de acondicionamiento con estructura temporal cerrada (AMRAP, EMOM, por tiempo). En este sistema no es una familia de sesión: es un formato de dosificación del bloque B3 (`docs/16`), sujeto a las mismas reglas duras y presupuestos que el resto de la sesión.
 
 ## Entidades
 

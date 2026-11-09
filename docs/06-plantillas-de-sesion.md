@@ -13,7 +13,7 @@ Toda sesión se compone de bloques ordenados (`docs/11`):
 - **B0 · Calentamiento** (5-10 min): movilidad, activación y coordinación. Ejercicios de coste bajo, `impacto_lumbar` verde (dead bug, puente de glúteos, escalera de agilidad).
 - **B1 · Principal**: fuerza o potencia. 2-4 ejercicios según familia. Los ejercicios explosivos van primero, la fuerza después.
 - **B2 · Accesorio y core**: 1-3 ejercicios de estabilidad o trabajo complementario.
-- **B3 · Acondicionamiento** (opcional): solo en familias que lo permiten y si queda presupuesto de cardio.
+- **B3 · Acondicionamiento** (opcional): solo en familias que lo permiten y si queda presupuesto de cardio. Puede dosificarse como series o con formato WOD (AMRAP, EMOM, por tiempo), según `docs/16`.
 - **B4 · Vuelta a la calma** (opcional, 3-5 min): respiración y movilidad suave.
 
 ## Plantillas por familia

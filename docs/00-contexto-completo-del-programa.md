@@ -316,6 +316,7 @@ Resultado esperado:
 - Trabajo cardiovascular o muscular estructurado.
 - Puede ser moderado o intenso.
 - El BJJ ya aporta una gran parte del trabajo intenso semanal.
+- Puede dosificarse con formato WOD (AMRAP, EMOM, por tiempo) bajo las reglas de `docs/16`: nunca en días rojos ni con dolor, y con las mismas restricciones lumbares y de agarre que el resto de la sesión.
 
 ### Descanso completo
 

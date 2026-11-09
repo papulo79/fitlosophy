@@ -62,7 +62,8 @@ fitlosophy/
 │   ├── 12-modelo-de-carga-e-inferencia.md
 │   ├── 13-casos-de-uso-y-validacion.md
 │   ├── 14-diseno-del-mvp.md
-│   └── 15-incorporacion-de-ejercicios-candidatos.md
+│   ├── 15-incorporacion-de-ejercicios-candidatos.md
+│   └── 16-wods-y-acondicionamiento-estructurado.md
 ├── app/
 │   ├── backend/             # Motor en Python (fitlosophy) + API FastAPI/SQLite (fitlosophy_api) + tests pytest
 │   └── frontend/            # MVP: Svelte 5 + Tailwind 4, 7 pantallas + login (Vite)
