@@ -534,16 +534,18 @@ def _grupo_wod(patron: str) -> str:
 
 
 def _dosis_estacion(ejercicio: Exercise, tipo: str) -> str:
-    """Dosis de una estación dentro del formato: un número que permite moverse
-    casi sin parar (docs/16, selección criterio 4). Fracción del extremo bajo
-    de la prescripción: el AMRAP/EMOM multiplica el volumen por las rondas, así
-    que la estación se dosifica por debajo de una serie normal. Provisional."""
+    """Dosis de una estación dentro del formato (docs/16).
+
+    La estación se repite varias veces por sesión (cada ronda del AMRAP o cada
+    vuelta del EMOM), así que su cifra parte del extremo bajo de una serie:
+    en AMRAP equivale a ese extremo (×1.0) y en EMOM al 80 % (×0.8), donde el
+    minuto fija el ritmo y lo que sobra descansa. Provisional (Fase 9)."""
     p = ejercicio.prescripcion
-    factor = 0.4 if tipo == "emom" else 0.5
+    factor = 0.8 if tipo == "emom" else 1.0
     por_lado = " por lado" if p.get("por_lado") else ""
     r = _rango(p.get("repeticiones"))
     if r is not None:
-        n = max(3 if tipo == "emom" else 4, round(r[0] * factor))
+        n = max(4 if tipo == "emom" else 5, round(r[0] * factor))
         return f"{n} repeticiones{por_lado}"
     if p.get("segundos") is not None:
         return f"{int(_rango(p['segundos'])[0])} s{por_lado}"
@@ -553,7 +555,8 @@ def _dosis_estacion(ejercicio: Exercise, tipo: str) -> str:
         n = max(10, round(int(_rango(p["saltos"])[0]) * factor))
         return f"{n} saltos"
     if p.get("recorridos") is not None:
-        return f"{int(_rango(p['recorridos'])[0])} recorridos"
+        n = max(2, round(int(_rango(p["recorridos"])[0]) * factor))
+        return f"{n} recorridos"
     return _dosis(ejercicio, "A")
 
 
@@ -683,17 +686,21 @@ def _construir_wod(
         return None
 
     if tipo == "emom":
-        nombres = " ↔ ".join(e.id for e in elegidos)
+        nombres = " ↔ ".join(e.nombre for e in elegidos)
         descripcion = (
             f"EMOM {minutos} min: estaciones en alternancia cada minuto "
             f"({nombres}); lo que sobre del minuto, descansa. "
-            f"RPE {rpe}: la primera mitad debe sentirse fácil."
+            f"RPE {rpe}: la primera mitad debe sentirse fácil. "
+            "Elige una carga que te deje mantener el ritmo (en sentadilla con "
+            "kettlebell, ligera); si la técnica se degrada, baja peso o repeticiones."
         )
     else:
         descripcion = (
             f"AMRAP {minutos} min: el mayor número de rondas completas de las "
             "estaciones en orden. "
-            f"RPE {rpe}: rondas homogéneas (±10 %); la primera debe sentirse lenta."
+            f"RPE {rpe}: rondas homogéneas (±10 %); la primera debe sentirse lenta. "
+            "Elige una carga que te deje mantener el ritmo (en sentadilla con "
+            "kettlebell, ligera); si la técnica se degrada, baja peso o repeticiones."
         )
     notas.append(f"B3 en formato WOD por preferencia declarada (P2, docs/16): {tipo.upper()} {minutos} min.")
     return WodBlock(

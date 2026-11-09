@@ -191,12 +191,18 @@ def test_sustitucion_de_estacion_conserva_dosis_wod(catalog, perfil):
 
 
 def test_dosis_estacion():
+    """La estación parte del extremo bajo de una serie: ×1.0 en AMRAP, ×0.8
+    en EMOM (se repite varias veces por sesión, docs/16)."""
     catalog = load_default_catalog()
-    squat = catalog.get("squat-libre")
-    assert _dosis_estacion(squat, "amrap") == "8 repeticiones"
-    assert _dosis_estacion(squat, "emom") == "6 repeticiones"
-    rope = catalog.get("rope-technical")
-    assert _dosis_estacion(rope, "amrap") == "50 saltos"
+    squat = catalog.get("squat-libre")  # repeticiones [15, 25]
+    assert _dosis_estacion(squat, "amrap") == "15 repeticiones"
+    assert _dosis_estacion(squat, "emom") == "12 repeticiones"
+    rope = catalog.get("rope-technical")  # 100 saltos
+    assert _dosis_estacion(rope, "amrap") == "100 saltos"
+    assert _dosis_estacion(rope, "emom") == "80 saltos"
+    goblet = catalog.get("goblet-squat")  # repeticiones [8, 15]
+    assert _dosis_estacion(goblet, "amrap") == "8 repeticiones"
+    assert _dosis_estacion(goblet, "emom") == "6 repeticiones"
 
 
 # --- API: persistencia y flujo --------------------------------------------------------

@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.35.1 - Dosis de estación del WOD calibrada al físico real
+
+- La fórmula de 0.34.0 fraccionaba el extremo bajo de una **serie** (×0.5 AMRAP / ×0.4 EMOM): con 3 estaciones en EMOM 12 salían 4 flexiones o 3 sentadillas por minuto, un volumen muy por debajo del nivel del atleta. Una estación no es una serie completa: se repite en cada ronda.
+- Nueva fórmula: **×1.0 del extremo bajo en AMRAP** (equivale a una serie) y **×0.8 en EMOM** (mínimos 5 y 4 repeticiones). Ejemplos reales: flexión 8 en EMOM, goblet squat 8 en AMRAP y 6 en EMOM, sentadilla libre 15/12, comba 100/80 saltos.
+- La descripción del formato añade la orientación de carga que el catálogo no prescribe en kilos: «elige una carga que te deje mantener el ritmo (en sentadilla con kettlebell, ligera); si la técnica se degrada, baja peso o repeticiones».
+- Corregido: la descripción del EMOM listaba los `id` internos en inglés; ahora usa los nombres en español.
+- `docs/16` actualizado (dosis de estación y valores provisionales); test de dosis con los casos reales.
+
 ## 0.35.0 - La preferencia del día es un selector visible y cerrado
 
 - La preferencia del estado diario era un **input de texto libre** escondido en el desplegable de opcionales, con placeholder «Preferencia (ej. sin impacto)»: el motor solo entiende el vocabulario cerrado de `docs/03` (`fuerza`, `potencia`, `acondicionamiento`, `tecnica`, `recuperacion`), así que el WOD de 0.34.0 era inalcanzable desde la interfaz y los valores libres se ignoraban en silencio.

@@ -122,7 +122,7 @@ Reglas con las que el generador construye el WOD (implementación provisional, F
 - **Condiciones**: familia A o B, presupuesto de cardio ≥ 1 punto y al menos 2 estaciones elegibles. Si no se cumplen, no hay WOD y la propuesta lo anota con el motivo.
 - **Formato por familia** (provisional): A → EMOM 12 min, RPE 5-6; B → AMRAP 15 min, RPE 7-8. Los dominios de tiempo de la tabla de objetivos son los límites de la validación.
 - **Estaciones = ítems normales**: puntúan presupuesto, admiten sustitución validada y comparten la regla 1 de patrones con el resto de la sesión (el WOD se construye antes que B1/B2 y reserva sus patrones: la preferencia del día es el cardio).
-- **Dosis de estación** (provisional): fracción del extremo bajo de la prescripción del ejercicio (×0.5 en AMRAP, ×0.4 en EMOM, mínimo 4 y 3 repeticiones), nunca series × repeticiones. El volumen total lo multiplica el formato por rondas.
+- **Dosis de estación** (provisional): parte del extremo bajo de la serie prescrita — ×1.0 en AMRAP (equivale a una serie) y ×0.8 en EMOM, con mínimos de 5 y 4 repeticiones —, nunca series × repeticiones. La estación se repite varias veces por sesión, así que el volumen total lo multiplica el formato por rondas.
 - **Recorte por tiempo** (regla 7): el WOD se elimina entero, nunca estación a estación.
 - **Persistencia**: la cabecera del formato (tipo, minutos, RPE, instrucción) se guarda en la propuesta; las estaciones viven como ítems de B3, así que una sustitución queda reflejada en ambas.
 
@@ -132,7 +132,6 @@ Antes de proponerse, el WOD se verifica como cualquier sesión (`docs/06`): punt
 
 ## Fuera de alcance
 
-- Implementación en el generador y la API (fase posterior: «primero se documenta, después se construye»).
 - Leaderboards, repeticiones máximas, competiciones tipo Open y clasificaciones: el WOD compite contra el reloj del propio atleta, no contra otros.
 - WODs con barra, mancuernas pesadas o gimnásticos de alta destreza: fuera del material y del perfil.
 
@@ -142,7 +141,7 @@ Antes de proponerse, el WOD se verifica como cualquier sesión (`docs/06`): punt
 - RPE de bloque por familia (5-6 en A, 7-8 en B).
 - Formato por familia (A → EMOM 12, B → AMRAP 15) y dominios de validación.
 - Número de movimientos (2-4; el generador usa 2-3), estación de agarre máxima (1).
-- Fórmula de dosis de estación (×0.5 AMRAP / ×0.4 EMOM del extremo bajo).
+- Fórmula de dosis de estación (×1.0 AMRAP / ×0.8 EMOM del extremo bajo; mínimos 5 y 4).
 - Umbral de presupuesto de cardio para generar WOD (1 punto).
 - Regla de homogeneidad de rondas (±10 %).
 - Lista de ejercicios prohibidos en WOD (deriva del catálogo; se revalida al crecer la biblioteca).
