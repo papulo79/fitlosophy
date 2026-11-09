@@ -8,10 +8,15 @@
 
   let sensacion = $state(null);
   let molestias = $state([]); // [{zona, intensidad}]
+  let rondas = $state(""); // marcador del WOD AMRAP/por tiempo (docs/16)
   let resultado = $state(null);
   let error = $state("");
   let cargando = $state(false);
   let descartando = $state(false);
+
+  // El EMOM no tiene rondas: el formato ya fija los minutos.
+  let pideRondas = $derived(Boolean(sesion?.wod && sesion.wod.tipo !== "emom"));
+  let nombreFormato = $derived(sesion?.wod?.tipo === "amrap" ? "AMRAP" : "por tiempo");
 
   function anadirMolestia() {
     molestias = [...molestias, { zona: "", intensidad: 3 }];
@@ -38,6 +43,7 @@
       resultado = await api.post(`/api/sesiones/${sesion.id}/cierre`, {
         sensacion,
         molestias: molestias.map((m) => ({ zona: m.zona.trim(), intensidad: m.intensidad })),
+        ...(pideRondas && rondas !== "" ? { rondas_completadas: Number(rondas) } : {}),
       });
       flujo.sesion = { ...flujo.sesion, estado: "cerrada" };
     } catch (e) {
@@ -114,6 +120,25 @@
           ]}
         />
       </section>
+
+      {#if pideRondas}
+        <section>
+          <p class="mb-2 text-xs font-semibold uppercase tracking-wider text-tenue">
+            Rondas completadas · WOD {nombreFormato}
+          </p>
+          <input
+            bind:value={rondas}
+            type="number"
+            min="0"
+            max="99"
+            placeholder="Ej. 7"
+            class="w-full rounded-xl border border-borde bg-superficie px-4 py-3 text-texto placeholder:text-tenue focus:border-acento focus:outline-none"
+          />
+          <p class="mt-1 text-xs text-tenue">
+            El marcador del WOD; se guarda para analizar la evolución (docs/16).
+          </p>
+        </section>
+      {/if}
 
       <section>
         <p class="mb-2 text-xs font-semibold uppercase tracking-wider text-tenue">Molestias posteriores</p>

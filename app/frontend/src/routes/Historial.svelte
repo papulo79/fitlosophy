@@ -70,7 +70,7 @@
 
   // --- Corrección del cierre (criterio 7 de docs/14) ---
   let cierreCorrigiendo = $state(null); // id de sesión
-  let cierreForm = $state({ sensacion: "como_previsto", molestias: [] });
+  let cierreForm = $state({ sensacion: "como_previsto", molestias: [], rondas: "" });
   let errorCierre = $state("");
 
   $effect(() => {
@@ -289,6 +289,7 @@
     cierreForm = {
       sensacion: s.cierre.sensacion,
       molestias: (s.cierre.molestias || []).map((m) => ({ ...m })),
+      rondas: s.cierre.rondas_completadas ?? "",
     };
     errorCierre = "";
   }
@@ -306,6 +307,9 @@
       await api.put(`/api/sesiones/${cierreCorrigiendo}/cierre`, {
         sensacion: cierreForm.sensacion,
         molestias: cierreForm.molestias.map((m) => ({ zona: m.zona.trim(), intensidad: Number(m.intensidad) || 0 })),
+        ...(cierreForm.rondas !== "" && cierreForm.rondas != null
+          ? { rondas_completadas: Number(cierreForm.rondas) }
+          : {}),
       });
       cierreCorrigiendo = null;
       detalle = await api.get(`/api/historial/${parametro}`);
@@ -440,6 +444,7 @@
             <div class="mt-3 text-sm text-apagado">
               <p>
                 Cierre: {s.cierre.sensacion.replace("_", " ")}
+                {#if s.cierre.rondas_completadas != null}· {s.cierre.rondas_completadas} rondas WOD{/if}
                 {#if s.cierre.molestias?.length}· molestias: {s.cierre.molestias.map((m) => `${m.zona} (${m.intensidad})`).join(", ")}{/if}
                 {#if s.cierre.dimensiones_congeladas?.length}· congela: {s.cierre.dimensiones_congeladas.join(", ")}{/if}
                 <button onclick={() => abrirCorreccionCierre(s)} class="ml-2 inline-flex items-center gap-1 font-medium text-acento">
@@ -465,6 +470,9 @@
                       </button>
                     </div>
                   {/each}
+                  {#if s.wod && s.wod.tipo !== "emom"}
+                    <input bind:value={cierreForm.rondas} type="number" min="0" max="99" placeholder="Rondas WOD completadas" class="w-full rounded-xl border border-borde bg-superficie px-3 py-2 text-texto placeholder:text-tenue" />
+                  {/if}
                   <button onclick={() => (cierreForm.molestias = [...cierreForm.molestias, { zona: "", intensidad: 3 }])} class="flex items-center gap-1.5 text-sm font-medium text-acento">
                     <Icon nombre="plus" tam={13} /> Añadir molestia
                   </button>

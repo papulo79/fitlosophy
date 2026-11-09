@@ -257,6 +257,69 @@ def test_api_propuesta_clasica_sin_wod(client):
     assert propuesta["wod"] is None
 
 
+def test_api_rondas_y_pesos_del_wod(client):
+    """El marcador del AMRAP y el peso de las estaciones se persisten y
+    vuelven en la lectura de la sesión (análisis de datos, docs/16)."""
+    propuesta = _crear_propuesta(client, preferencia="acondicionamiento")
+    assert propuesta["wod"]["tipo"] in ("amrap", "emom")
+    if propuesta["wod"]["tipo"] == "emom":
+        pytest.skip("el estado diario dio familia A (EMOM): sin rondas que registrar")
+
+    r = client.post("/api/sesiones", json={"proposal_id": propuesta["id"]})
+    sesion = r.json()["sesion"]
+    estaciones = [i for i in sesion["items"] if i["bloque"] == "B3"]
+    assert estaciones
+
+    # Peso de una estación con kettlebell (goblet squat, etc.).
+    con_peso = next((i for i in estaciones if i["admite_peso"]), None)
+    if con_peso is not None:
+        r = client.patch(
+            f"/api/sesiones/{sesion['id']}/items/{con_peso['id']}",
+            json={"estado": "completado", "carga_kg_real": 12},
+        )
+        assert r.status_code == 200, r.text
+
+    r = client.post(f"/api/sesiones/{sesion['id']}/finalizar", json={"rpe_real": 8})
+    assert r.status_code == 200, r.text
+    r = client.post(
+        f"/api/sesiones/{sesion['id']}/cierre",
+        json={"sensacion": "como_previsto", "molestias": [], "rondas_completadas": 7},
+    )
+    assert r.status_code == 201, r.text
+
+    detalle = client.get(f"/api/sesiones/{sesion['id']}").json()["sesion"]
+    assert detalle["cierre"]["rondas_completadas"] == 7
+    if con_peso is not None:
+        item = next(i for i in detalle["items"] if i["id"] == con_peso["id"])
+        assert item["real"]["carga_kg"] == 12
+
+
+def test_api_rondas_sin_wod_amrap_es_422(client):
+    """Sin WOD (o en EMOM) no hay marcador de rondas que registrar."""
+    propuesta = _crear_propuesta(client, preferencia="fuerza")
+    assert propuesta["wod"] is None
+    r = client.post("/api/sesiones", json={"proposal_id": propuesta["id"]})
+    sesion = r.json()["sesion"]
+    client.post(f"/api/sesiones/{sesion['id']}/finalizar", json={"rpe_real": 7})
+    r = client.post(
+        f"/api/sesiones/{sesion['id']}/cierre",
+        json={"sensacion": "como_previsto", "molestias": [], "rondas_completadas": 5},
+    )
+    assert r.status_code == 422
+
+
+def test_api_rondas_negativas_es_422(client):
+    propuesta = _crear_propuesta(client, preferencia="acondicionamiento")
+    r = client.post("/api/sesiones", json={"proposal_id": propuesta["id"]})
+    sesion = r.json()["sesion"]
+    client.post(f"/api/sesiones/{sesion['id']}/finalizar", json={"rpe_real": 8})
+    r = client.post(
+        f"/api/sesiones/{sesion['id']}/cierre",
+        json={"sensacion": "como_previsto", "molestias": [], "rondas_completadas": -1},
+    )
+    assert r.status_code == 422
+
+
 def test_api_preferencia_fuera_de_dominio_es_422(client):
     """La preferencia es vocabulario cerrado (docs/03): un valor libre se
     rechaza en la puerta en vez de ignorarse en silencio en el motor."""

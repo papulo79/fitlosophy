@@ -86,11 +86,14 @@ class MolestiaIn(BaseModel):
 class CierreIn(BaseModel):
     sensacion: Sensacion
     molestias: list[MolestiaIn] = []
+    # Marcador del WOD (docs/16): solo tiene sentido en AMRAP o por tiempo.
+    rondas_completadas: int | None = Field(default=None, ge=0, le=99)
 
 
 class CierrePut(BaseModel):
     sensacion: Sensacion | None = None
     molestias: list[MolestiaIn] | None = None
+    rondas_completadas: int | None = Field(default=None, ge=0, le=99)
 
 
 class BjjIn(BaseModel):

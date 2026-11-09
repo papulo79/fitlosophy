@@ -87,6 +87,12 @@ Las reglas de seguridad (`docs/03`) no se relajan por ser «solo un bloque corto
 - Se descansa en las transiciones, no de pie quieto: si una estación obliga a 45 s parado, la escala es insuficiente (ver selección, criterio 4).
 - Los flags del catálogo mandan dentro del formato: `evitar_fallo`, `detener_si_falla_tecnica`. Fatiga técnica = se detiene o se escala, aunque quede tiempo en el reloj.
 
+## Registro
+
+- **Rondas completadas**: marcador del WOD en AMRAP y por tiempo; se registra en el cierre de la sesión y es el dato que permite comparar el mismo WOD entre semanas. En EMOM no se registra: el formato ya fija los minutos. Se puede corregir desde el historial como cualquier cierre.
+- **Pesos**: cada estación es un ítem normal, así que el peso apuntado se guarda por ítem (`carga_kg_real`), también en las estaciones con kettlebell.
+- **Export**: `sesiones.csv` incluye `rondas_completadas` y el diario (`historico.md`) la muestra junto al cierre, para el análisis de datos.
+
 ## Ejemplos (catálogo actual)
 
 Escenario 1: familia A, BJJ normal por la tarde, todo fresco.

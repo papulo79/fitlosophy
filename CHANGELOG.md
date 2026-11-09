@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.36.0 - Rondas del WOD y pesos registrados para el análisis
+
+- **Contador de rondas**: el cierre de la sesión pide «Rondas completadas» cuando la sesión tiene un WOD AMRAP o por tiempo (no en EMOM, que ya fija los minutos). Se persiste en la nueva columna `session_closures.rondas_completadas` (migración idempotente), se devuelve en la sesión y se puede corregir desde el historial como el resto del cierre. El backend rechaza con 422 las rondas en sesiones sin WOD de rondas o con valor negativo.
+- **Pesos**: las estaciones del WOD son ítems normales, así que el peso apuntado en una estación con kettlebell se guarda igual que en cualquier ejercicio (`carga_kg_real`); se verificó con un test del flujo completo y ya salía en el export por ejercicio.
+- **Export**: `sesiones.csv` incluye `rondas_completadas` y `historico.md` la muestra en el bloque de cierre, para el análisis de las próximas semanas.
+- **Docs**: `docs/08` añade ambos datos al registro diario mínimo; `docs/16` estrena la sección «Registro».
+- Tests nuevos en `tests/test_wod.py`: flujo con rondas y peso, rondas sin WOD de rondas (422) y valor negativo (422). Suite en verde (199).
+
 ## 0.35.1 - Dosis de estación del WOD calibrada al físico real
 
 - La fórmula de 0.34.0 fraccionaba el extremo bajo de una **serie** (×0.5 AMRAP / ×0.4 EMOM): con 3 estaciones en EMOM 12 salían 4 flexiones o 3 sentadillas por minuto, un volumen muy por debajo del nivel del atleta. Una estación no es una serie completa: se repite en cada ronda.

@@ -561,16 +561,13 @@ def _sesion_json(conn, row, catalog) -> dict:
     cierre = conn.execute("SELECT * FROM session_closures WHERE session_id = ?", (row["id"],)).fetchone()
     # La cabecera WOD vive en la propuesta; las estaciones se reconstruyen
     # desde los ítems reales de la sesión (sustituciones incluidas, docs/16).
-    wod = None
-    if row["proposal_id"] is not None:
-        prop_row = conn.execute("SELECT wod FROM proposals WHERE id = ?", (row["proposal_id"],)).fetchone()
-        wod = _wod_desde_json(prop_row["wod"]) if prop_row else None
-        if wod is not None:
-            wod.estaciones = [
-                WodStation(exercise_id=i["exercise_id"], detalle=i["dosis"])
-                for i in items
-                if i["bloque"] == "B3"
-            ]
+    wod = _wod_de_sesion(conn, row)
+    if wod is not None:
+        wod.estaciones = [
+            WodStation(exercise_id=i["exercise_id"], detalle=i["dosis"])
+            for i in items
+            if i["bloque"] == "B3"
+        ]
     return {
         "id": row["id"],
         "proposal_id": row["proposal_id"],
@@ -589,8 +586,17 @@ def _sesion_json(conn, row, catalog) -> dict:
             "sensacion": cierre["sensacion"],
             "molestias": cargar_json(cierre["molestias"], []),
             "dimensiones_congeladas": cargar_json(cierre["dimensiones_congeladas"], []),
+            "rondas_completadas": cierre["rondas_completadas"],
         },
     }
+
+
+def _wod_de_sesion(conn, row) -> WodBlock | None:
+    """WOD de la propuesta que originó la sesión (None si B3 era clásico)."""
+    if row["proposal_id"] is None:
+        return None
+    prop_row = conn.execute("SELECT wod FROM proposals WHERE id = ?", (row["proposal_id"],)).fetchone()
+    return _wod_desde_json(prop_row["wod"]) if prop_row else None
 
 
 @router.post("/api/sesiones", status_code=201)
@@ -854,15 +860,27 @@ def cerrar_sesion(sesion_id: int, datos: CierreIn, request: Request, user=Depend
     if existente is not None:
         raise HTTPException(status_code=409, detail="La sesión ya tiene cierre; usa PUT para corregirlo")
 
+    # El marcador de rondas solo tiene sentido en un WOD AMRAP o por tiempo
+    # (docs/16): en EMOM el formato ya fija los minutos.
+    if datos.rondas_completadas is not None:
+        wod = _wod_de_sesion(conn, sesion)
+        if wod is None or wod.tipo not in ("amrap", "por_tiempo"):
+            raise HTTPException(
+                status_code=422,
+                detail="Las rondas completadas solo aplican a un WOD AMRAP o por tiempo",
+            )
+
     molestias = [m.model_dump() for m in datos.molestias]
     congeladas, desconocidas = dimensiones_de_molestias(molestias)
     conn.execute(
-        "INSERT INTO session_closures (session_id, sensacion, molestias, dimensiones_congeladas, created_at) VALUES (?, ?, ?, ?, ?)",
+        "INSERT INTO session_closures (session_id, sensacion, molestias, dimensiones_congeladas, rondas_completadas, created_at) "
+        "VALUES (?, ?, ?, ?, ?, ?)",
         (
             sesion_id,
             datos.sensacion,
             volcar_json(molestias),
             volcar_json(congeladas),
+            datos.rondas_completadas,
             datetime.now().isoformat(timespec="seconds"),
         ),
     )
@@ -1201,11 +1219,23 @@ def corregir_sesion(sesion_id: int, datos: SesionPut, user=Depends(usuario_actua
 
 @router.put("/api/sesiones/{sesion_id}/cierre")
 def corregir_cierre(sesion_id: int, datos: CierrePut, user=Depends(usuario_actual), conn=Depends(db_conn)):
-    _sesion_propia(conn, sesion_id, user["id"])
+    sesion = _sesion_propia(conn, sesion_id, user["id"])
     row = conn.execute("SELECT * FROM session_closures WHERE session_id = ?", (sesion_id,)).fetchone()
     if row is None:
         raise HTTPException(status_code=404, detail="La sesión no tiene cierre registrado")
+    if datos.rondas_completadas is not None:
+        wod = _wod_de_sesion(conn, sesion)
+        if wod is None or wod.tipo not in ("amrap", "por_tiempo"):
+            raise HTTPException(
+                status_code=422,
+                detail="Las rondas completadas solo aplican a un WOD AMRAP o por tiempo",
+            )
     sensacion = datos.sensacion or row["sensacion"]
+    rondas = (
+        datos.rondas_completadas
+        if datos.rondas_completadas is not None
+        else row["rondas_completadas"]
+    )
     molestias = (
         [m.model_dump() for m in datos.molestias]
         if datos.molestias is not None
@@ -1213,8 +1243,9 @@ def corregir_cierre(sesion_id: int, datos: CierrePut, user=Depends(usuario_actua
     )
     congeladas, _ = dimensiones_de_molestias(molestias)
     conn.execute(
-        "UPDATE session_closures SET sensacion = ?, molestias = ?, dimensiones_congeladas = ? WHERE session_id = ?",
-        (sensacion, volcar_json(molestias), volcar_json(congeladas), sesion_id),
+        "UPDATE session_closures SET sensacion = ?, molestias = ?, dimensiones_congeladas = ?, "
+        "rondas_completadas = ? WHERE session_id = ?",
+        (sensacion, volcar_json(molestias), volcar_json(congeladas), rondas, sesion_id),
     )
     conn.commit()
     return {"id": sesion_id, "dimensiones_congeladas": congeladas}

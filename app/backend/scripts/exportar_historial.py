@@ -57,7 +57,7 @@ SELECT ts.id, ts.fecha, ts.familia, ts.estado, ts.rpe_real, ts.finalizada_at,
        ds.recuperacion, ds.dolor, ds.zona_dolor, ds.bjj_disponible, ds.tipo_bjj,
        ds.limitacion, ds.sueno, ds.tiempo_disponible, ds.preferencia,
        ds.circunstancias, ds.material_disponible,
-       sc.sensacion, sc.molestias, sc.dimensiones_congeladas
+       sc.sensacion, sc.molestias, sc.dimensiones_congeladas, sc.rondas_completadas
   FROM training_sessions ts
   LEFT JOIN proposals p ON p.id = ts.proposal_id
   LEFT JOIN daily_states ds ON ds.id = p.daily_state_id
@@ -160,6 +160,7 @@ def _filas_sesion(sesion, items, dimensiones) -> dict:
         "sensacion": sesion["sensacion"] or "",
         "molestias": _lista(sesion["molestias"]),
         "dimensiones_congeladas": _lista(sesion["dimensiones_congeladas"]),
+        "rondas_completadas": sesion["rondas_completadas"] if sesion["rondas_completadas"] is not None else "",
         "recuperacion": sesion["recuperacion"] or "",
         "dolor": sesion["dolor"] if sesion["dolor"] is not None else "",
         "zona_dolor": sesion["zona_dolor"] or "",
@@ -371,7 +372,8 @@ def _bloque_sesion(s, items, catalog) -> list[str]:
         + f" · BJJ {s['bjj_disponible'] or '—'}"
         + (f" ({s['tipo_bjj']})" if s["tipo_bjj"] else ""),
         f"- Sensación: {s['sensacion'] or '—'} · molestias: "
-        f"{_lista(s['molestias']) or 'ninguna'}",
+        f"{_lista(s['molestias']) or 'ninguna'}"
+        + (f" · rondas WOD completadas: {s['rondas_completadas']}" if s["rondas_completadas"] is not None else ""),
         "",
         "| Bloque | Ejercicio | Dosis del día | Peso (kg) | Desviación |",
         "|---|---|---|---|---|",

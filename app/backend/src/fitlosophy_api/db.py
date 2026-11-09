@@ -135,6 +135,7 @@ CREATE TABLE IF NOT EXISTS {nombre} (
     sensacion TEXT NOT NULL,           -- como_previsto | mas_duro | mas_suave
     molestias TEXT NOT NULL,           -- JSON lista de {zona, intensidad}
     dimensiones_congeladas TEXT NOT NULL DEFAULT '[]',  -- JSON
+    rondas_completadas INTEGER,        -- marcador del WOD (AMRAP/por tiempo); NULL si no aplica
     created_at TEXT NOT NULL
 )""",
     "bjj_records": """
@@ -366,6 +367,20 @@ def _migrar_wod_propuestas(conn: sqlite3.Connection) -> None:
     conn.commit()
 
 
+def _migrar_rondas_cierre(conn: sqlite3.Connection) -> None:
+    """Columna `rondas_completadas` en `session_closures` (marcador del WOD).
+
+    Es anulable (NULL = sin WOD o formato sin rondas, como EMOM) y no tiene
+    clave foránea, así que basta un `ALTER TABLE`.
+    """
+    if not _existe(conn, "session_closures"):
+        return
+    if "rondas_completadas" in _columnas(conn, "session_closures"):
+        return
+    conn.execute("ALTER TABLE session_closures ADD COLUMN rondas_completadas INTEGER")
+    conn.commit()
+
+
 def _reconstruir_con_usuario(conn: sqlite3.Connection, tabla: str, propietario: int | None) -> None:
     """Añade `user_id` a una tabla existente reconstruyéndola.
 
@@ -457,6 +472,7 @@ def crear_esquema(conn: sqlite3.Connection) -> None:
     _migrar_multiusuario(conn)
     _migrar_bjj_externa(conn)
     _migrar_wod_propuestas(conn)
+    _migrar_rondas_cierre(conn)
     conn.executescript(INDICES)
     conn.commit()
 
