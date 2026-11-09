@@ -573,9 +573,11 @@ exercises:
 
   - id: kettlebell-alternating-press
     nombre: kettlebell alternating press
-    descripcion: Ponte de pie con los pies separados a la altura de los hombros, sosteniendo una pesa rusa
-      en cada mano a la altura de los hombros. Empuja una pesa rusa por encima de la cabeza, extendiendo el
-      brazo por completo.
+    descripcion: >-
+      Ponte de pie con los pies separados a la altura de los hombros, sosteniendo una pesa rusa en
+      cada mano a la altura de los hombros. Empuja una pesa rusa por encima de la cabeza,
+      extendiendo el brazo por completo. Baja la pesa rusa de nuevo a la altura de los hombros.
+      Repite con el otro brazo.
     patron: empuje_vertical
     material:
     - kettlebell
@@ -604,8 +606,12 @@ exercises:
 
   - id: clap-push-up
     nombre: clap push up
-    descripcion: Comienza en posición de plancha alta con las manos un poco más separadas que el ancho de
-      los hombros. Baja el cuerpo hacia el suelo flexionando los codos, manteniendo el core activado.
+    descripcion: >-
+      Comienza en posición de plancha alta con las manos un poco más separadas que el ancho de los
+      hombros. Baja el cuerpo hacia el suelo flexionando los codos, manteniendo el core activado.
+      Empuja con las palmas de forma explosiva para impulsar tu cuerpo fuera del suelo. Mientras
+      estás en el aire, junta las manos en un aplauso antes de aterrizar de vuelta en la posición
+      inicial.
     patron: empuje_horizontal
     material: []
     nivel: base
@@ -633,8 +639,12 @@ exercises:
 
   - id: clock-push-up
     nombre: clock push-up
-    descripcion: Comienza en una posición de plancha alta con las manos justo debajo de los hombros y el cuerpo
-      en línea recta. Baja el cuerpo hacia el suelo flexionando los codos, manteniéndolos cerca de los costados.
+    descripcion: >-
+      Comienza en una posición de plancha alta con las manos justo debajo de los hombros y el
+      cuerpo en línea recta. Baja el cuerpo hacia el suelo flexionando los codos, manteniéndolos
+      cerca de los costados. Mientras bajas, gira el cuerpo hacia la izquierda, extendiendo el
+      brazo izquierdo recto hacia el lado. Empuja de vuelta hacia arriba hasta la posición
+      inicial, mientras giras el cuerpo hacia el centro.
     patron: empuje_horizontal
     material: []
     nivel: base
@@ -662,9 +672,12 @@ exercises:
 
   - id: incline-push-up-on-box
     nombre: incline push-up (on box)
-    descripcion: Coloca las manos en el borde de una caja o una superficie elevada, ligeramente más separadas
-      que la altura de los hombros. Extiende las piernas detrás de ti, apoyándote en la punta de los pies,
-      formando una línea recta desde la cabeza hasta los talones.
+    descripcion: >-
+      Coloca las manos en el borde de una caja o una superficie elevada, ligeramente más separadas
+      que la altura de los hombros. Extiende las piernas detrás de ti, apoyándote en la punta de
+      los pies, formando una línea recta desde la cabeza hasta los talones. Baja el pecho hacia la
+      caja doblando los codos, manteniendo el cuerpo en línea recta. Haz una pausa breve en la
+      parte baja, luego empújate de nuevo hacia arriba a la posición inicial estirando los brazos.
     patron: empuje_horizontal
     material: []
     nivel: base
@@ -691,8 +704,12 @@ exercises:
 
   - id: modified-push-up-to-lower-arms
     nombre: modified push up to lower arms
-    descripcion: Comienza en posición de flexión con las manos directamente debajo de los hombros y el cuerpo
-      en línea recta. Baja el cuerpo hacia el suelo flexionando los codos, manteniéndolos cerca de tu costado.
+    descripcion: >-
+      Comienza en posición de flexión con las manos directamente debajo de los hombros y el cuerpo
+      en línea recta. Baja el cuerpo hacia el suelo flexionando los codos, manteniéndolos cerca de
+      tu costado. Cuando los codos formen un ángulo de 90 grados, baja los antebrazos hasta el
+      suelo, manteniendo los codos justo debajo de los hombros. Haz una pausa por un momento y
+      luego empuja con las palmas para llevar los antebrazos de vuelta a la posición inicial.
     patron: empuje_horizontal
     material: []
     nivel: base
@@ -720,8 +737,13 @@ exercises:
 
   - id: 3-4-sit-up
     nombre: 3/4 sit-up
-    descripcion: Túmbate sobre tu espalda con las rodillas flexionadas y los pies apoyados en el suelo. Coloca
-      las manos detrás de la cabeza con los codos apuntando hacia afuera.
+    descripcion: >-
+      Túmbate sobre tu espalda con las rodillas flexionadas y los pies apoyados en el suelo.
+      Coloca las manos detrás de la cabeza con los codos apuntando hacia afuera. Activando el
+      abdomen, levanta lentamente la parte superior del cuerpo del suelo, curvándote hacia
+      adelante hasta que tu torso forme un ángulo de 45 grados. Haz una pausa por un momento en la
+      parte superior, luego baja lentamente la parte superior del cuerpo de vuelta a la posición
+      inicial.
     patron: core_flexion_cadera
     material: []
     nivel: base
@@ -748,8 +770,12 @@ exercises:
 
   - id: archer-push-up
     nombre: archer push up
-    descripcion: Comienza en posición de flexión de brazos con las manos un poco más separadas que el ancho
-      de los hombros. Extiende un brazo hacia el lado, paralelo al suelo.
+    descripcion: >-
+      Comienza en posición de flexión de brazos con las manos un poco más separadas que el ancho
+      de los hombros. Extiende un brazo hacia el lado, paralelo al suelo. Baja el cuerpo
+      flexionando los codos, manteniendo la espalda recta y el core activado. Empuja hacia arriba
+      para volver a la posición inicial. Repite del otro lado, extendiendo el brazo opuesto hacia
+      el lado.
     patron: empuje_horizontal
     material: []
     nivel: base
@@ -776,8 +802,12 @@ exercises:
 
   - id: back-and-forth-step
     nombre: back and forth step
-    descripcion: Ponte de pie con los pies separados a la altura de los hombros. Da un paso adelante con el
+    descripcion: >-
+      Ponte de pie con los pies separados a la altura de los hombros. Da un paso adelante con el
       pie derecho, flexionando la rodilla y bajando el cuerpo hacia una posición de zancada.
+      Empuja con el pie derecho y da un paso atrás para regresar a la posición inicial. Repite el
+      movimiento con el pie izquierdo, alternando las piernas en cada paso. Continúa dando pasos
+      hacia adelante y hacia atrás, manteniendo un ritmo constante.
     patron: acondicionamiento
     material: []
     nivel: base
@@ -805,8 +835,10 @@ exercises:
 
   - id: backward-jump
     nombre: backward jump
-    descripcion: Ponte de pie con los pies separados a la altura de los hombros. Flexiona ligeramente las
-      rodillas y salta hacia atrás, impulsándote con ambos pies.
+    descripcion: >-
+      Ponte de pie con los pies separados a la altura de los hombros. Flexiona ligeramente las
+      rodillas y salta hacia atrás, impulsándote con ambos pies. Aterriza suavemente sobre la
+      punta de los pies, flexionando las rodillas para absorber el impacto.
     patron: acondicionamiento
     material: []
     nivel: base
@@ -833,9 +865,11 @@ exercises:
 
   - id: biceps-pull-up
     nombre: biceps pull-up
-    descripcion: Cuélgate de una barra de dominadas con las palmas mirando hacia afuera y las manos separadas
-      a la altura de los hombros. Activa el core y tira de tu cuerpo hacia arriba flexionando los codos, llevando
-      el pecho hacia la barra.
+    descripcion: >-
+      Cuélgate de una barra de dominadas con las palmas mirando hacia afuera y las manos separadas
+      a la altura de los hombros. Activa el core y tira de tu cuerpo hacia arriba flexionando los
+      codos, llevando el pecho hacia la barra. Haz una pausa en la parte más alta del movimiento,
+      luego baja lentamente de vuelta a la posición inicial.
     patron: tiron_vertical
     material:
     - barra_dominadas
@@ -862,9 +896,11 @@ exercises:
 
   - id: arm-slingers-hanging-bent-knee-legs
     nombre: arm slingers hanging bent knee legs
-    descripcion: Cuélgate de una barra de dominadas con los brazos completamente extendidos y las rodillas
-      flexionadas formando un ángulo de 90 grados. Activa el core y levanta las rodillas hacia el pecho, acercándolas
-      lo más posible a los codos.
+    descripcion: >-
+      Cuélgate de una barra de dominadas con los brazos completamente extendidos y las rodillas
+      flexionadas formando un ángulo de 90 grados. Activa el core y levanta las rodillas hacia el
+      pecho, acercándolas lo más posible a los codos. Baja lentamente las piernas de vuelta a la
+      posición inicial.
     patron: core_antiextension
     material: []
     nivel: base
@@ -891,9 +927,12 @@ exercises:
 
   - id: body-up
     nombre: body-up
-    descripcion: Comienza colocando las manos sobre una superficie elevada, como un banco o unas barras paralelas,
-      con las palmas hacia abajo y los dedos apuntando hacia adelante. Extiende las piernas frente a ti, manteniendo
-      los talones en el suelo y el cuerpo recto.
+    descripcion: >-
+      Comienza colocando las manos sobre una superficie elevada, como un banco o unas barras
+      paralelas, con las palmas hacia abajo y los dedos apuntando hacia adelante. Extiende las
+      piernas frente a ti, manteniendo los talones en el suelo y el cuerpo recto. Baja el cuerpo
+      flexionando los codos, manteniéndolos cerca del cuerpo, hasta que los brazos superiores
+      queden paralelos al suelo.
     patron: empuje_horizontal
     material: []
     nivel: base
@@ -920,8 +959,13 @@ exercises:
 
   - id: burpee
     nombre: burpee
-    descripcion: Comienza de pie con los pies separados a la altura de los hombros. Baja el cuerpo hacia una
-      posición de sentadilla flexionando las rodillas y colocando las manos en el suelo frente a ti.
+    descripcion: >-
+      Comienza de pie con los pies separados a la altura de los hombros. Baja el cuerpo hacia una
+      posición de sentadilla flexionando las rodillas y colocando las manos en el suelo frente a
+      ti. Lleva los pies hacia atrás de una patada hasta una posición de flexión de brazos.
+      Realiza una flexión de brazos, manteniendo el cuerpo en línea recta. Salta con los pies de
+      vuelta a la posición de sentadilla. Salta hacia arriba explosivamente, llevando los brazos
+      por encima de la cabeza.
     patron: acondicionamiento
     material: []
     nivel: base
@@ -948,8 +992,12 @@ exercises:
 
   - id: bodyweight-drop-jump-squat
     nombre: bodyweight drop jump squat
-    descripcion: Ponte de pie con los pies separados a la altura de los hombros. Baja el cuerpo hacia una
-      posición de sentadilla flexionando las rodillas y empujando las caderas hacia atrás.
+    descripcion: >-
+      Ponte de pie con los pies separados a la altura de los hombros. Baja el cuerpo hacia una
+      posición de sentadilla flexionando las rodillas y empujando las caderas hacia atrás. Salta
+      hacia arriba explosivamente, extendiendo las caderas, las rodillas y los tobillos. Mientras
+      estás en el aire, junta rápidamente los pies. Aterriza suavemente sobre las puntas de los
+      pies y de inmediato vuelve a bajar a una posición de sentadilla.
     patron: dominante_rodilla
     material: []
     nivel: base
@@ -976,8 +1024,11 @@ exercises:
 
   - id: semi-squat-jump-male
     nombre: semi squat jump (male)
-    descripcion: Ponte de pie con los pies separados a la altura de los hombros. Flexiona las rodillas y baja
-      el cuerpo hacia una posición de sentadilla.
+    descripcion: >-
+      Ponte de pie con los pies separados a la altura de los hombros. Flexiona las rodillas y baja
+      el cuerpo hacia una posición de sentadilla. Salta de forma explosiva, extendiendo las
+      caderas y las rodillas mientras balanceas los brazos para generar impulso. Aterriza
+      suavemente sobre la punta de los pies y pasa de inmediato a la siguiente repetición.
     patron: dominante_rodilla
     material: []
     nivel: base
@@ -1004,9 +1055,13 @@ exercises:
 
   - id: lunge-with-twist
     nombre: lunge with twist
-    descripcion: Comienza de pie con los pies separados a la altura de los hombros. Da un paso adelante con
-      el pie derecho, bajando el cuerpo hasta una posición de zancada. Detén el ejercicio si aparece molestia
-      lumbar.
+    descripcion: >-
+      Comienza de pie con los pies separados a la altura de los hombros. Da un paso adelante con
+      el pie derecho, bajando el cuerpo hasta una posición de zancada. Al hacer la zancada, gira
+      el torso hacia la derecha, llevando el codo izquierdo hacia la rodilla derecha. Haz una
+      pausa breve y luego vuelve a la posición inicial. Repite hacia el otro lado, dando un paso
+      adelante con el pie izquierdo y girando el torso hacia la izquierda. Detén el ejercicio si
+      aparece molestia lumbar.
     patron: dominante_rodilla
     material: []
     nivel: base
@@ -1034,8 +1089,12 @@ exercises:
 
   - id: forward-jump
     nombre: forward jump
-    descripcion: Ponte de pie con los pies separados a la altura de los hombros. Flexiona las rodillas y baja
-      el cuerpo hacia una posición de sentadilla.
+    descripcion: >-
+      Ponte de pie con los pies separados a la altura de los hombros. Flexiona las rodillas y baja
+      el cuerpo hacia una posición de sentadilla. Balancea los brazos hacia atrás para generar
+      impulso. Salta hacia adelante de forma explosiva, extendiendo las caderas, las rodillas y
+      los tobillos. Aterriza suavemente sobre la punta de los pies y pasa de inmediato al
+      siguiente salto.
     patron: acondicionamiento
     material: []
     nivel: base
@@ -1062,9 +1121,13 @@ exercises:
 
   - id: kettlebell-alternating-hang-clean
     nombre: kettlebell alternating hang clean
-    descripcion: Ponte de pie con los pies separados a la altura de los hombros, sosteniendo una pesa rusa
-      en cada mano con agarre prono. Flexiona ligeramente las rodillas e inclínate hacia adelante desde las
-      caderas, manteniendo la espalda recta y el pecho elevado. Detén el ejercicio si aparece molestia lumbar.
+    descripcion: >-
+      Ponte de pie con los pies separados a la altura de los hombros, sosteniendo una pesa rusa en
+      cada mano con agarre prono. Flexiona ligeramente las rodillas e inclínate hacia adelante
+      desde las caderas, manteniendo la espalda recta y el pecho elevado. Deja que las pesas rusas
+      cuelguen frente al cuerpo con los brazos completamente extendidos. En un solo movimiento
+      fluido, extiende las caderas de forma explosiva, encoge los hombros y tira de las pesas
+      rusas hacia los hombros. Detén el ejercicio si aparece molestia lumbar.
     patron: dominante_cadera
     material:
     - kettlebell
@@ -1093,9 +1156,12 @@ exercises:
 
   - id: kettlebell-arnold-press
     nombre: kettlebell arnold press
-    descripcion: Ponte de pie con los pies separados a la altura de los hombros, sosteniendo una pesa rusa
-      en cada mano a la altura de los hombros con las palmas hacia ti. Activa el core y empuja las pesas rusas
-      por encima de la cabeza, girando las palmas hacia adelante mientras extiendes los brazos.
+    descripcion: >-
+      Ponte de pie con los pies separados a la altura de los hombros, sosteniendo una pesa rusa en
+      cada mano a la altura de los hombros con las palmas hacia ti. Activa el core y empuja las
+      pesas rusas por encima de la cabeza, girando las palmas hacia adelante mientras extiendes
+      los brazos. Haz una pausa en la parte superior del movimiento, luego baja lentamente las
+      pesas rusas de vuelta a la posición inicial.
     patron: empuje_vertical
     material:
     - kettlebell

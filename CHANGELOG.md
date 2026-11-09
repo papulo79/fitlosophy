@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.37.2 - Descripciones completas en los ejercicios importados
+
+- **Fallo detectado en producción**: al desplegar «Cómo se hace», ejercicios importados como «3/4 sit-up» o «clock push-up» describían la posición inicial pero no el movimiento. El importador (`candidatos.py`) se quedaba con las **dos primeras frases** de las instrucciones del dataset y las cortaba a 300 caracteres; las instrucciones traen 4-7 frases (preparación, ejecución, retorno).
+- `_descripcion` une ahora frases **completas** hasta ~500 caracteres, sin cortar a mitad de frase, y descarta el cierre genérico del dataset («Repite el número de repeticiones deseado»).
+- Nuevo `scripts/reparar_descripciones.py`: recalcula y aplica las descripciones de los ejercicios aceptados desde el dataset. Repara el YAML **por bloque de texto** (sin reordenar ni reformatear el resto), actualiza el borrador revisado de `candidates`, simula por defecto (`--aplicar` para escribir) y conserva las descripciones editadas a mano (19 reparadas; `side-plank-hip-adduction` se mantiene tal cual). Verifica el YAML antes de escribir.
+- `docs/05`: criterio 5 de «Ejecución» — la descripción debe cubrir preparación, movimiento y retorno, hasta ~500 caracteres.
+- Tests nuevos: la descripción incluye el movimiento y no el cierre genérico, el recorte es por frases completas y el reemplazo del YAML conserva el resto. Suite en verde (203).
+
 ## 0.37.1 - El WOD no repite patrón principal entre estaciones
 
 - **Fallo detectado en producción**: una sesión de familia A con WOD EMOM salió con «patrón principal repetido: dominante_rodilla (regla 1)». El generador alternaba el grupo muscular (pierna/empuje/core/cardio), pero dos ejercicios del mismo grupo pueden compartir patrón principal (sentadilla libre y búlgara son ambas `dominante_rodilla`), y la comprobación de patrón único no se aplicaba **dentro** del WOD.

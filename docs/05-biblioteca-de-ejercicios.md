@@ -67,7 +67,7 @@ Cada ejercicio define:
 
 Las etiquetas anteriores sirven al motor para decidir; no le dicen nada al usuario sobre **cómo** se hace el ejercicio. Para eso, cada ejercicio lleva:
 
-- `descripcion` (obligatorio): una o dos frases con la ejecución y la clave técnica que más importa en este perfil. Es lo que se muestra bajo la dosis en la propuesta y en la ejecución. Se escribe en imperativo y en español, sin repetir el nombre del ejercicio.
+- `descripcion` (obligatorio): una a cinco frases (hasta ~500 caracteres) con la ejecución **completa** — posición inicial, movimiento principal y retorno — y la clave técnica que más importa en este perfil. Es lo que se muestra bajo la dosis en la propuesta y en la ejecución. Se escribe en imperativo y en español, sin repetir el nombre del ejercicio.
 - `patrones` (opcional): lista ordenada de las variantes concretas que se recorren dentro del ejercicio.
 
 Criterios:
@@ -76,6 +76,7 @@ Criterios:
 2. La descripción no repite la dosis: las series y repeticiones ya salen de `prescripcion`, y duplicarlas las desincronizaría.
 3. **`patrones` es obligatorio cuando la prescripción se expresa por patrón** (hoy, `pasadas_por_patron`). Sin esa lista la dosis es incompleta: «4 pasadas» no dice de qué, y el usuario no puede ejecutar la sesión. Un test del catálogo lo verifica.
 4. La descripción explica *qué* hacer, no *por qué* está hoy en la sesión: el motivo lo genera el motor en la justificación del ítem (`docs/03`).
+5. **La ejecución tiene que estar completa**: preparación, movimiento y retorno. Una descripción que solo describe la posición inicial deja al usuario sin saber qué hacer (fue el fallo del importador de `docs/15`, que cortaba a dos frases).
 
 ## Intención del ejercicio
 

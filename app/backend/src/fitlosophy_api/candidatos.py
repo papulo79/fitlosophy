@@ -245,15 +245,40 @@ def inferir_etiquetas(registro: dict, material: list[str]) -> dict:
     }
 
 
-def _descripcion(registro: dict, impacto: str) -> str:
-    """Una o dos frases de ejecución a partir de las instrucciones en español.
+# Las instrucciones del dataset traen 4-7 frases (preparación, ejecución,
+# retorno). Cortar a dos frases dejaba la explicación a medias: describía la
+# posición inicial y omitía el movimiento (docs/05, sección «Ejecución»).
+LIMITE_DESCRIPCION = 500
+# Cierre genérico del dataset («Repite el número de repeticiones deseado»):
+# no aporta ejecución y ocupa el sitio del movimiento.
+_REPETICION_GENERICA = re.compile(
+    r"^(repite|contin[uú]a)\b[^.]*\b(repeticiones|deseado|deseada)s?\b", re.IGNORECASE
+)
 
-    Si el impacto lumbar inferido es rojo se añade el límite con palabras
-    (docs/05), para que la validación determinista no lo rechace.
+
+def _descripcion(registro: dict, impacto: str) -> str:
+    """Explicación de ejecución completa a partir de las instrucciones en español.
+
+    Une frases hasta ~500 caracteres **sin cortar a mitad de frase**, para que
+    el texto cubra el movimiento entero y no solo la preparación. Descarta los
+    cierres genéricos del dataset. Si el impacto lumbar inferido es rojo se
+    añade el límite con palabras (docs/05), para que la validación determinista
+    no lo rechace.
     """
     pasos = (registro.get("instructions") or {}).get("es") or ""
-    frases = [f.strip() for f in re.split(r"(?<=[.!?])\s+", pasos.replace("\n", " ")) if f.strip()]
-    desc = " ".join(frases[:2])[:300].strip()
+    frases = [
+        f.strip()
+        for f in re.split(r"(?<=[.!?])\s+", pasos.replace("\n", " "))
+        if f.strip() and not _REPETICION_GENERICA.match(f.strip())
+    ]
+    partes: list[str] = []
+    total = 0
+    for frase in frases:
+        if partes and total + len(frase) + 1 > LIMITE_DESCRIPCION:
+            break
+        partes.append(frase)
+        total += len(frase) + 1
+    desc = " ".join(partes).strip()
     if impacto == "rojo":
         desc = (desc + " Detén el ejercicio si aparece molestia lumbar.").strip()
     return desc

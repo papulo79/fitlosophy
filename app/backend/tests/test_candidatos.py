@@ -17,7 +17,7 @@ from fastapi.testclient import TestClient
 
 from fitlosophy.catalog import load_default_catalog, load_default_perfil
 from fitlosophy_api.app import create_app
-from fitlosophy_api.candidatos import DATA_DIR, inferir_etiquetas, material_para_equipment
+from fitlosophy_api.candidatos import DATA_DIR, _descripcion, inferir_etiquetas, material_para_equipment
 from fitlosophy_api.db import conectar
 from fitlosophy_api.usuarios import alta_usuario
 
@@ -326,3 +326,52 @@ def test_gif_se_sirve_con_atribucion_latin1(client, app, dataset_json, tmp_path,
     atribucion = r.headers["x-atribucion"]
     atribucion.encode("latin-1")
     assert "Gym visual" in atribucion
+
+
+def test_descripcion_cubre_el_movimiento_no_solo_la_preparacion():
+    """Regresión: la regla anterior se quedaba con las dos primeras frases y
+    cortaba la ejecución (posición inicial sin movimiento ni retorno)."""
+    registro = {
+        "instructions": {
+            "es": "Túmbate boca arriba con las rodillas flexionadas. "
+            "Coloca las manos detrás de la cabeza. "
+            "Sube el tronco activando el abdomen. "
+            "Baja despacio a la posición inicial. "
+            "Repite el número de repeticiones deseado."
+        }
+    }
+    desc = _descripcion(registro, "verde")
+    assert "Sube el tronco" in desc  # el movimiento, no solo la preparación
+    assert "Baja despacio" in desc
+    assert "Repite el número" not in desc  # cierre genérico descartado
+    assert desc.endswith("Baja despacio a la posición inicial.")
+
+
+def test_descripcion_no_corta_a_mitad_de_frase():
+    """Con instrucciones largas se recorta por frases completas, nunca dentro
+    de una frase (docs/05, criterio 5)."""
+    frases = [f"Paso número {i} de la ejecución con texto suficiente." for i in range(1, 15)]
+    desc = _descripcion({"instructions": {"es": " ".join(frases)}}, "verde")
+    assert desc.endswith(".")
+    assert desc.split(".")[-2].strip() == desc.rstrip(".").split(".")[-1].strip()
+    assert len(desc) <= 500
+
+
+def test_reemplazo_de_descripcion_conserva_el_resto_del_yaml():
+    from reparar_descripciones import _reemplazar_descripcion
+
+    texto = (
+        "exercises:\n"
+        "  - id: uno\n"
+        "    nombre: Uno\n"
+        "    descripcion: Vieja descripción a medias.\n"
+        "    patron: empuje_horizontal\n"
+        "  - id: dos\n"
+        "    nombre: Dos\n"
+        "    descripcion: Otra.\n"
+    )
+    nuevo = _reemplazar_descripcion(texto, "uno", "Preparación, movimiento y retorno completos.")
+    datos = yaml.safe_load(nuevo)
+    assert datos["exercises"][0]["descripcion"] == "Preparación, movimiento y retorno completos."
+    assert datos["exercises"][0]["patron"] == "empuje_horizontal"
+    assert datos["exercises"][1]["descripcion"] == "Otra."
