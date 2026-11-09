@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.37.1 - El WOD no repite patrón principal entre estaciones
+
+- **Fallo detectado en producción**: una sesión de familia A con WOD EMOM salió con «patrón principal repetido: dominante_rodilla (regla 1)». El generador alternaba el grupo muscular (pierna/empuje/core/cardio), pero dos ejercicios del mismo grupo pueden compartir patrón principal (sentadilla libre y búlgara son ambas `dominante_rodilla`), y la comprobación de patrón único no se aplicaba **dentro** del WOD.
+- `_construir_wod` descarta ahora cualquier estación cuyo patrón principal ya esté en uso; si quedan menos de dos estaciones, aplica el fallback existente con su nota. La sesión vuelve a salir válida (o con dos estaciones si el presupuesto de core/empuje no da para una tercera).
+- Test de regresión con la variedad forzada que reproducía el caso (historial que penaliza los ejercicios habituales).
+
 ## 0.37.0 - Peso en kilos por kettlebell + número de kettlebells
 
 - El peso se guardaba en un único número sin semántica: un press Arnold con 2×12 kg quedaba como «12 kg» cuando la carga real era 24. No afectaba a las decisiones (el modelo de carga es ciego a la intensidad) pero sí distorsionaba el análisis histórico y hacía incomparables los registros.

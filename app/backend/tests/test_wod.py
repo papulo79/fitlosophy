@@ -6,13 +6,15 @@ familia A (EMOM suave) o B (AMRAP). Las reglas duras (D3-D5), el presupuesto
 por dimensión y la regla 1 de patrones aplican igual que al resto de la sesión.
 """
 
-from datetime import datetime
+from datetime import datetime, timedelta
 
 import pytest
 from fastapi.testclient import TestClient
 
 from fitlosophy import (
     DailyState,
+    PerformedExercise,
+    PerformedSession,
     Proposal,
     decide,
     generate,
@@ -157,6 +159,32 @@ def test_estaciones_familia_a_sin_explosivos_ni_agarre(catalog, perfil):
         assert ej.impacto_lumbar == "verde"
         assert not ej.explosivo
         assert ej.coste("agarre") in (None, "bajo")  # sin coste declarado = no fatiga de agarre
+
+
+def test_wod_nunca_repite_patron_principal_entre_estaciones(catalog, perfil):
+    """Regresión: con variedad forzada se elegían sentadilla libre y búlgara
+    (ambas `dominante_rodilla`) porque solo se alternaba el grupo muscular.
+    La regla 1 vale también dentro del WOD y la sesión debe salir válida."""
+    ayer = AHORA - timedelta(days=1)
+    historial = [
+        PerformedSession(
+            ayer,
+            [
+                PerformedExercise(x)
+                for x in (
+                    "pushup-classic", "goblet-squat", "rope-technical",
+                    "plank-front", "side-plank", "bird-dog", "dead-bug", "pallof-press",
+                )
+            ],
+        )
+    ]
+    estado = _estado(bjj="si", tipo_bjj="tecnico")
+    prop = decide(estado, historial, catalog)
+    sesion = generate(prop, estado, catalog, perfil.material, historial)
+    assert sesion.wod is not None
+    patrones = [catalog[i.exercise_id].patron for i in _estaciones(sesion)]
+    assert len(patrones) == len(set(patrones)), patrones
+    assert sesion.valida, sesion.violaciones
 
 
 def test_duracion_y_recorte_eliminian_el_wod_entero(catalog, perfil):

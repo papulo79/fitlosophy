@@ -629,6 +629,11 @@ def _construir_wod(
             grupo = _grupo_wod(candidato.patron)
             if grupo == grupo_anterior:
                 continue
+            # Regla 1 también dentro del WOD: un patrón principal no se repite
+            # entre estaciones (dos ejercicios de pierna comparten
+            # dominante_rodilla y la alternancia por grupo no lo detecta).
+            if candidato.patron in usados_principal:
+                continue
             if agarre_usado and candidato.coste("agarre") in ("medio", "alto"):
                 continue
             pts = puntos_propuesta(candidato, familia, dosis_minima)
