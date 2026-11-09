@@ -13,7 +13,15 @@ from datetime import datetime
 from .catalog import PUNTOS_COSTE, Catalog, Exercise
 from .engine import PATRONES_FAMILIA
 from .load import puntos_registro, ultimo_uso_por_ejercicio
-from .models import DailyState, Event, Proposal, SessionItem, SessionProposal
+from .models import (
+    DailyState,
+    Event,
+    Proposal,
+    SessionItem,
+    SessionProposal,
+    WodBlock,
+    WodStation,
+)
 
 # Orden de bloques y tamaños por plantilla (docs/06).
 B1_TAMANO = {"A": (2, 3), "B": (3, 4)}  # (mínimo, máximo); C y D no tienen B1
@@ -42,6 +50,41 @@ _C_BASE = ("dead-bug", "glute-bridge", "plank-front")
 # cualquier patrón admitido en la familia.
 _C_B2_PATRONES = {"core_antiextension", "core_antirotacion", "core_lateral", "movilidad_cargada"}
 _D_BASE = ("cones-zigzag", "rope-technical", "agility-ladder-basic")
+
+# --- Formato WOD (docs/16) ------------------------------------------------------
+# Un WOD no es una familia nueva: es la forma que puede tomar el bloque B3.
+# Estas constantes son la interpretación provisional del documento.
+_WOD_PATRONES = {
+    "empuje_horizontal",
+    "empuje_vertical",
+    "dominante_rodilla",
+    "core_antiextension",
+    "core_antirotacion",
+    "core_lateral",
+    "acondicionamiento",
+}
+# Alternancia de grupos musculares entre estaciones (selección, criterio 2).
+_WOD_GRUPOS = [
+    ("pierna", {"dominante_rodilla"}),
+    ("empuje", {"empuje_horizontal", "empuje_vertical"}),
+    ("cardio", {"acondicionamiento"}),
+    ("core", {"core_antiextension", "core_antirotacion", "core_lateral"}),
+]
+_WOD_MIN_ESTACIONES = 2
+_WOD_MAX_ESTACIONES = 3
+# Formato por familia (docs/16): A compatible -> EMOM suave; B potente -> AMRAP.
+_WOD_FORMATO = {
+    "A": {"tipo": "emom", "minutos": 12, "rpe": "5-6"},
+    "B": {"tipo": "amrap", "minutos": 15, "rpe": "7-8"},
+}
+# Dominios de tiempo permitidos por (familia, tipo); validación final.
+_WOD_DOMINIO_TIEMPO = {
+    ("A", "emom"): (10, 14),
+    ("A", "amrap"): (12, 20),
+    ("B", "amrap"): (8, 20),
+    ("B", "emom"): (8, 14),
+    ("B", "por_tiempo"): (3, 10),
+}
 
 
 def _clave_variedad(ejercicio: Exercise, ultimo_uso: dict[str, datetime], fecha: datetime):
@@ -358,12 +401,22 @@ def generate(
     # B0 no computa ni para la regla 1 de patrones, pero no repetimos ejercicio.
     usados_ids.update(i.exercise_id for i in items)
 
+    # B3 en formato WOD (docs/16): bajo demanda (preferencia `acondicionamiento`),
+    # antes que B1/B2 para que la regla 1 reserve sus patrones. Si no se genera,
+    # el B3 clásico sigue su camino habitual (familia B).
+    wod = None
+    if familia in ("A", "B"):
+        wod = _construir_wod(
+            prop, estado, catalog, material, familia, ultimo_uso,
+            items, totales, usados_principal, usados_secundario, usados_ids, lumbares, notas,
+        )
+
     if familia == "C":
         _generar_c(prop, catalog, material, anadir, notas, ultimo_uso)
     elif familia == "D":
         _generar_d(prop, catalog, material, anadir, notas, items, ultimo_uso)
     else:
-        _generar_ab(prop, catalog, material, familia, anadir, usados_principal, usados_secundario, notas, ultimo_uso)
+        _generar_ab(prop, catalog, material, familia, anadir, usados_principal, usados_secundario, notas, ultimo_uso, con_b3_clasico=wod is None)
 
     _ordenar_bloques(items, catalog)
     sesion = SessionProposal(
@@ -371,15 +424,16 @@ def generate(
         familia=familia,
         items=items,
         puntos_sesion=totales,
-        duracion_estimada_min=_duracion_estimada(items),
+        duracion_estimada_min=_duracion_estimada(items, wod),
         notas=notas,
+        wod=wod,
     )
     _recortar_por_tiempo(sesion, estado, prop)
     validate_session(sesion, prop, catalog)
     return sesion
 
 
-def _generar_ab(prop, catalog, material, familia, anadir, usados_principal, usados_secundario, notas, ultimo_uso) -> None:
+def _generar_ab(prop, catalog, material, familia, anadir, usados_principal, usados_secundario, notas, ultimo_uso, con_b3_clasico: bool = True) -> None:
     """Familias A y B: B1 (patrones prioritarios primero, regla 2) + B2 (+ B3 en B)."""
     n_min, n_max = B1_TAMANO[familia]
     # Tamaño objetivo: extremo conservador del rango (interpretación provisional;
@@ -455,8 +509,10 @@ def _generar_ab(prop, catalog, material, familia, anadir, usados_principal, usad
                 anadidos2 += 1
                 break
 
-    # B3 · Acondicionamiento: solo en familia B y si queda presupuesto de cardio.
-    if familia == "B":
+    # B3 · Acondicionamiento clásico (series): en familia B cuando no hay WOD.
+    # Con preferencia `acondicionamiento` el bloque toma formato WOD (docs/16)
+    # y se construye antes de B1/B2 (ver `generate`).
+    if familia == "B" and con_b3_clasico:
         cands = _candidatos(prop, familia, catalog, material, {"acondicionamiento"})
         base0 = _orden_preferencia(cands, familia)[0].id if ultimo_uso and cands else None
         for candidato in _orden_preferencia(cands, familia, ultimo_uso, prop.fecha):
@@ -465,6 +521,188 @@ def _generar_ab(prop, catalog, material, familia, anadir, usados_principal, usad
                 just += _nota_variedad(candidato, ultimo_uso)
             if anadir(candidato, "B3", just):
                 break
+
+
+# --- Formato WOD (docs/16) ------------------------------------------------------
+
+
+def _grupo_wod(patron: str) -> str:
+    for nombre, patrones in _WOD_GRUPOS:
+        if patron in patrones:
+            return nombre
+    return "otro"
+
+
+def _dosis_estacion(ejercicio: Exercise, tipo: str) -> str:
+    """Dosis de una estación dentro del formato: un número que permite moverse
+    casi sin parar (docs/16, selección criterio 4). Fracción del extremo bajo
+    de la prescripción: el AMRAP/EMOM multiplica el volumen por las rondas, así
+    que la estación se dosifica por debajo de una serie normal. Provisional."""
+    p = ejercicio.prescripcion
+    factor = 0.4 if tipo == "emom" else 0.5
+    por_lado = " por lado" if p.get("por_lado") else ""
+    r = _rango(p.get("repeticiones"))
+    if r is not None:
+        n = max(3 if tipo == "emom" else 4, round(r[0] * factor))
+        return f"{n} repeticiones{por_lado}"
+    if p.get("segundos") is not None:
+        return f"{int(_rango(p['segundos'])[0])} s{por_lado}"
+    if p.get("minutos") is not None:
+        return f"{int(_rango(p['minutos'])[0])} min"
+    if p.get("saltos") is not None:
+        n = max(10, round(int(_rango(p["saltos"])[0]) * factor))
+        return f"{n} saltos"
+    if p.get("recorridos") is not None:
+        return f"{int(_rango(p['recorridos'])[0])} recorridos"
+    return _dosis(ejercicio, "A")
+
+
+def _construir_wod(
+    prop: Proposal,
+    estado: DailyState,
+    catalog: Catalog,
+    material: set[str],
+    familia: str,
+    ultimo_uso: dict[str, datetime],
+    items: list[SessionItem],
+    totales: dict[str, float],
+    usados_principal: set[str],
+    usados_secundario: set[str],
+    usados_ids: set[str],
+    lumbares: set[str],
+    notas: list[str],
+) -> WodBlock | None:
+    """Construye el bloque B3 con formato WOD (docs/16), bajo demanda.
+
+    Condiciones (todas, docs/16): preferencia `acondicionamiento` declarada,
+    familia A o B, y al menos dos estaciones elegibles con presupuesto. Si no
+    se cumplen, el B3 queda en su comportamiento clásico (o ausente, en A) y
+    se anota el motivo. Devuelve el WodBlock o None; las estaciones se añaden
+    a `items` como ítems normales de B3 (puntos, presupuesto, sustitución y
+    regla 1 aplican igual que al resto de la sesión)."""
+    if estado.preferencia != "acondicionamiento" or familia not in ("A", "B"):
+        return None
+    if prop.presupuestos.get("cardio", 0.0) < 1.0:
+        # B3 exige presupuesto de cardio (docs/06); el formato WOD no lo relaja.
+        notas.append(
+            "WOD no generado: presupuesto de cardio insuficiente "
+            f"({prop.presupuestos.get('cardio', 0.0):g} puntos; docs/16)."
+        )
+        return None
+
+    config = _WOD_FORMATO[familia]
+    tipo, minutos, rpe = config["tipo"], config["minutos"], config["rpe"]
+
+    pool = []
+    for ej in _candidatos(prop, familia, catalog, material):
+        if ej.patron not in _WOD_PATRONES:
+            continue
+        # Regla 1: el WOD respeta los patrones ya usados y reserva los suyos
+        # (se construye antes que B1/B2: la preferencia del día es el cardio).
+        if ej.patron in usados_principal or ej.patron in usados_secundario:
+            continue
+        if ej.id in usados_ids:
+            continue
+        # Selección criterio 1 (docs/16): rojos fuera del formato siempre; los
+        # amarillos solo en familia B (y contando para D4, como ya registra
+        # `lumbares` al añadir la estación).
+        if ej.impacto_lumbar == "rojo":
+            continue
+        if ej.impacto_lumbar == "amarillo" and familia != "B":
+            continue
+        pool.append(ej)
+
+    # Selección greedy: preferencia del catálogo + variedad, alternando grupos
+    # musculares y con máximo una estación de agarre medio/alto (criterio 3).
+    estaciones: list[WodStation] = []
+    elegidos: list[Exercise] = []
+    grupo_anterior: str | None = None
+    agarre_usado = False
+    dosis_minima = _es_dosis_minima(familia)
+    ordenados = _orden_preferencia(pool, familia, ultimo_uso, prop.fecha)
+    while len(elegidos) < _WOD_MAX_ESTACIONES and ordenados:
+        elegido = None
+        for candidato in ordenados:
+            grupo = _grupo_wod(candidato.patron)
+            if grupo == grupo_anterior:
+                continue
+            if agarre_usado and candidato.coste("agarre") in ("medio", "alto"):
+                continue
+            pts = puntos_propuesta(candidato, familia, dosis_minima)
+            if not _encaja(pts, totales, prop.presupuestos):
+                continue
+            if candidato.impacto_lumbar == "amarillo" and lumbares & {"rojo", "amarillo"}:
+                continue  # D4 / regla 3
+            elegido = candidato
+            break
+        if elegido is None:
+            break
+        ordenados.remove(elegido)
+        elegidos.append(elegido)
+        grupo_anterior = _grupo_wod(elegido.patron)
+        agarre_usado = agarre_usado or elegido.coste("agarre") in ("medio", "alto")
+        pts = puntos_propuesta(elegido, familia, dosis_minima)
+        _sumar(pts, totales)
+        usados_principal.add(elegido.patron)
+        usados_secundario.update(elegido.secundarios)
+        usados_ids.add(elegido.id)
+        lumbares.add(elegido.impacto_lumbar)
+        just = f"Estación WOD ({_grupo_wod(elegido.patron)}): {tipo.upper()} dentro del presupuesto (docs/16)"
+        if ultimo_uso:
+            just += _nota_variedad(elegido, ultimo_uso)
+        items.append(
+            SessionItem(
+                exercise_id=elegido.id,
+                bloque="B3",
+                dosis=_dosis_estacion(elegido, tipo),
+                puntos=pts,
+                justificacion=just,
+            )
+        )
+        estaciones.append(WodStation(exercise_id=elegido.id, detalle=items[-1].dosis))
+
+    if len(estaciones) < _WOD_MIN_ESTACIONES:
+        # No se completa el mínimo del formato: se deshace y queda el B3
+        # clásico (familia B) o ningún B3 (familia A), con la nota explicada.
+        for item in [i for i in items if i.bloque == "B3"]:
+            items.remove(item)
+            for d, p in item.puntos.items():
+                totales[d] = totales.get(d, 0.0) - p
+            ej = catalog.get(item.exercise_id)
+            if ej:
+                usados_principal.discard(ej.patron)
+                for sec in ej.secundarios:
+                    usados_secundario.discard(sec)
+                usados_ids.discard(ej.id)
+                lumbares.discard(ej.impacto_lumbar)
+        notas.append(
+            "WOD no generado: se necesitan al menos "
+            f"{_WOD_MIN_ESTACIONES} estaciones elegibles (docs/16); "
+            "el acondicionamiento queda en su formato habitual."
+        )
+        return None
+
+    if tipo == "emom":
+        nombres = " ↔ ".join(e.id for e in elegidos)
+        descripcion = (
+            f"EMOM {minutos} min: estaciones en alternancia cada minuto "
+            f"({nombres}); lo que sobre del minuto, descansa. "
+            f"RPE {rpe}: la primera mitad debe sentirse fácil."
+        )
+    else:
+        descripcion = (
+            f"AMRAP {minutos} min: el mayor número de rondas completas de las "
+            "estaciones en orden. "
+            f"RPE {rpe}: rondas homogéneas (±10 %); la primera debe sentirse lenta."
+        )
+    notas.append(f"B3 en formato WOD por preferencia declarada (P2, docs/16): {tipo.upper()} {minutos} min.")
+    return WodBlock(
+        tipo=tipo,
+        minutos=minutos,
+        rpe_objetivo=rpe,
+        estaciones=estaciones,
+        descripcion=descripcion,
+    )
 
 
 def _orden_preferencia(
@@ -572,10 +810,12 @@ def _ordenar_bloques(items: list[SessionItem], catalog: Catalog) -> None:
     items.sort(key=clave)
 
 
-def _duracion_estimada(items: list[SessionItem]) -> int:
+def _duracion_estimada(items: list[SessionItem], wod: WodBlock | None = None) -> int:
     """Estimación burda (provisional): B0 8 min; B1 ~3 min/serie; B2 ~2 min/serie;
-    B3 ~2 min/serie; bloque continuo según sus minutos."""
+    B3 ~2 min/serie, o los minutos del formato si B3 es un WOD; bloque continuo
+    según sus minutos."""
     total = 0
+    wod_contado = False
     for item in items:
         if item.bloque == "B0":
             total += 8
@@ -584,6 +824,10 @@ def _duracion_estimada(items: list[SessionItem]) -> int:
                 total += int(item.dosis.split()[0])
             except (ValueError, IndexError):
                 total += 25
+        elif item.bloque == "B3" and wod is not None:
+            if not wod_contado:
+                total += wod.minutos
+                wod_contado = True
         else:
             series = 3
             if "×" in item.dosis:
@@ -604,6 +848,22 @@ def _recortar_por_tiempo(sesion: SessionProposal, estado: DailyState, prop: Prop
     while sesion.duracion_estimada_min > estado.tiempo_disponible and orden:
         bloque = orden.pop(0)
         candidatos = [i for i in sesion.items if i.bloque == bloque]
+        if bloque == "B3" and sesion.wod is not None and candidatos:
+            # El WOD es un formato cerrado: se recorta entero o no se recorta
+            # (docs/16, validación; regla 7 recorta primero B3).
+            eliminados, candidatos = candidatos, []
+            for eliminado in eliminados:
+                sesion.items.remove(eliminado)
+                for d, p in eliminado.puntos.items():
+                    sesion.puntos_sesion[d] = sesion.puntos_sesion.get(d, 0.0) - p
+            nota = (
+                "Recorte por tiempo disponible (P3, regla 7): se elimina el bloque "
+                f"WOD completo ({sesion.wod.tipo.upper()} {sesion.wod.minutos} min)."
+            )
+            sesion.wod = None
+            sesion.notas.append(nota)
+            sesion.duracion_estimada_min = _duracion_estimada(sesion.items)
+            continue
         while sesion.duracion_estimada_min > estado.tiempo_disponible and candidatos:
             eliminado = candidatos.pop()
             sesion.items.remove(eliminado)
@@ -612,7 +872,7 @@ def _recortar_por_tiempo(sesion: SessionProposal, estado: DailyState, prop: Prop
             )
             for d, p in eliminado.puntos.items():
                 sesion.puntos_sesion[d] = sesion.puntos_sesion.get(d, 0.0) - p
-            sesion.duracion_estimada_min = _duracion_estimada(sesion.items)
+            sesion.duracion_estimada_min = _duracion_estimada(sesion.items, sesion.wod)
     if sesion.duracion_estimada_min > estado.tiempo_disponible:
         sesion.notas.append(
             "Tiempo insuficiente para el mínimo de la familia (P3): considera familia C."
@@ -674,6 +934,38 @@ def validate_session(
         violaciones.append("Impacto lumbar rojo combinado con amarillo o BJJ duro (D4, regla 3)")
     if rojos and sesion.familia != "B":
         violaciones.append("Impacto lumbar rojo fuera de familia B (regla 3)")
+
+    # Formato WOD (docs/16): dominio de tiempo, estaciones y seguridad lumbar.
+    if sesion.wod is not None:
+        w = sesion.wod
+        nombres_estaciones = {e.exercise_id for e in w.estaciones}
+        items_b3 = {i.exercise_id for i in sesion.items if i.bloque == "B3"}
+        if len(w.estaciones) < _WOD_MIN_ESTACIONES:
+            violaciones.append(f"WOD con menos de {_WOD_MIN_ESTACIONES} estaciones (docs/16)")
+        if len(w.estaciones) > _WOD_MAX_ESTACIONES:
+            violaciones.append(f"WOD con más de {_WOD_MAX_ESTACIONES} estaciones (docs/16)")
+        if nombres_estaciones != items_b3:
+            violaciones.append("Las estaciones del WOD no coinciden con los ítems de B3 (docs/16)")
+        dominio = _WOD_DOMINIO_TIEMPO.get((sesion.familia, w.tipo))
+        if dominio is None:
+            violaciones.append(
+                f"Formato {w.tipo} no permitido en familia {sesion.familia} (docs/16)"
+            )
+        elif not dominio[0] <= w.minutos <= dominio[1]:
+            violaciones.append(
+                f"WOD {w.tipo} de {w.minutos} min fuera del dominio "
+                f"{dominio[0]}-{dominio[1]} de la familia {sesion.familia} (docs/16)"
+            )
+        if w.tipo == "por_tiempo" and w.rondas is None:
+            violaciones.append("WOD por_tiempo sin rondas fijas (docs/16)")
+        for estacion in w.estaciones:
+            ej = catalog.get(estacion.exercise_id)
+            if ej is None:
+                continue
+            if ej.impacto_lumbar == "rojo":
+                violaciones.append(f"{ej.id}: lumbar rojo prohibido en formato WOD (docs/16)")
+            if ej.explosivo and sesion.familia == "A":
+                violaciones.append(f"{ej.id}: explosivo prohibido en familia A (docs/16)")
 
     sesion.violaciones = violaciones
     sesion.valida = not violaciones

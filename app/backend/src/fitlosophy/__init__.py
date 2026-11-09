@@ -16,6 +16,8 @@ from .models import (
     Proposal,
     SessionItem,
     SessionProposal,
+    WodBlock,
+    WodStation,
 )
 from .load import compute_load
 from .engine import decide
@@ -33,6 +35,8 @@ __all__ = [
     "Proposal",
     "SessionItem",
     "SessionProposal",
+    "WodBlock",
+    "WodStation",
     "check_substitution",
     "compute_load",
     "decide",

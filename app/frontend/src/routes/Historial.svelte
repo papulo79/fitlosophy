@@ -3,6 +3,7 @@
   import { BLOQUES, FAMILIAS, ESTADOS_ITEM, agruparPorBloque } from "../lib/etiquetas.js";
   import Opciones from "../lib/Opciones.svelte";
   import Icon from "../lib/Icon.svelte";
+  import WodCabecera from "../lib/WodCabecera.svelte";
 
   let { parametro } = $props(); // fecha YYYY-MM-DD o null (lista)
 
@@ -415,6 +416,9 @@
           </div>
           {#each agruparPorBloque(s.items) as grupo}
             <p class="mt-3 text-xs font-bold uppercase tracking-wider text-tenue">{BLOQUES[grupo.bloque] || grupo.bloque}</p>
+            {#if grupo.bloque === "B3" && s.wod}
+              <WodCabecera wod={s.wod} />
+            {/if}
             <ul class="mt-1 space-y-1 text-sm">
               {#each grupo.items as item}
                 <li class="flex items-start justify-between gap-2">

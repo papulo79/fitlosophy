@@ -88,6 +88,7 @@ CREATE TABLE IF NOT EXISTS {nombre} (
     explicacion TEXT NOT NULL,
     carga TEXT NOT NULL,               -- JSON LoadVector
     items TEXT NOT NULL,               -- JSON lista de ítems de la sesión
+    wod TEXT NOT NULL DEFAULT '{}',    -- JSON WodBlock si B3 va en formato WOD (docs/16); '{}' = clásico
     notas TEXT NOT NULL,               -- JSON
     duracion_estimada_min INTEGER,
     valida INTEGER NOT NULL DEFAULT 1,
@@ -351,6 +352,20 @@ def _migrar_bjj_externa(conn: sqlite3.Connection) -> None:
     conn.commit()
 
 
+def _migrar_wod_propuestas(conn: sqlite3.Connection) -> None:
+    """Columna `wod` en `proposals` (formato WOD del bloque B3, docs/16).
+
+    JSON del WodBlock o '{}' cuando B3 es clásico. Valor por defecto en el
+    propio ALTER: las propuestas existentes no tienen WOD.
+    """
+    if not _existe(conn, "proposals"):
+        return
+    if "wod" in _columnas(conn, "proposals"):
+        return
+    conn.execute("ALTER TABLE proposals ADD COLUMN wod TEXT NOT NULL DEFAULT '{}'")
+    conn.commit()
+
+
 def _reconstruir_con_usuario(conn: sqlite3.Connection, tabla: str, propietario: int | None) -> None:
     """Añade `user_id` a una tabla existente reconstruyéndola.
 
@@ -441,6 +456,7 @@ def crear_esquema(conn: sqlite3.Connection) -> None:
     _migrar_estado_propuestas(conn)
     _migrar_multiusuario(conn)
     _migrar_bjj_externa(conn)
+    _migrar_wod_propuestas(conn)
     conn.executescript(INDICES)
     conn.commit()
 

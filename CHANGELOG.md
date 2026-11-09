@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.34.0 - Diseño de WODs como formato del bloque B3
+
+- Nuevo `docs/16-wods-y-acondicionamiento-estructurado.md`: los WOD (AMRAP, EMOM, por tiempo) se definen como **formato de dosificación del bloque B3**, no como familia de sesión nueva — el motor sigue decidiendo si toca cardio y con qué presupuesto. Documenta objetivos y dominios de tiempo, formatos permitidos por familia, criterios de selección de ejercicios (lumbar verde, agarre dosificado, sin fallo programado), puntuación de carga, aplicación de las reglas duras (D3-D5), pacing y ejemplos con el catálogo actual.
+- `docs/06` (bloque B3) y `docs/00` (tipo «Acondicionamiento») referencian el nuevo formato; `docs/11` añade la definición de WOD al glosario.
+- Solo documentación, sin implementación: el criterio de la Fase 9 («primero se documenta, después se construye») aplica a esta ampliación.
+
+## 0.34.0 - WODs como formato del bloque B3
+
+- Nuevo `docs/16-wods-y-acondicionamiento-estructurado.md`: los WOD (AMRAP, EMOM, por tiempo) se definen como **formato de dosificación del bloque B3**, no como familia de sesión nueva — el motor sigue decidiendo si toca cardio y con qué presupuesto. Incluye objetivos y dominios de tiempo, formatos permitidos por familia, criterios de selección de ejercicios, reglas de generación (disparador por preferencia `acondicionamiento`, dosis de estación, recorte entero), puntuación de carga, reglas duras y ejemplos con el catálogo actual.
+- **Generador**: con `preferencia: acondicionamiento` y familia A o B, el B3 se genera como WOD (A → EMOM 12 min RPE 5-6; B → AMRAP 15 min RPE 7-8): 2-3 estaciones elegidas con los filtros duros (sin lumbar rojo, agarre dosificado a una estación, regla 1 de patrones reservada antes que B1/B2) y dosis de estación (fracción del extremo bajo de la prescripción). Sin las condiciones (presupuesto de cardio, estaciones suficientes), queda el B3 clásico y la propuesta anota el motivo. El recorte por tiempo elimina el WOD entero y la validación final verifica dominio de tiempo, estaciones y prohibiciones del formato.
+- **API**: la cabecera del WOD se persiste en la nueva columna `proposals.wod` (migración idempotente) y se expone en propuesta, sesión e historial; las estaciones son ítems de B3 normales: sustituir una estación conserva la dosis de formato y mantiene cabecera e ítems sincronizados.
+- **Frontend**: nueva cabecera `WodCabecera.svelte` (tipo · minutos · RPE e instrucción del formato) en Propuesta, Ejecución e Historial.
+- Tests nuevos en `tests/test_wod.py` (disparador, seguridad lumbar, regla 1, dosis de estación, recorte y persistencia); suite en verde (195).
+
 ## 0.33.0 - El export del historial cubre todas las entidades
 
 - `scripts/exportar_historial.py` deja de exportar solo sesiones: añade `actividades.csv` (una fila por actividad externa, con su carga en UA y los datos del registro de BJJ enlazado), `bienestar.csv` (los seis indicadores de cada revisión matutina, con la celda vacía cuando no se valoró) y `bjj.csv` (una fila por registro de BJJ, con `origen`: manual o desde actividad externa).

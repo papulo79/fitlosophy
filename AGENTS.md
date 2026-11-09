@@ -32,6 +32,7 @@ fitlosophy/
 │   ├── 13-casos-de-uso-y-validacion.md     # Validación manual: casos ejecutados e incoherencias
 │   ├── 14-diseno-del-mvp.md                # MVP: pantallas, flujo de uso, criterios de aceptación
 │   ├── 15-incorporacion-de-ejercicios-candidatos.md # Puerta de evidencia y pruebas controladas
+│   ├── 16-wods-y-acondicionamiento-estructurado.md  # WODs como formato de dosificación del bloque B3
 │   ├── roles/               # Orquestación opcional de dos IAs (ver sección más abajo)
 │   └── superpowers/         # Planes de trabajo para ese flujo
 ├── opencode.json            # Agentes del orquestador en el flujo de dos IAs

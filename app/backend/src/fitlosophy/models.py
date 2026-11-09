@@ -138,6 +138,32 @@ class SessionItem:
 
 
 @dataclass
+class WodStation:
+    """Estación (movimiento dosificado) dentro de un bloque WOD (docs/16)."""
+
+    exercise_id: str
+    detalle: str  # dosis de la estación dentro del formato: "10 repeticiones", "40 s"
+
+
+@dataclass
+class WodBlock:
+    """Bloque B3 con formato WOD: estructura temporal cerrada (docs/16).
+
+    No es una familia de sesión: es la forma que puede tomar el bloque B3.
+    Las estaciones son además ítems normales de la sesión (bloque "B3"), así
+    que computan puntos, validan presupuesto y admiten sustitución como
+    cualquier ejercicio.
+    """
+
+    tipo: str  # amrap | emom | por_tiempo
+    minutos: int
+    rpe_objetivo: str  # "5-6" | "7-8" (docs/16)
+    estaciones: list[WodStation]
+    descripcion: str = ""  # instrucción del formato en español
+    rondas: int | None = None  # solo por_tiempo: rondas fijas contra cronómetro
+
+
+@dataclass
 class SessionProposal:
     """Sesión propuesta completa (entidad de docs/11)."""
 
@@ -149,6 +175,7 @@ class SessionProposal:
     valida: bool = True
     violaciones: list[str] = field(default_factory=list)
     notas: list[str] = field(default_factory=list)  # recortes, patrones pendientes...
+    wod: WodBlock | None = None  # B3 con formato cerrado, si se generó (docs/16)
 
     def items_bloque(self, bloque: str) -> list[SessionItem]:
         return [i for i in self.items if i.bloque == bloque]

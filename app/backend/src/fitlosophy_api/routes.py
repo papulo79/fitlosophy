@@ -16,6 +16,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request, Response
 from fitlosophy.catalog import MATERIAL_A_PERFIL, Catalog, perfil_desde_dict
 from fitlosophy.engine import decide
 from fitlosophy.generator import (
+    _dosis_estacion,
     check_substitution,
     dosis_prescrita,
     es_dosis_minima,
@@ -23,7 +24,14 @@ from fitlosophy.generator import (
     puntos_propuesta,
     validate_session,
 )
-from fitlosophy.models import DailyState, Proposal, SessionItem, SessionProposal
+from fitlosophy.models import (
+    DailyState,
+    Proposal,
+    SessionItem,
+    SessionProposal,
+    WodBlock,
+    WodStation,
+)
 
 from .auth import LoginIn, login, logout, usuario_actual
 from .db import cargar_json, db_conn, volcar_json
@@ -180,6 +188,37 @@ def _totales_items(items: list[dict]) -> dict[str, float]:
     return totales
 
 
+def _wod_a_dict(wod) -> dict | None:
+    """WodBlock del núcleo a JSON para la API (docs/16). None si no hay."""
+    if wod is None:
+        return None
+    return {
+        "tipo": wod.tipo,
+        "minutos": wod.minutos,
+        "rpe_objetivo": wod.rpe_objetivo,
+        "descripcion": wod.descripcion,
+        "rondas": wod.rondas,
+        "estaciones": [
+            {"exercise_id": e.exercise_id, "detalle": e.detalle} for e in wod.estaciones
+        ],
+    }
+
+
+def _wod_desde_json(raw: str | None):
+    """WodBlock desde el JSON persistido; None si B3 es clásico ('{}')."""
+    datos = cargar_json(raw, None)
+    if not datos:
+        return None
+    return WodBlock(
+        tipo=datos["tipo"],
+        minutos=datos["minutos"],
+        rpe_objetivo=datos.get("rpe_objetivo", ""),
+        estaciones=[WodStation(**e) for e in datos.get("estaciones", [])],
+        descripcion=datos.get("descripcion", ""),
+        rondas=datos.get("rondas"),
+    )
+
+
 def _pesos_disponibles(conn, user_id: int) -> list[float]:
     """Kettlebells del inventario del perfil, para ofrecerlas de un toque al
     apuntar el peso usado (docs/05: la biblioteca no prescribe kilos)."""
@@ -204,6 +243,15 @@ def _propuesta_json(row: sqlite3.Row, catalog: Catalog) -> dict:
         it["intencion"] = ej.intencion if ej else ""
         it["admite_peso"] = bool(ej and "kettlebell" in ej.material)
         it["reserva"] = _reserva(ej, it.get("bloque", ""), row["familia"])
+    wod = _wod_desde_json(row["wod"])
+    if wod is not None:
+        # Las estaciones se reconstruyen siempre desde los ítems: una
+        # sustitución en B3 queda reflejada al instante en la cabecera WOD.
+        wod.estaciones = [
+            WodStation(exercise_id=i["exercise_id"], detalle=i["dosis"])
+            for i in items
+            if i["bloque"] == "B3"
+        ]
     return {
         "id": row["id"],
         "estado_diario_id": row["daily_state_id"],
@@ -226,6 +274,7 @@ def _propuesta_json(row: sqlite3.Row, catalog: Catalog) -> dict:
         "d5_activa": bool(row["d5"]),
         "carga": cargar_json(row["carga"], {}),
         "items": items,
+        "wod": _wod_a_dict(wod),
         "puntos_sesion": _totales_items(items),
         "notas": cargar_json(row["notas"], []),
         "duracion_estimada_min": row["duracion_estimada_min"],
@@ -259,9 +308,9 @@ def _guardar_propuesta(conn, user_id: int, estado_id: int, prop: Proposal, sesio
         """INSERT INTO proposals (
             user_id, daily_state_id, fecha, familia, reducida, techo, bjj_efectivo, rpe_previsto,
             presupuestos, patrones_prioritarios, patrones_restringidos, patrones_dosificados,
-            d3, d4, d5, reglas, incertidumbres, explicacion, carga, items, notas,
+            d3, d4, d5, reglas, incertidumbres, explicacion, carga, items, wod, notas,
             duracion_estimada_min, valida, violaciones, created_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
         (
             user_id,
             estado_id,
@@ -291,6 +340,7 @@ def _guardar_propuesta(conn, user_id: int, estado_id: int, prop: Proposal, sesio
                 }
             ),
             volcar_json(items),
+            volcar_json(_wod_a_dict(sesion.wod) or {}),
             volcar_json(sesion.notas),
             sesion.duracion_estimada_min,
             int(sesion.valida),
@@ -426,6 +476,8 @@ def sustituir_item(propuesta_id: int, datos: SustituirIn, request: Request, user
         raise HTTPException(status_code=422, detail="Ejercicio desconocido en el catálogo")
 
     prop = _prop_desde_fila(row)
+    wod = _wod_desde_json(row["wod"])
+    es_estacion_wod = wod is not None and items[datos.item_indice]["bloque"] == "B3"
     ok, motivos = check_substitution(
         original, candidato, prop, row["familia"], catalog, puntos_actuales=_totales_items(items)
     )
@@ -433,13 +485,23 @@ def sustituir_item(propuesta_id: int, datos: SustituirIn, request: Request, user
         # Criterio 8: las sustituciones que violan reglas se rechazan con su motivo.
         raise HTTPException(status_code=409, detail={"detalle": "Sustitución rechazada", "motivos": motivos})
 
+    # Una estación WOD conserva la dosis de estación (formato), no la dosis
+    # clásica por series (docs/16).
+    dosis = _dosis_estacion(candidato, wod.tipo) if es_estacion_wod else dosis_prescrita(candidato, row["familia"])
     items[datos.item_indice] = {
         "exercise_id": candidato.id,
         "bloque": items[datos.item_indice]["bloque"],
-        "dosis": dosis_prescrita(candidato, row["familia"]),
+        "dosis": dosis,
         "puntos": puntos_propuesta(candidato, row["familia"], es_dosis_minima(row["familia"])),
         "justificacion": items[datos.item_indice].get("justificacion", "") + " (sustituido por el usuario)",
     }
+    if wod is not None:
+        # Mantener estaciones e ítems sincronizados para la validación (docs/16).
+        wod.estaciones = [
+            WodStation(exercise_id=i["exercise_id"], detalle=i["dosis"])
+            for i in items
+            if i["bloque"] == "B3"
+        ]
     sesion = SessionProposal(
         fecha=prop.fecha,
         familia=row["familia"],
@@ -450,11 +512,12 @@ def sustituir_item(propuesta_id: int, datos: SustituirIn, request: Request, user
             )
             for it in items
         ],
+        wod=wod,
     )
     validate_session(sesion, prop, catalog)
     conn.execute(
-        "UPDATE proposals SET items = ?, valida = ?, violaciones = ? WHERE id = ?",
-        (volcar_json(items), int(sesion.valida), volcar_json(sesion.violaciones), propuesta_id),
+        "UPDATE proposals SET items = ?, wod = ?, valida = ?, violaciones = ? WHERE id = ?",
+        (volcar_json(items), volcar_json(_wod_a_dict(wod) or {}), int(sesion.valida), volcar_json(sesion.violaciones), propuesta_id),
     )
     conn.commit()
     row = conn.execute("SELECT * FROM proposals WHERE id = ?", (propuesta_id,)).fetchone()
@@ -496,6 +559,18 @@ def _sesion_json(conn, row, catalog) -> dict:
             }
         )
     cierre = conn.execute("SELECT * FROM session_closures WHERE session_id = ?", (row["id"],)).fetchone()
+    # La cabecera WOD vive en la propuesta; las estaciones se reconstruyen
+    # desde los ítems reales de la sesión (sustituciones incluidas, docs/16).
+    wod = None
+    if row["proposal_id"] is not None:
+        prop_row = conn.execute("SELECT wod FROM proposals WHERE id = ?", (row["proposal_id"],)).fetchone()
+        wod = _wod_desde_json(prop_row["wod"]) if prop_row else None
+        if wod is not None:
+            wod.estaciones = [
+                WodStation(exercise_id=i["exercise_id"], detalle=i["dosis"])
+                for i in items
+                if i["bloque"] == "B3"
+            ]
     return {
         "id": row["id"],
         "proposal_id": row["proposal_id"],
@@ -504,6 +579,7 @@ def _sesion_json(conn, row, catalog) -> dict:
         "estado": row["estado"],
         "rpe_real": row["rpe_real"],
         "items": items,
+        "wod": _wod_a_dict(wod),
         # Inventario de kettlebells del dueño de la sesión: se ofrece de un
         # toque al apuntar el peso.
         "pesos_disponibles": _pesos_disponibles(conn, row["user_id"]),

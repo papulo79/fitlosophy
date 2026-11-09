@@ -8,6 +8,7 @@
   import AccionesEjercicio from "../lib/AccionesEjercicio.svelte";
   import Intencion from "../lib/Intencion.svelte";
   import PesoUsado from "../lib/PesoUsado.svelte";
+  import WodCabecera from "../lib/WodCabecera.svelte";
 
   let sesion = $derived(flujo.sesion);
   let grupos = $derived(agruparPorBloque(sesion?.items));
@@ -167,6 +168,9 @@
     {#each grupos as grupo}
       <section>
         <h3 class="mb-2 text-xs font-bold uppercase tracking-wider text-tenue">{BLOQUES[grupo.bloque] || grupo.bloque}</h3>
+        {#if grupo.bloque === "B3" && sesion.wod}
+          <WodCabecera wod={sesion.wod} />
+        {/if}
         <div class="space-y-2">
           {#each grupo.items as item}
             <div class="rounded-xl border border-borde bg-superficie p-3 {item.estado !== 'pendiente' ? 'opacity-60' : ''}">
