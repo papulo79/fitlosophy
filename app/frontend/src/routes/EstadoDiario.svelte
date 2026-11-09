@@ -20,6 +20,17 @@
     cinta: "Cinta",
   };
 
+  // Vocabulario cerrado de docs/03: el motor solo entiende estos valores
+  // (P2 desempata y «acondicionamiento» activa el WOD, docs/16).
+  const PREFERENCIAS = [
+    { valor: "fuerza", etiqueta: "Fuerza" },
+    { valor: "potencia", etiqueta: "Potencia" },
+    { valor: "acondicionamiento", etiqueta: "Cardio" },
+    { valor: "tecnica", etiqueta: "Técnica" },
+    { valor: "recuperacion", etiqueta: "Recuperación" },
+    { valor: "", etiqueta: "Ninguna" },
+  ];
+
   let recuperacion = $state(null);
   let dolor = $state(0);
   let zonaDolor = $state("");
@@ -175,6 +186,26 @@
     {/if}
   </section>
 
+  <section>
+    <p class="mb-2 text-xs font-semibold uppercase tracking-wider text-tenue">¿Qué te apetece trabajar hoy?</p>
+    <div class="grid grid-cols-3 gap-2">
+      {#each PREFERENCIAS as op}
+        <button
+          type="button"
+          onclick={() => (preferencia = preferencia === op.valor ? "" : op.valor)}
+          class="min-h-11 rounded-xl border px-2 py-2 text-sm font-semibold transition-colors {preferencia === op.valor
+            ? 'border-acento bg-acento text-fondo'
+            : 'border-borde bg-superficie text-apagado'}"
+        >
+          {op.etiqueta}
+        </button>
+      {/each}
+    </div>
+    <p class="mt-2 text-xs text-tenue">
+      «Cardio» activa un WOD en el bloque de acondicionamiento, solo en los días que lo permiten (docs/16).
+    </p>
+  </section>
+
   {#if materialVariable.length > 0}
     <section>
       <p class="mb-2 text-xs font-semibold uppercase tracking-wider text-tenue">Material disponible hoy</p>
@@ -188,14 +219,13 @@
   <section>
     <button type="button" onclick={() => (mostrarOpcionales = !mostrarOpcionales)} class="flex items-center gap-1.5 text-sm font-medium text-acento">
       <Icon nombre={mostrarOpcionales ? "cerrar" : "plus"} tam={14} />
-      {mostrarOpcionales ? "Ocultar opcionales" : "Limitación, sueño, tiempo, preferencias…"}
+      {mostrarOpcionales ? "Ocultar opcionales" : "Limitación, sueño y tiempo…"}
     </button>
     {#if mostrarOpcionales}
       <div class="mt-3 space-y-3">
         <input bind:value={limitacion} type="text" placeholder="Limitación puntual (ej. hombro cargado)" class="w-full rounded-xl border border-borde bg-superficie px-4 py-3 text-texto placeholder:text-tenue focus:border-acento focus:outline-none" />
         <input bind:value={sueno} type="text" placeholder="Sueño (ej. 6 h, mal)" class="w-full rounded-xl border border-borde bg-superficie px-4 py-3 text-texto placeholder:text-tenue focus:border-acento focus:outline-none" />
         <input bind:value={tiempo} type="number" min="1" placeholder="Tiempo disponible (minutos)" class="w-full rounded-xl border border-borde bg-superficie px-4 py-3 text-texto placeholder:text-tenue focus:border-acento focus:outline-none" />
-        <input bind:value={preferencia} type="text" placeholder="Preferencia (ej. sin impacto)" class="w-full rounded-xl border border-borde bg-superficie px-4 py-3 text-texto placeholder:text-tenue focus:border-acento focus:outline-none" />
         <input bind:value={circunstancias} type="text" placeholder="Circunstancias (ej. viaje, calor)" class="w-full rounded-xl border border-borde bg-superficie px-4 py-3 text-texto placeholder:text-tenue focus:border-acento focus:outline-none" />
       </div>
     {/if}

@@ -118,7 +118,7 @@ Techo: RPE ≤ 8; si la técnica de apoyos se degrada, se detiene.
 
 Reglas con las que el generador construye el WOD (implementación provisional, Fase 9):
 
-- **Bajo demanda**: se genera solo si el estado diario declara `preferencia: acondicionamiento` (P2). Sin preferencia, el B3 conserva su comportamiento clásico (familia B) o no aparece (familia A).
+- **Bajo demanda**: se genera solo si el estado diario declara `preferencia: acondicionamiento` (P2). La pantalla del estado diario lo ofrece como selector visible y cerrado («Cardio»); sin preferencia, el B3 conserva su comportamiento clásico (familia B) o no aparece (familia A).
 - **Condiciones**: familia A o B, presupuesto de cardio ≥ 1 punto y al menos 2 estaciones elegibles. Si no se cumplen, no hay WOD y la propuesta lo anota con el motivo.
 - **Formato por familia** (provisional): A → EMOM 12 min, RPE 5-6; B → AMRAP 15 min, RPE 7-8. Los dominios de tiempo de la tabla de objetivos son los límites de la validación.
 - **Estaciones = ítems normales**: puntúan presupuesto, admiten sustitución validada y comparten la regla 1 de patrones con el resto de la sesión (el WOD se construye antes que B1/B2 y reserva sus patrones: la preferencia del día es el cardio).

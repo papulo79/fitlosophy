@@ -15,6 +15,10 @@ BjjDisponible = Literal["si", "no", "incierto"]
 TipoBjj = Literal["tecnico", "normal", "duro"]
 EstadoItem = Literal["completado", "modificado", "sustituido", "no_realizado"]
 Sensacion = Literal["como_previsto", "mas_duro", "mas_suave"]
+# Vocabulario cerrado de docs/03; la preferencia desempata (P2) y el WOD se
+# activa con `acondicionamiento` (docs/16). Un valor libre se ignoraría en
+# silencio en el motor, así que se rechaza en la puerta.
+Preferencia = Literal["fuerza", "potencia", "acondicionamiento", "tecnica", "recuperacion"]
 
 
 class EstadoDiarioIn(BaseModel):
@@ -28,7 +32,7 @@ class EstadoDiarioIn(BaseModel):
     limitacion: str | None = None
     sueno: str | None = None
     tiempo_disponible: int | None = Field(default=None, gt=0)
-    preferencia: str | None = None
+    preferencia: Preferencia | None = None
     circunstancias: str | None = None
     material_disponible: list[str] | None = None  # None = todo el garaje; [] = sin material
 

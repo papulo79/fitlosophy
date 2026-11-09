@@ -249,3 +249,18 @@ def test_api_propuesta_y_sesion_exponen_el_wod(client):
 def test_api_propuesta_clasica_sin_wod(client):
     propuesta = _crear_propuesta(client, preferencia="fuerza")
     assert propuesta["wod"] is None
+
+
+def test_api_preferencia_fuera_de_dominio_es_422(client):
+    """La preferencia es vocabulario cerrado (docs/03): un valor libre se
+    rechaza en la puerta en vez de ignorarse en silencio en el motor."""
+    r = client.post(
+        "/api/estado-diario",
+        json={
+            "recuperacion": "verde",
+            "dolor": 0,
+            "bjj_disponible": "no",
+            "preferencia": "cardio",
+        },
+    )
+    assert r.status_code == 422

@@ -1,10 +1,12 @@
 # Changelog
 
-## 0.34.0 - Diseño de WODs como formato del bloque B3
+## 0.35.0 - La preferencia del día es un selector visible y cerrado
 
-- Nuevo `docs/16-wods-y-acondicionamiento-estructurado.md`: los WOD (AMRAP, EMOM, por tiempo) se definen como **formato de dosificación del bloque B3**, no como familia de sesión nueva — el motor sigue decidiendo si toca cardio y con qué presupuesto. Documenta objetivos y dominios de tiempo, formatos permitidos por familia, criterios de selección de ejercicios (lumbar verde, agarre dosificado, sin fallo programado), puntuación de carga, aplicación de las reglas duras (D3-D5), pacing y ejemplos con el catálogo actual.
-- `docs/06` (bloque B3) y `docs/00` (tipo «Acondicionamiento») referencian el nuevo formato; `docs/11` añade la definición de WOD al glosario.
-- Solo documentación, sin implementación: el criterio de la Fase 9 («primero se documenta, después se construye») aplica a esta ampliación.
+- La preferencia del estado diario era un **input de texto libre** escondido en el desplegable de opcionales, con placeholder «Preferencia (ej. sin impacto)»: el motor solo entiende el vocabulario cerrado de `docs/03` (`fuerza`, `potencia`, `acondicionamiento`, `tecnica`, `recuperacion`), así que el WOD de 0.34.0 era inalcanzable desde la interfaz y los valores libres se ignoraban en silencio.
+- Nuevo bloque visible **«¿Qué te apetece trabajar hoy?»** en el estado diario, con selector cerrado (Fuerza · Potencia · Cardio · Técnica · Recuperación · Ninguna). «Cardio» declara `acondicionamiento` y activa el WOD de `docs/16` cuando las condiciones lo permiten.
+- El input libre desaparece del desplegable, que pasa a llamarse «Limitación, sueño y tiempo…».
+- `EstadoDiarioIn.preferencia` valida contra el vocabulario cerrado (`Literal`): un valor fuera del dominio responde 422 en vez de ignorarse.
+- Test nuevo: preferencia fuera de dominio → 422 (suite en verde, 196).
 
 ## 0.34.0 - WODs como formato del bloque B3
 
