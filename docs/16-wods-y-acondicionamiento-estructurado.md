@@ -90,7 +90,7 @@ Las reglas de seguridad (`docs/03`) no se relajan por ser «solo un bloque corto
 ## Registro
 
 - **Rondas completadas**: marcador del WOD en AMRAP y por tiempo; se registra en el cierre de la sesión y es el dato que permite comparar el mismo WOD entre semanas. En EMOM no se registra: el formato ya fija los minutos. Se puede corregir desde el historial como cualquier cierre.
-- **Pesos**: cada estación es un ítem normal, así que el peso apuntado se guarda por ítem (`carga_kg_real`), también en las estaciones con kettlebell.
+- **Pesos**: cada estación es un ítem normal, así que el peso apuntado se guarda por ítem (`carga_kg_real`), también en las estaciones con kettlebell. Rige la convención de `docs/05`: kilos por kettlebell + número de kettlebells (`unidades_carga`), y el total se deriva.
 - **Export**: `sesiones.csv` incluye `rondas_completadas` y el diario (`historico.md`) la muestra junto al cierre, para el análisis de datos.
 
 ## Ejemplos (catálogo actual)

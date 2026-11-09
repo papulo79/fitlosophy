@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.37.0 - Peso en kilos por kettlebell + número de kettlebells
+
+- El peso se guardaba en un único número sin semántica: un press Arnold con 2×12 kg quedaba como «12 kg» cuando la carga real era 24. No afectaba a las decisiones (el modelo de carga es ciego a la intensidad) pero sí distorsionaba el análisis histórico y hacía incomparables los registros.
+- Nueva convención: `carga_kg_real` son **kilos por kettlebell** y `unidades_carga` (nueva columna en `session_items`, por defecto 1) cuántas se usaron. El total (kg × unidades) se deriva al leer (`carga_total_kg` en la API y en el export).
+- Frontend: toggle **«× 1 KB / × 2 KB»** en el apunte de peso en línea, en el modal de desviación de Ejecución y en la corrección de ítem del Historial; la etiqueta muestra el total («12 kg × 2 (24 kg)»).
+- `ejercicios.csv` añade `unidades_carga` y `carga_total_kg`; el diario muestra «12 × 2 = 24» en la columna de peso.
+- Los registros anteriores quedan como 1 unidad; si alguno fue con dos kettlebells puede corregirse desde el Historial.
+- Docs: `docs/05` (carga usada) y `docs/08` (registro) recogen la convención. Test del flujo con 12×2 → total 24. Suite en verde.
+
 ## 0.36.0 - Rondas del WOD y pesos registrados para el análisis
 
 - **Contador de rondas**: el cierre de la sesión pide «Rondas completadas» cuando la sesión tiene un WOD AMRAP o por tiempo (no en EMOM, que ya fija los minutos). Se persiste en la nueva columna `session_closures.rondas_completadas` (migración idempotente), se devuelve en la sesión y se puede corregir desde el historial como el resto del cierre. El backend rechaza con 422 las rondas en sesiones sin WOD de rondas o con valor negativo.

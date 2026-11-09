@@ -64,7 +64,7 @@
   // --- Corrección de un ítem registrado (criterio 7 de docs/14) ---
   let itemCorrigiendo = $state(null); // { sesionId, item }
   let modoItem = $state("modificado");
-  let formItem = $state({ series: "", repeticiones: "", segundos: "", minutos: "", carga_kg: "", exercise_id: "", motivo: "" });
+  let formItem = $state({ series: "", repeticiones: "", segundos: "", minutos: "", carga_kg: "", unidades: 1, exercise_id: "", motivo: "" });
   let catalogo = $state([]);
   let errorItem = $state("");
 
@@ -236,6 +236,7 @@
       segundos: item.real.segundos ?? "",
       minutos: item.real.minutos ?? "",
       carga_kg: item.real.carga_kg ?? "",
+      unidades: item.real.unidades ?? 1,
       exercise_id: item.exercise_id_real || "",
       motivo: item.motivo || "",
     };
@@ -268,6 +269,9 @@
         ["carga_kg", "carga_kg_real"],
       ]) {
         if (formItem[campo] !== "" && formItem[campo] !== null) cuerpo[clave] = Number(formItem[campo]);
+      }
+      if (formItem.carga_kg !== "" && formItem.carga_kg !== null) {
+        cuerpo.unidades_carga = formItem.unidades; // kilos por kettlebell × cuántas
       }
       if (modoItem === "modificado" && !Object.keys(cuerpo).some((k) => k.endsWith("_real"))) {
         errorItem = "Indica al menos un valor real.";
@@ -596,6 +600,15 @@
             <input bind:value={formItem.segundos} type="number" min="1" placeholder="Segundos" class="rounded-xl border border-borde bg-fondo px-3 py-3 text-texto placeholder:text-tenue" />
             <input bind:value={formItem.minutos} type="number" min="1" placeholder="Minutos" class="rounded-xl border border-borde bg-fondo px-3 py-3 text-texto placeholder:text-tenue" />
             <input bind:value={formItem.carga_kg} type="number" min="0" step="0.5" placeholder="Carga (kg)" class="col-span-2 rounded-xl border border-borde bg-fondo px-3 py-3 text-texto placeholder:text-tenue" />
+            <button
+              type="button"
+              onclick={() => (formItem.unidades = formItem.unidades === 2 ? 1 : 2)}
+              class="col-span-2 min-h-11 rounded-xl border px-3 text-sm font-semibold {formItem.unidades === 2
+                ? 'border-acento bg-acento/15 text-acento'
+                : 'border-borde text-apagado'}"
+            >
+              Kettlebells: × {formItem.unidades}{formItem.unidades === 2 ? " (total = kg × 2)" : ""}
+            </button>
           </div>
         {/if}
         <input bind:value={formItem.motivo} type="text" placeholder="Motivo (opcional)" class="w-full rounded-xl border border-borde bg-fondo px-3 py-3 text-texto placeholder:text-tenue" />

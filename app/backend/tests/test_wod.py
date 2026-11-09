@@ -270,12 +270,12 @@ def test_api_rondas_y_pesos_del_wod(client):
     estaciones = [i for i in sesion["items"] if i["bloque"] == "B3"]
     assert estaciones
 
-    # Peso de una estación con kettlebell (goblet squat, etc.).
+    # Peso de una estación con kettlebell: 12 kg por kettlebell × 2 = 24 kg.
     con_peso = next((i for i in estaciones if i["admite_peso"]), None)
     if con_peso is not None:
         r = client.patch(
             f"/api/sesiones/{sesion['id']}/items/{con_peso['id']}",
-            json={"estado": "completado", "carga_kg_real": 12},
+            json={"estado": "completado", "carga_kg_real": 12, "unidades_carga": 2},
         )
         assert r.status_code == 200, r.text
 
@@ -292,6 +292,8 @@ def test_api_rondas_y_pesos_del_wod(client):
     if con_peso is not None:
         item = next(i for i in detalle["items"] if i["id"] == con_peso["id"])
         assert item["real"]["carga_kg"] == 12
+        assert item["real"]["unidades"] == 2
+        assert item["real"]["carga_total_kg"] == 24
 
 
 def test_api_rondas_sin_wod_amrap_es_422(client):

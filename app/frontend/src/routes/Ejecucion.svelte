@@ -22,7 +22,7 @@
   let itemModal = $state(null); // ítem abierto
   let modo = $state("modificado"); // modificado | sustituido | no_realizado
   let catalogo = $state([]);
-  let formulario = $state({ series: "", repeticiones: "", segundos: "", minutos: "", carga_kg: "", exercise_id: "", motivo: "" });
+  let formulario = $state({ series: "", repeticiones: "", segundos: "", minutos: "", carga_kg: "", unidades: 1, exercise_id: "", motivo: "" });
   let errorModal = $state("");
 
   // Finalizar: RPE real obligatorio.
@@ -46,14 +46,16 @@
 
   /** Apunta el peso usado sin declarar desviación: el ítem se hizo tal cual,
    *  solo queda constancia de los kilos (docs/05). El backend acepta
-   *  `carga_kg_real` con estado `completado`. */
-  async function guardarPeso(item, kg) {
+   *  `carga_kg_real` y `unidades_carga` (kilos por kettlebell × cuántas) con
+   *  estado `completado`. */
+  async function guardarPeso(item, kg, unidades) {
     error = "";
     guardandoPeso = item.id;
     try {
       const resp = await api.patch(`/api/sesiones/${sesion.id}/items/${item.id}`, {
         estado: item.estado === "pendiente" ? "completado" : item.estado,
         carga_kg_real: kg,
+        unidades_carga: unidades,
         // Un ítem sustituido exige mantener su ejercicio real (schemas.py).
         ...(item.estado === "sustituido" ? { exercise_id_real: item.exercise_id_real } : {}),
       });
@@ -70,7 +72,7 @@
     if (sesion.estado !== "en_curso") return;
     itemModal = item;
     modo = "modificado";
-    formulario = { series: "", repeticiones: "", segundos: "", minutos: "", carga_kg: "", exercise_id: "", motivo: "" };
+    formulario = { series: "", repeticiones: "", segundos: "", minutos: "", carga_kg: "", unidades: 1, exercise_id: "", motivo: "" };
     errorModal = "";
     if (catalogo.length === 0) {
       try {
@@ -101,6 +103,9 @@
         ["carga_kg", "carga_kg_real"],
       ]) {
         if (formulario[campo] !== "" && formulario[campo] !== null) cuerpo[clave] = Number(formulario[campo]);
+      }
+      if (formulario.carga_kg !== "" && formulario.carga_kg !== null) {
+        cuerpo.unidades_carga = formulario.unidades; // kilos por kettlebell × cuántas
       }
       if (modo === "modificado" && !Object.keys(cuerpo).some((k) => k.endsWith("_real"))) {
         errorModal = "Indica al menos un valor real.";
@@ -198,9 +203,10 @@
                   {#if item.admite_peso && sesion.estado === "en_curso"}
                     <PesoUsado
                       valor={item.real?.carga_kg ?? null}
+                      unidades={item.real?.unidades ?? 1}
                       sugerencias={sesion.pesos_disponibles || []}
                       guardando={guardandoPeso === item.id}
-                      alGuardar={(kg) => guardarPeso(item, kg)}
+                      alGuardar={(kg, unidades) => guardarPeso(item, kg, unidades)}
                     />
                   {/if}
                 </div>
@@ -305,6 +311,17 @@
               <input bind:value={formulario.segundos} type="number" min="1" placeholder="Segundos" class="rounded-xl border border-borde bg-fondo px-3 py-3 text-texto placeholder:text-tenue" />
               <input bind:value={formulario.minutos} type="number" min="1" placeholder="Minutos" class="rounded-xl border border-borde bg-fondo px-3 py-3 text-texto placeholder:text-tenue" />
               <input bind:value={formulario.carga_kg} type="number" min="0" step="0.5" placeholder="Carga (kg)" class="col-span-2 rounded-xl border border-borde bg-fondo px-3 py-3 text-texto placeholder:text-tenue" />
+              {#if itemModal?.admite_peso}
+                <button
+                  type="button"
+                  onclick={() => (formulario.unidades = formulario.unidades === 2 ? 1 : 2)}
+                  class="col-span-2 min-h-11 rounded-xl border px-3 text-sm font-semibold {formulario.unidades === 2
+                    ? 'border-acento bg-acento/15 text-acento'
+                    : 'border-borde text-apagado'}"
+                >
+                  Kettlebells: × {formulario.unidades}{formulario.unidades === 2 ? " (total = kg × 2)" : ""}
+                </button>
+              {/if}
             </div>
           {/if}
           <input bind:value={formulario.motivo} type="text" placeholder="Motivo (opcional)" class="w-full rounded-xl border border-borde bg-fondo px-3 py-3 text-texto placeholder:text-tenue" />

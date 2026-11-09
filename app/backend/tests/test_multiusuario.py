@@ -451,7 +451,11 @@ def test_una_base_de_datos_nueva_no_necesita_migracion(tmp_path):
 
 
 def _esquema(conn) -> dict[str, list[tuple]]:
-    """Columnas de cada tabla: nombre, tipo, not-null y valor por defecto."""
+    """Columnas de cada tabla: nombre, tipo, not-null y valor por defecto.
+
+    Se ordenan por nombre: `ALTER TABLE` añade la columna al final y el orden
+    físico no interviene en ninguna consulta (todas nombran sus columnas).
+    """
     tablas = [
         f["name"]
         for f in conn.execute(
@@ -459,6 +463,9 @@ def _esquema(conn) -> dict[str, list[tuple]]:
         )
     ]
     return {
-        t: [(c["name"], c["type"], c["notnull"], c["dflt_value"]) for c in conn.execute(f"PRAGMA table_info({t})")]
+        t: sorted(
+            [(c["name"], c["type"], c["notnull"], c["dflt_value"]) for c in conn.execute(f"PRAGMA table_info({t})")],
+            key=lambda c: c[0],
+        )
         for t in tablas
     }

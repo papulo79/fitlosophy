@@ -553,6 +553,12 @@ def _sesion_json(conn, row, catalog) -> dict:
                     "segundos": it["segundos_real"],
                     "minutos": it["minutos_real"],
                     "carga_kg": it["carga_kg_real"],
+                    "unidades": it["unidades_carga"],
+                    "carga_total_kg": (
+                        it["carga_kg_real"] * it["unidades_carga"]
+                        if it["carga_kg_real"] is not None
+                        else None
+                    ),
                 },
                 "motivo": it["motivo"],
                 "puntos_reales": cargar_json(it["puntos_reales"], None),
@@ -759,7 +765,8 @@ def corregir_item(sesion_id: int, item_id: int, datos: ItemPatchIn, request: Req
 def _guardar_estado_item(conn, item_id: int, datos: ItemPatchIn) -> None:
     conn.execute(
         """UPDATE session_items SET estado = ?, exercise_id_real = ?, series_real = ?,
-           repeticiones_real = ?, segundos_real = ?, minutos_real = ?, carga_kg_real = ?, motivo = ?
+           repeticiones_real = ?, segundos_real = ?, minutos_real = ?, carga_kg_real = ?,
+           unidades_carga = COALESCE(?, unidades_carga), motivo = ?
            WHERE id = ?""",
         (
             datos.estado,
@@ -769,6 +776,7 @@ def _guardar_estado_item(conn, item_id: int, datos: ItemPatchIn) -> None:
             datos.segundos_real,
             datos.minutos_real,
             datos.carga_kg_real,
+            datos.unidades_carga,
             datos.motivo,
             item_id,
         ),

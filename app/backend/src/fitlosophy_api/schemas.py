@@ -60,6 +60,8 @@ class ItemPatchIn(BaseModel):
     segundos_real: float | None = Field(default=None, gt=0)
     minutos_real: float | None = Field(default=None, gt=0)
     carga_kg_real: float | None = Field(default=None, ge=0)
+    # Kilos por kettlebell + cuántas se usaron (ej. press Arnold 2×12 kg).
+    unidades_carga: int | None = Field(default=None, ge=1, le=2)
     motivo: str | None = None
 
     @model_validator(mode="after")

@@ -98,7 +98,7 @@ Junto a la intención se muestra la **reserva de repeticiones de la familia** (`
 
 La reserva solo se muestra donde significa algo: en ejercicios dosificados en **repeticiones**. No aplica a los isométricos ni a los que se dosifican en segundos, minutos, saltos o pasadas —«deja 1-3 repeticiones en recámara» no dice nada en una plancha de 32 s—, ni a B0 y B4, que por la regla 8 de `docs/06` no buscan estímulo.
 
-El peso realmente usado se registra en `carga_kg_real`. Hoy no alimenta el modelo de carga; se acumula para poder sugerir progresión más adelante (`docs/07`: una sola variable a la vez, y solo si se cerró el rango alto con el RPE previsto o menor).
+El peso realmente usado se registra en `carga_kg_real`. En ejercicios con kettlebell se apunta **kilos por kettlebell** y se declara cuántas se usaron (`unidades_carga`: 1 o 2, por defecto 1), de modo que una carga de dos kettlebells (12 × 2 = 24 kg) no se confunde con una de 12 kg totales; el total se deriva al leerlo. Hoy no alimenta el modelo de carga; se acumula para poder sugerir progresión más adelante (`docs/07`: una sola variable a la vez, y solo si se cerró el rango alto con el RPE previsto o menor).
 
 ## Criterio lumbar
 

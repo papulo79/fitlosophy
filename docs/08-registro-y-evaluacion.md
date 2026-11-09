@@ -12,7 +12,7 @@
 - BJJ: no, técnico, normal o duro.
 - Observaciones al día siguiente.
 - Si la sesión tuvo un WOD con rondas (AMRAP o por tiempo): rondas completadas, el marcador del formato (`docs/16`). En EMOM no se registra: el formato ya fija los minutos.
-- Peso usado por ejercicio cuando se apunta: se guarda por ítem, también en las estaciones del WOD, para poder analizar la evolución.
+- Peso usado por ejercicio cuando se apunta: se guarda por ítem, también en las estaciones del WOD, para poder analizar la evolución. En kettlebell se registra **kilos por kettlebell + número de kettlebells** (1 o 2), y el total (kg × unidades) se deriva.
 
 ## Evaluación semanal
 

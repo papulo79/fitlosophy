@@ -124,7 +124,8 @@ CREATE TABLE IF NOT EXISTS {nombre} (
     repeticiones_real INTEGER,
     segundos_real REAL,
     minutos_real REAL,
-    carga_kg_real REAL,
+    carga_kg_real REAL,                 -- kilos por kettlebell (o peso total si no es KB)
+    unidades_carga INTEGER NOT NULL DEFAULT 1,  -- 1 o 2 kettlebells; total = carga_kg_real × unidades
     motivo TEXT,
     puntos_reales TEXT                 -- JSON; NULL hasta finalizar
 )""",
@@ -381,6 +382,22 @@ def _migrar_rondas_cierre(conn: sqlite3.Connection) -> None:
     conn.commit()
 
 
+def _migrar_unidades_items(conn: sqlite3.Connection) -> None:
+    """Columnas `unidades_carga` en `session_items` (kilos por kettlebell).
+
+    Los registros existentes quedan en 1 unidad (el número guardado era la
+    carga que se usó); el total se deriva al leer el export.
+    """
+    if not _existe(conn, "session_items"):
+        return
+    if "unidades_carga" in _columnas(conn, "session_items"):
+        return
+    conn.execute(
+        "ALTER TABLE session_items ADD COLUMN unidades_carga INTEGER NOT NULL DEFAULT 1"
+    )
+    conn.commit()
+
+
 def _reconstruir_con_usuario(conn: sqlite3.Connection, tabla: str, propietario: int | None) -> None:
     """Añade `user_id` a una tabla existente reconstruyéndola.
 
@@ -473,6 +490,7 @@ def crear_esquema(conn: sqlite3.Connection) -> None:
     _migrar_bjj_externa(conn)
     _migrar_wod_propuestas(conn)
     _migrar_rondas_cierre(conn)
+    _migrar_unidades_items(conn)
     conn.executescript(INDICES)
     conn.commit()
 

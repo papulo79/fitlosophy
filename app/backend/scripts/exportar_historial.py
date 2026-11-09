@@ -226,6 +226,12 @@ def _filas_ejercicios(sesion, items, catalog, dimensiones) -> list[dict]:
                 "segundos_real": it["segundos_real"] if it["segundos_real"] is not None else "",
                 "minutos_real": it["minutos_real"] if it["minutos_real"] is not None else "",
                 "carga_kg_real": it["carga_kg_real"] if it["carga_kg_real"] is not None else "",
+                "unidades_carga": it["unidades_carga"] or 1,
+                "carga_total_kg": (
+                    it["carga_kg_real"] * (it["unidades_carga"] or 1)
+                    if it["carga_kg_real"] is not None
+                    else ""
+                ),
                 "dosis_real": _real(it),
                 "ejercicio_real_id": it["exercise_id_real"] or "",
                 "ejercicio_real": real.nombre if real else "",
@@ -395,6 +401,9 @@ def _bloque_sesion(s, items, catalog) -> list[str]:
         if it["motivo"]:
             desviacion += f" ({it['motivo']})"
         peso = it["carga_kg_real"] if it["carga_kg_real"] is not None else "—"
+        unidades = it["unidades_carga"] or 1
+        if peso != "—" and unidades > 1:
+            peso = f"{peso} × {unidades} = {peso * unidades:g}"
         lineas.append(f"| {it['bloque']} | {nombre} | {it['dosis']} | {peso} | {desviacion} |")
     lineas.append("")
     return lineas
